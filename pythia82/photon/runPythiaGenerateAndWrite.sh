@@ -5,11 +5,11 @@ progPaths=(
 );
 
 progCards=(
-"./photonJet/promptPhoton.cmnd"
+"./photon/promptPhoton.cmnd"
 );
 
 outputFiles=(
-"./photonJet/pythiaGenerateAndWrite_promptPhoton.root"
+"./photon/pythiaGenerateAndWrite_promptPhoton.root"
 );
 
 arrayIndices=${!outputFiles[*]}

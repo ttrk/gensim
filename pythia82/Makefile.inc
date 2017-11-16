@@ -26,10 +26,11 @@ EVTGEN_INCLUDE=./
 EVTGEN_LIB=./
 
 # FASTJET3 configuration.
-FASTJET3_USE=false
-FASTJET3_BIN=
-FASTJET3_INCLUDE=./
-FASTJET3_LIB=./
+# FASTJET3 is a user-defined env variable for the FASTJET 3 installation path
+FASTJET3_USE=true
+FASTJET3_BIN=$(FASTJET3)/bin
+FASTJET3_INCLUDE=$(FASTJET3)/include
+FASTJET3_LIB=$(FASTJET3)/lib
 
 # HEPMC2 configuration.
 HEPMC2_USE=false

@@ -61,7 +61,9 @@ $(PREFIX_LIB)/libpythia8.a :
 # run any program that ends with ".cc"
 %.exe : %.cc $(PREFIX_LIB)/libpythia8.a
 ifeq ($(ROOT_USE),true)
-	$(CXX) $^ -o $@ -w -I$(ROOT_INCLUDE) $(CXX_COMMON) `$(ROOTBIN)root-config --cflags` -Wl,-rpath,$(ROOT_LIB) `$(ROOT_BIN)root-config --glibs`
+	$(CXX) $^ -o $@ -w $(CXX_COMMON) \
+        -I$(ROOT_INCLUDE) `$(ROOTBIN)root-config --cflags` -Wl,-rpath,$(ROOT_LIB) `$(ROOT_BIN)root-config --glibs` \
+        -I$(FASTJET3_INCLUDE) -L$(FASTJET3_LIB) -Wl,-rpath,$(FASTJET3_LIB) -lfastjet
 else
 	@echo "Error: $@ requires ROOT"
 endif

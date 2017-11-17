@@ -23,22 +23,18 @@
 
 using namespace Pythia8;
 
-int main(int argc, char* argv[]) {
+void pythiaClusterJets(std::string inputFileName = "pythiaEvents.root", std::string outputFileName = "pythiaClusterJets_out.root",
+                       int dR = 3, int minJetPt = 5);
 
-    // Read in commands from external file.
-    std::string inputFileName = "pythiaEvents.root";
-    if (argc > 0) {
-        inputFileName = argv[1];
-    }
-
-    std::string outputFileName = "pythiaClusterJets_out.root";
-    if (argc > 1) {
-        outputFileName = argv[2];
-    }
+void pythiaClusterJets(std::string inputFileName, std::string outputFileName, int dR, int minJetPt)
+{
+    double jetRadius = (double)dR / 10;
 
     std::cout << "##### Parameters #####" << std::endl;
     std::cout << "inputFileName = " << inputFileName.c_str() << std::endl;
     std::cout << "outputFileName = " << outputFileName.c_str() << std::endl;
+    std::cout << "jetRadius = " << jetRadius << std::endl;
+    std::cout << "minJetPt = " << minJetPt << std::endl;
     std::cout << "##### Parameters - END #####" << std::endl;
 
     // Set up the ROOT TFile and TTree.
@@ -50,12 +46,10 @@ int main(int argc, char* argv[]) {
     // Create file on which histogram(s) can be saved.
     TFile* outputFile = new TFile(outputFileName.c_str(), "RECREATE");
 
-    // choose a jet definition
-    double R = 0.4;
     fastjet::JetDefinition* fjJetDefn = 0;
-    fjJetDefn = new fastjet::JetDefinition(fastjet::antikt_algorithm, R);
+    fjJetDefn = new fastjet::JetDefinition(fastjet::antikt_algorithm, jetRadius);
 
-    TTree* jetTreeOut = new TTree("jetTree", Form("jets with R = %.1f", R));
+    TTree* jetTreeOut = new TTree("jetTree", Form("jets with radius = %.1f", jetRadius));
     fastJetTree fjt;
     fjt.branchTree(jetTreeOut);
 
@@ -96,6 +90,8 @@ int main(int argc, char* argv[]) {
                                           (*event)[i].py(),
                                           (*event)[i].pz(),
                                           (*event)[i].e());
+            fjParticle.set_user_index(i);
+
             fjParticles.push_back(fjParticle);
         }
 
@@ -104,7 +100,7 @@ int main(int argc, char* argv[]) {
         fastjet::ClusterSequence clustSeq(fjParticles, *fjJetDefn);
 
         // Extract inclusive jets sorted by pT (note minimum pT of 20.0 GeV)
-        inclusiveJets = clustSeq.inclusive_jets(5.0);
+        inclusiveJets = clustSeq.inclusive_jets(minJetPt);
         sortedJets    = sorted_by_pt(inclusiveJets);
 
         int nSortedJets = sortedJets.size();
@@ -122,6 +118,7 @@ int main(int argc, char* argv[]) {
             fjt.jeteta->push_back(sortedJets[i].eta());
             fjt.jetphi->push_back(sortedJets[i].phi_std());
             fjt.nJet++;
+
         }
 
         jetTreeOut->Fill();
@@ -135,7 +132,30 @@ int main(int argc, char* argv[]) {
     outputFile->Close();
 
     inputFile->Close();
+}
 
-    // Done.
-    return 0;
+int main(int argc, char* argv[]) {
+
+    if (argc == 5) {
+        pythiaClusterJets(argv[1], argv[2], std::atoi(argv[3]), std::atoi(argv[4]));
+        return 0;
+    }
+    else if (argc == 4) {
+        pythiaClusterJets(argv[1], argv[2], std::atoi(argv[3]));
+        return 0;
+    }
+    else if (argc == 3) {
+        pythiaClusterJets(argv[1], argv[2]);
+        return 0;
+    }
+    else if (argc == 2) {
+        pythiaClusterJets(argv[1]);
+        return 0;
+    }
+    else {
+        std::cout << "Usage : \n" <<
+                "./pythiaClusterJets.exe <inputFileName> <outputFileName> <jetRadius> <minJetPt>"
+                << std::endl;
+        return 1;
+    }
 }

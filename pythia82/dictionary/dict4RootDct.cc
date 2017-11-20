@@ -4315,7 +4315,7 @@ namespace {
 0
     };
     static const char* includePaths[] = {
-"../include",
+Form("%s/include", std::getenv("PYTHIA82")),
 "/usr/local/include/root",
 0
     };

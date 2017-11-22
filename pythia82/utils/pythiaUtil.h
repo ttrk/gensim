@@ -24,7 +24,7 @@ bool isGamma(Pythia8::Particle particle)
 
 bool isQuark(Pythia8::Particle particle)
 {
-    return (particle.id() > 0 && particle.id() < 9);
+    return (particle.idAbs() > 0 && particle.idAbs() < 9);
 }
 
 bool isGluon(Pythia8::Particle particle)

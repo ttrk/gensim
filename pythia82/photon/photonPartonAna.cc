@@ -25,6 +25,7 @@
 #include <vector>
 
 int main(int argc, char* argv[]) {
+    std::cout << "running photonPartonAna()" << std::endl;
 
     std::string inputFileName = "promptPhoton.root";
     if (argc > 0) {
@@ -115,10 +116,9 @@ int main(int argc, char* argv[]) {
         int ip1 = 5;
         int ip2 = 6;
         int iGamma = -1;
-        iGamma = (isGamma((*event)[ip1])) ? ip1 : ip2;
-        if ((isGamma((*event)[ip1])) && ((*event)[ip2].isParton()))
+        if ((isGamma((*event)[ip1])) && (isParton((*event)[ip2])))
             iGamma = ip1;
-        else if ((isGamma((*event)[ip2])) && ((*event)[ip1].isParton()))
+        else if ((isGamma((*event)[ip2])) && (isParton((*event)[ip1])))
             iGamma = ip2;
         if (iGamma == -1) continue;
 
@@ -142,17 +142,13 @@ int main(int argc, char* argv[]) {
         h2_qscale_deta_pho_parton[kInclusive]->Fill(deta_pho_parton, event->scale());
         h_pt_pho_ratio_parton[kInclusive]->Fill(pt_pho);
 
-        int iQG = -1;
-        if (isQuark((*event)[iParton]))  iQG = kQuark;
-        else if (isGluon((*event)[iParton]))  iQG = kGluon;
+        int iQG = (isQuark((*event)[iParton])) ? kQuark : kGluon;
 
-        if (iQG > -1) {
-            h_pt_parton[iQG]->Fill(pt_parton);
-            h_eta_parton[iQG]->Fill(TMath::Abs(eta_parton));
-            h_deta_pho_parton[iQG]->Fill(deta_pho_parton);
-            h2_qscale_deta_pho_parton[iQG]->Fill(deta_pho_parton, event->scale());
-            h_pt_pho_ratio_parton[iQG]->Fill(pt_pho);
-        }
+        h_pt_parton[iQG]->Fill(pt_parton);
+        h_eta_parton[iQG]->Fill(TMath::Abs(eta_parton));
+        h_deta_pho_parton[iQG]->Fill(deta_pho_parton);
+        h2_qscale_deta_pho_parton[iQG]->Fill(deta_pho_parton, event->scale());
+        h_pt_pho_ratio_parton[iQG]->Fill(pt_pho);
     }
     std::cout << "Loop ENDED" << std::endl;
     std::cout << "Closing the input file" << std::endl;
@@ -178,6 +174,8 @@ int main(int argc, char* argv[]) {
     outputFile->Write("", TObject::kOverwrite);
     std::cout << "Closing the output file" << std::endl;
     outputFile->Close();
+
+    std::cout << "running photonPartonAna() - END" << std::endl;
 
     return 0;
 }

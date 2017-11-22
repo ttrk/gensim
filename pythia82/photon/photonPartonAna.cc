@@ -59,26 +59,49 @@ int main(int argc, char* argv[]) {
     double axis_eta_max = 5;
     TH1D* h_pt_pho = new TH1D("h_pt_pho",";p_{T}^{#gamma};", nBinsX_pt, axis_pt_min, axis_pt_max);
     TH1D* h_eta_pho = new TH1D("h_eta_pho",";|#eta^{#gamma}|;", nBinsX_eta, axis_eta_min, axis_eta_max);
-    TH1D* h_pt_pho_ratio_q = new TH1D("h_pt_pho_ratio_q",";p_{T}^{#gamma};", nBinsX_pt, axis_pt_min, axis_pt_max);
-    TH1D* h_pt_pho_ratio_g = new TH1D("h_pt_pho_ratio_g",";p_{T}^{#gamma};", nBinsX_pt, axis_pt_min, axis_pt_max);
-
-    // parton histograms
-    TH1D* h_pt_parton = new TH1D("h_pt_parton",";p_{T}^{q/g};", nBinsX_pt, axis_pt_min, axis_pt_max);
-    TH1D* h_eta_parton = new TH1D("h_eta_parton",";|#eta^{q/g}|;", nBinsX_eta, axis_eta_min, axis_eta_max);
-    TH1D* h_pt_q = new TH1D("h_pt_q",";p_{T}^{q};", nBinsX_pt, axis_pt_min, axis_pt_max);
-    TH1D* h_eta_q = new TH1D("h_eta_q",";|#eta^{q}|;", nBinsX_eta, axis_eta_min, axis_eta_max);
-    TH1D* h_pt_g = new TH1D("h_pt_g",";p_{T}^{g};", nBinsX_pt, axis_pt_min, axis_pt_max);
-    TH1D* h_eta_g = new TH1D("h_eta_g",";|#eta^{g}|;", nBinsX_eta, axis_eta_min, axis_eta_max);
-
-    // photon-parton histograms
-    TH1D* h_deta_pho_parton = new TH1D("h_deta_pho_parton",";#Delta#eta_{#gamma q/g} = |#eta^{#gamma} - #eta^{q/g}|;", nBinsX_eta, 0, 1.5*axis_eta_max);
-    TH1D* h_deta_pho_q = new TH1D("h_deta_pho_q",";#Delta#eta_{#gamma q} = |#eta^{#gamma} - #eta^{q}|;", nBinsX_eta, 0, 1.5*axis_eta_max);
-    TH1D* h_deta_pho_g = new TH1D("h_deta_pho_g",";#Delta#eta_{#gamma g} = |#eta^{#gamma} - #eta^{g}|;", nBinsX_eta, 0, 1.5*axis_eta_max);
 
     // event info
     TH2D* h2_qscale_pt_pho = new TH2D("h2_qscale_pt_pho", ";p_{T}^{#gamma};Q", nBinsX_pt, axis_pt_min, axis_pt_max, nBinsX_pt, axis_pt_min, axis_pt_max);
     TH2D* h2_qscale_eta_pho = new TH2D("h2_qscale_eta_pho", ";|#eta^{#gamma}|;Q", nBinsX_eta, axis_eta_min, axis_eta_max, nBinsX_pt, axis_pt_min, axis_pt_max);
-    TH2D* h2_qscale_deta_pho_parton = new TH2D("h2_qscale_deta_pho_parton", ";#Delta#eta_{#gamma q/g} = |#eta^{#gamma} - #eta^{q/g}|;Q", nBinsX_eta, axis_eta_min, axis_eta_max, nBinsX_pt, axis_pt_min, axis_pt_max);
+
+    enum PARTONTYPES {
+        kInclusive,
+        kQuark,
+        kGluon,
+        kN_PARTONTYPES
+    };
+    std::string partonTypesStr[kN_PARTONTYPES] = {"parton", "q", "g"};
+    std::string partonTypesLabel[kN_PARTONTYPES] = {"q/g", "q", "g"};
+
+    // parton histograms
+    TH1D* h_pt_parton[kN_PARTONTYPES];
+    TH1D* h_eta_parton[kN_PARTONTYPES];
+    // photon-parton histograms
+    TH1D* h_deta_pho_parton[kN_PARTONTYPES];
+    TH2D* h2_qscale_deta_pho_parton[kN_PARTONTYPES];
+    // photon histograms split for parton types
+    TH1D* h_pt_pho_ratio_parton[kN_PARTONTYPES];
+    for (int i = 0; i < kN_PARTONTYPES; ++i) {
+        h_pt_parton[i] = new TH1D(Form("h_pt_%s", partonTypesStr[i].c_str()),
+                Form(";p_{T}^{%s};", partonTypesLabel[i].c_str()),
+                nBinsX_pt, axis_pt_min, axis_pt_max);
+
+        h_eta_parton[i] = new TH1D(Form("h_eta_%s", partonTypesStr[i].c_str()),
+                Form(";|#eta^{%s}|;", partonTypesLabel[i].c_str()),
+                nBinsX_eta, axis_eta_min, axis_eta_max);
+
+        h_deta_pho_parton[i] = new TH1D(Form("h_deta_pho_%s", partonTypesStr[i].c_str()),
+                Form(";#Delta#eta_{#gamma %s} = |#eta^{#gamma} - #eta^{%s}|;", partonTypesLabel[i].c_str(), partonTypesLabel[i].c_str()),
+                nBinsX_eta, axis_eta_min, 1.5*axis_eta_max);
+
+        h2_qscale_deta_pho_parton[i] = new TH2D(Form("h2_qscale_deta_pho_%s", partonTypesStr[i].c_str()),
+                Form(";#Delta#eta_{#gamma %s} = |#eta^{#gamma} - #eta^{%s}|;Q", partonTypesLabel[i].c_str(), partonTypesLabel[i].c_str()),
+                nBinsX_eta, axis_eta_min, axis_eta_max, nBinsX_pt, axis_pt_min, axis_pt_max);
+
+        h_pt_pho_ratio_parton[i] = new TH1D(Form("h_pt_pho_ratio_%s", partonTypesStr[i].c_str()),
+                ";p_{T}^{#gamma};",
+                nBinsX_pt, axis_pt_min, axis_pt_max);
+    }
 
     int nEvents = T->GetEntries();
     std::cout << "nEvents = " << nEvents << std::endl;
@@ -111,24 +134,24 @@ int main(int argc, char* argv[]) {
 
         double pt_parton = (*event)[iParton].pT();
         double eta_parton = (*event)[iParton].eta();
-
         double deta_pho_parton = TMath::Abs(eta_pho - eta_parton);
-        h2_qscale_deta_pho_parton->Fill(deta_pho_parton, event->scale());
 
-        h_pt_parton->Fill(pt_parton);
-        h_eta_parton->Fill(TMath::Abs(eta_parton));
-        h_deta_pho_parton->Fill(deta_pho_parton);
-        if (isQuark((*event)[iParton])) {
-            h_pt_q->Fill(pt_parton);
-            h_eta_q->Fill(TMath::Abs(eta_parton));
-            h_pt_pho_ratio_q->Fill(pt_pho);
-            h_deta_pho_q->Fill(deta_pho_parton);
-        }
-        else if (isGluon((*event)[iParton])) {
-            h_pt_g->Fill(pt_parton);
-            h_eta_g->Fill(TMath::Abs(eta_parton));
-            h_pt_pho_ratio_g->Fill(pt_pho);
-            h_deta_pho_g->Fill(deta_pho_parton);
+        h_pt_parton[kInclusive]->Fill(pt_parton);
+        h_eta_parton[kInclusive]->Fill(TMath::Abs(eta_parton));
+        h_deta_pho_parton[kInclusive]->Fill(deta_pho_parton);
+        h2_qscale_deta_pho_parton[kInclusive]->Fill(deta_pho_parton, event->scale());
+        h_pt_pho_ratio_parton[kInclusive]->Fill(pt_pho);
+
+        int iQG = -1;
+        if (isQuark((*event)[iParton]))  iQG = kQuark;
+        else if (isGluon((*event)[iParton]))  iQG = kGluon;
+
+        if (iQG > -1) {
+            h_pt_parton[iQG]->Fill(pt_parton);
+            h_eta_parton[iQG]->Fill(TMath::Abs(eta_parton));
+            h_deta_pho_parton[iQG]->Fill(deta_pho_parton);
+            h2_qscale_deta_pho_parton[iQG]->Fill(deta_pho_parton, event->scale());
+            h_pt_pho_ratio_parton[iQG]->Fill(pt_pho);
         }
     }
     std::cout << "Loop ENDED" << std::endl;
@@ -138,22 +161,19 @@ int main(int argc, char* argv[]) {
     // Save histogram on file and close file.
     std::cout << "saving histograms" << std::endl;
 
-    h_pt_pho_ratio_q->Divide(h_pt_pho);
-    h_pt_pho_ratio_g->Divide(h_pt_pho);
-
     h_pt_pho->Scale(1./h_pt_pho->Integral(), "width");
     h_eta_pho->Scale(1./h_eta_pho->Integral(), "width");
 
-    h_pt_parton->Scale(1./h_pt_parton->Integral(), "width");
-    h_eta_parton->Scale(1./h_eta_parton->Integral(), "width");
-    h_pt_q->Scale(1./h_pt_q->Integral(), "width");
-    h_eta_q->Scale(1./h_eta_q->Integral(), "width");
-    h_pt_g->Scale(1./h_pt_g->Integral(), "width");
-    h_eta_g->Scale(1./h_eta_g->Integral(), "width");
+    for (int i = 0; i < kN_PARTONTYPES; ++i) {
 
-    h_deta_pho_parton->Scale(1./h_deta_pho_parton->Integral(), "width");
-    h_deta_pho_q->Scale(1./h_deta_pho_q->Integral(), "width");
-    h_deta_pho_g->Scale(1./h_deta_pho_g->Integral(), "width");
+        h_pt_parton[i]->Scale(1./h_pt_parton[i]->Integral(), "width");
+        h_eta_parton[i]->Scale(1./h_eta_parton[i]->Integral(), "width");
+        h_deta_pho_parton[i]->Scale(1./h_deta_pho_parton[i]->Integral(), "width");
+
+        if (i != kInclusive) {
+            h_pt_pho_ratio_parton[i]->Divide(h_pt_pho_ratio_parton[kInclusive]);
+        }
+    }
 
     outputFile->Write("", TObject::kOverwrite);
     std::cout << "Closing the output file" << std::endl;

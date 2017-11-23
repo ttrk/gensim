@@ -10,6 +10,7 @@
 #include "TTree.h"
 #include "TFile.h"
 #include "TSystem.h"
+#include "TMath.h"
 #include "TH1.h"
 #include "TH1D.h"
 #include "TH2D.h"
@@ -58,6 +59,7 @@ int main(int argc, char* argv[]) {
     int nBinsX_eta = 20;
     double axis_eta_min = 0;
     double axis_eta_max = 5;
+    int nBinsX_phi = 20;
     TH1D* h_pt_pho = new TH1D("h_pt_pho",";p_{T}^{#gamma};", nBinsX_pt, axis_pt_min, axis_pt_max);
     TH1D* h_eta_pho = new TH1D("h_eta_pho",";|#eta^{#gamma}|;", nBinsX_eta, axis_eta_min, axis_eta_max);
 
@@ -79,6 +81,8 @@ int main(int argc, char* argv[]) {
     TH1D* h_eta_parton[kN_PARTONTYPES];
     // photon-parton histograms
     TH1D* h_deta_pho_parton[kN_PARTONTYPES];
+    TH2D* h2_eta_pho_eta_parton[kN_PARTONTYPES];
+    TH2D* h2_phi_pho_phi_parton[kN_PARTONTYPES];
     TH2D* h2_qscale_deta_pho_parton[kN_PARTONTYPES];
     // photon histograms split for parton types
     TH1D* h_pt_pho_ratio_parton[kN_PARTONTYPES];
@@ -94,6 +98,14 @@ int main(int argc, char* argv[]) {
         h_deta_pho_parton[i] = new TH1D(Form("h_deta_pho_%s", partonTypesStr[i].c_str()),
                 Form(";#Delta#eta_{#gamma %s} = |#eta^{#gamma} - #eta^{%s}|;", partonTypesLabel[i].c_str(), partonTypesLabel[i].c_str()),
                 nBinsX_eta, axis_eta_min, 1.5*axis_eta_max);
+
+        h2_eta_pho_eta_parton[i] = new TH2D(Form("h2_eta_pho_eta_%s", partonTypesStr[i].c_str()),
+                Form(";#eta^{#gamma};#eta^{%s}", partonTypesLabel[i].c_str()),
+                nBinsX_eta, -1*axis_eta_max, axis_eta_max, nBinsX_eta, -1*axis_eta_max, axis_eta_max);
+
+        h2_phi_pho_phi_parton[i] = new TH2D(Form("h2_phi_pho_phi_%s", partonTypesStr[i].c_str()),
+                Form(";#phi^{#gamma};#phi^{%s}", partonTypesLabel[i].c_str()),
+                nBinsX_phi, -TMath::Pi(), TMath::Pi(), nBinsX_phi, -TMath::Pi(), TMath::Pi());
 
         h2_qscale_deta_pho_parton[i] = new TH2D(Form("h2_qscale_deta_pho_%s", partonTypesStr[i].c_str()),
                 Form(";#Delta#eta_{#gamma %s} = |#eta^{#gamma} - #eta^{%s}|;Q", partonTypesLabel[i].c_str(), partonTypesLabel[i].c_str()),
@@ -126,6 +138,7 @@ int main(int argc, char* argv[]) {
 
         double pt_pho = (*event)[iGamma].pT();
         double eta_pho = (*event)[iGamma].eta();
+        double phi_pho = (*event)[iGamma].phi();
 
         h_pt_pho->Fill(pt_pho);
         h_eta_pho->Fill(TMath::Abs(eta_pho));
@@ -134,11 +147,14 @@ int main(int argc, char* argv[]) {
 
         double pt_parton = (*event)[iParton].pT();
         double eta_parton = (*event)[iParton].eta();
+        double phi_parton = (*event)[iParton].phi();
         double deta_pho_parton = TMath::Abs(eta_pho - eta_parton);
 
         h_pt_parton[kInclusive]->Fill(pt_parton);
         h_eta_parton[kInclusive]->Fill(TMath::Abs(eta_parton));
         h_deta_pho_parton[kInclusive]->Fill(deta_pho_parton);
+        h2_eta_pho_eta_parton[kInclusive]->Fill(eta_pho, eta_parton);
+        h2_phi_pho_phi_parton[kInclusive]->Fill(phi_pho, phi_parton);
         h2_qscale_deta_pho_parton[kInclusive]->Fill(deta_pho_parton, event->scale());
         h_pt_pho_ratio_parton[kInclusive]->Fill(pt_pho);
 
@@ -147,6 +163,8 @@ int main(int argc, char* argv[]) {
         h_pt_parton[iQG]->Fill(pt_parton);
         h_eta_parton[iQG]->Fill(TMath::Abs(eta_parton));
         h_deta_pho_parton[iQG]->Fill(deta_pho_parton);
+        h2_eta_pho_eta_parton[iQG]->Fill(eta_pho, eta_parton);
+        h2_phi_pho_phi_parton[iQG]->Fill(phi_pho, phi_parton);
         h2_qscale_deta_pho_parton[iQG]->Fill(deta_pho_parton, event->scale());
         h_pt_pho_ratio_parton[iQG]->Fill(pt_pho);
     }

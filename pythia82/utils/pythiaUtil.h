@@ -13,15 +13,11 @@
 #ifndef PYTHIAUTIL_H_
 #define PYTHIAUTIL_H_
 
-bool isGamma(Pythia8::Particle particle);
 bool isParton(Pythia8::Particle particle);
 bool isQuark(Pythia8::Particle particle);
 bool isGluon(Pythia8::Particle particle);
-
-bool isGamma(Pythia8::Particle particle)
-{
-    return (particle.id() == 22);
-}
+bool isGamma(Pythia8::Particle particle);
+bool isNeutrino(Pythia8::Particle particle);
 
 bool isParton(Pythia8::Particle particle)
 {
@@ -36,6 +32,16 @@ bool isQuark(Pythia8::Particle particle)
 bool isGluon(Pythia8::Particle particle)
 {
     return (particle.id() == 21);
+}
+
+bool isGamma(Pythia8::Particle particle)
+{
+    return (particle.id() == 22);
+}
+
+bool isNeutrino(Pythia8::Particle particle)
+{
+    return (particle.idAbs() == 12 || particle.idAbs() == 14 || particle.idAbs() == 16);
 }
 
 #endif /* PYTHIAUTIL_H_ */

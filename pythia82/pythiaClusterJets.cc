@@ -12,6 +12,7 @@
 
 // dictionary to read Pythia8::Event
 #include "dictionary/dict4RootDct.cc"
+#include "utils/pythiaUtil.h"
 #include "../fastjet3/fastJetTree.h"
 
 #include "fastjet/ClusterSequence.hh"
@@ -28,6 +29,8 @@ void pythiaClusterJets(std::string inputFileName = "pythiaEvents.root", std::str
 
 void pythiaClusterJets(std::string inputFileName, std::string outputFileName, int dR, int minJetPt)
 {
+    std::cout << "running pythiaClusterJets()" << std::endl;
+
     double jetRadius = (double)dR / 10;
 
     std::cout << "##### Parameters #####" << std::endl;
@@ -44,12 +47,12 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
     T->SetBranchAddress("event", &event);
 
     // Create file on which histogram(s) can be saved.
-    TFile* outputFile = new TFile(outputFileName.c_str(), "RECREATE");
+    TFile* outputFile = new TFile(outputFileName.c_str(), "UPDATE");
 
     fastjet::JetDefinition* fjJetDefn = 0;
     fjJetDefn = new fastjet::JetDefinition(fastjet::antikt_algorithm, jetRadius);
 
-    TTree* jetTreeOut = new TTree("jetTree", Form("jets with radius = %.1f", jetRadius));
+    TTree* jetTreeOut = new TTree(Form("ak%djets", dR), Form("jets with R = %.1f", jetRadius));
     fastJetTree fjt;
     fjt.branchTree(jetTreeOut);
 
@@ -61,12 +64,10 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
 
     int nEvents = T->GetEntries();
     std::cout << "nEvents = " << nEvents << std::endl;
-
-    // Begin event loop.
+    std::cout << "Loop STARTED" << std::endl;
     for (int iEvent = 0; iEvent < nEvents; ++iEvent) {
 
         fjt.clearEvent();
-        std::cout << "iEvent = " << iEvent << std::endl;
         T->GetEntry(iEvent);
 
         // Reset Fastjet input
@@ -76,11 +77,10 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
         for (int i = 0; i < eventSize; ++i) {
 
             // Final state only
-            if (!(*event)[i].isFinal())        continue;
+            if (!(*event)[i].isFinal())      continue;
 
             // No neutrinos
-            if ((*event)[i].idAbs() == 12 || (*event)[i].idAbs() == 14 ||
-                (*event)[i].idAbs() == 16)     continue;
+            if (isNeutrino((*event)[i]))     continue;
 
             // Only |eta| < 3.6
             if (std::fabs((*event)[i].eta()) > 3.6) continue;
@@ -104,26 +104,17 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
         sortedJets    = sorted_by_pt(inclusiveJets);
 
         int nSortedJets = sortedJets.size();
-        std::cout << "nSortedJets = " << nSortedJets << std::endl;
-
         for (int i = 0; i < nSortedJets; ++i) {
-
-            std::cout << "iJet = " << i << std::endl;
-            std::cout << "jet pt = " << sortedJets[i].pt() << std::endl;
-            std::cout << "jet eta = " << sortedJets[i].eta() << std::endl;
-            std::cout << "jet phi = " << sortedJets[i].phi_std() << std::endl;
-            //std::cout << "jet area = " << sortedJets[i].area() << std::endl;
 
             fjt.jetpt->push_back(sortedJets[i].pt());
             fjt.jeteta->push_back(sortedJets[i].eta());
             fjt.jetphi->push_back(sortedJets[i].phi_std());
             fjt.nJet++;
-
         }
 
         jetTreeOut->Fill();
     }
-
+    std::cout << "Loop ENDED" << std::endl;
     std::cout<<"Closing the input file"<<std::endl;
     inputFile->Close();
 
@@ -131,7 +122,7 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
     std::cout<<"Closing the output file"<<std::endl;
     outputFile->Close();
 
-    inputFile->Close();
+    std::cout << "running pythiaClusterJets() - END" << std::endl;
 }
 
 int main(int argc, char* argv[]) {

@@ -60,6 +60,9 @@ int main(int argc, char* argv[]) {
     double axis_eta_min = 0;
     double axis_eta_max = 5;
     int nBinsX_phi = 20;
+    int nBinsX_phoqgX = 20;
+    double axis_phoqgX_min = 0;
+    double axis_phoqgX_max = 2;
     TH1D* h_phoPt = new TH1D("h_phoPt",";p_{T}^{#gamma};", nBinsX_pt, axis_pt_min, axis_pt_max);
     TH1D* h_phoEta = new TH1D("h_phoEta",";|#eta^{#gamma}|;", nBinsX_eta, axis_eta_min, axis_eta_max);
 
@@ -81,6 +84,8 @@ int main(int argc, char* argv[]) {
     TH1D* h_qgEta[kN_PARTONTYPES];
     // photon-parton histograms
     TH1D* h_phoqgDeta[kN_PARTONTYPES];
+    TH1D* h_phoqgDphi[kN_PARTONTYPES];
+    TH1D* h_phoqgX[kN_PARTONTYPES];
     TH2D* h2_phoEta_qgEta[kN_PARTONTYPES];
     TH2D* h2_phoPhi_qgPhi[kN_PARTONTYPES];
     TH2D* h2_qscale_phoqgDeta[kN_PARTONTYPES];
@@ -98,6 +103,14 @@ int main(int argc, char* argv[]) {
         h_phoqgDeta[i] = new TH1D(Form("h_pho%sDeta", partonTypesStr[i].c_str()),
                 Form(";#Delta#eta_{#gamma %s} = |#eta^{#gamma} - #eta^{%s}|;", partonTypesLabel[i].c_str(), partonTypesLabel[i].c_str()),
                 nBinsX_eta, axis_eta_min, 1.5*axis_eta_max);
+
+        h_phoqgDphi[i] = new TH1D(Form("h_pho%sDphi", partonTypesStr[i].c_str()),
+                Form(";#Delta#phi_{#gamma %s} = |#phi^{#gamma} - #phi^{%s}|;", partonTypesLabel[i].c_str(), partonTypesLabel[i].c_str()),
+                nBinsX_phi, 0, TMath::Pi()+1e-12);
+
+        h_phoqgX[i] = new TH1D(Form("h_pho%sX", partonTypesStr[i].c_str()),
+                Form(";X_{#gamma %s} = p_{T}^{%s}/p_{T}^{#gamma};", partonTypesLabel[i].c_str(), partonTypesLabel[i].c_str()),
+                nBinsX_phoqgX, axis_phoqgX_min, axis_phoqgX_max);
 
         h2_phoEta_qgEta[i] = new TH2D(Form("h2_phoEta_%sEta", partonTypesStr[i].c_str()),
                 Form(";#eta^{#gamma};#eta^{%s}", partonTypesLabel[i].c_str()),
@@ -148,11 +161,16 @@ int main(int argc, char* argv[]) {
         double qgPt = (*event)[iParton].pT();
         double qgEta = (*event)[iParton].eta();
         double qgPhi = (*event)[iParton].phi();
+
         double phoqgDeta = TMath::Abs(phoEta - qgEta);
+        double phoqgDphi = std::acos(cos(phoPhi - qgPhi));
+        double phoqgX = qgPt / phoPt;
 
         h_qgPt[kInclusive]->Fill(qgPt);
         h_qgEta[kInclusive]->Fill(TMath::Abs(qgEta));
         h_phoqgDeta[kInclusive]->Fill(phoqgDeta);
+        h_phoqgDphi[kInclusive]->Fill(phoqgDphi);
+        h_phoqgX[kInclusive]->Fill(phoqgX);
         h2_phoEta_qgEta[kInclusive]->Fill(phoEta, qgEta);
         h2_phoPhi_qgPhi[kInclusive]->Fill(phoPhi, qgPhi);
         h2_qscale_phoqgDeta[kInclusive]->Fill(phoqgDeta, event->scale());
@@ -163,6 +181,8 @@ int main(int argc, char* argv[]) {
         h_qgPt[iQG]->Fill(qgPt);
         h_qgEta[iQG]->Fill(TMath::Abs(qgEta));
         h_phoqgDeta[iQG]->Fill(phoqgDeta);
+        h_phoqgDphi[iQG]->Fill(phoqgDphi);
+        h_phoqgX[iQG]->Fill(phoqgX);
         h2_phoEta_qgEta[iQG]->Fill(phoEta, qgEta);
         h2_phoPhi_qgPhi[iQG]->Fill(phoPhi, qgPhi);
         h2_qscale_phoqgDeta[iQG]->Fill(phoqgDeta, event->scale());

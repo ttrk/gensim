@@ -65,6 +65,8 @@ int main(int argc, char* argv[]) {
     double axis_phoqgX_max = 2;
     TH1D* h_phoPt = new TH1D("h_phoPt",";p_{T}^{#gamma};", nBinsX_pt, axis_pt_min, axis_pt_max);
     TH1D* h_phoEta = new TH1D("h_phoEta",";|#eta^{#gamma}|;", nBinsX_eta, axis_eta_min, axis_eta_max);
+    TH2D* h2_phoEta_phoPt = new TH2D("h2_phoEta_phoPt",";|#eta^{#gamma}|;p_{T}^{#gamma}",
+            nBinsX_eta, axis_eta_min, axis_eta_max, nBinsX_pt, axis_pt_min, axis_pt_max);
 
     // event info
     TH2D* h2_qscale_phoPt = new TH2D("h2_qscale_phoPt", ";p_{T}^{#gamma};Q", nBinsX_pt, axis_pt_min, axis_pt_max, nBinsX_pt, axis_pt_min, axis_pt_max);
@@ -82,6 +84,7 @@ int main(int argc, char* argv[]) {
     // parton histograms
     TH1D* h_qgPt[kN_PARTONTYPES];
     TH1D* h_qgEta[kN_PARTONTYPES];
+    TH2D* h2_qgEta_qgPt[kN_PARTONTYPES];
     // photon-parton histograms
     TH1D* h_phoqgDeta[kN_PARTONTYPES];
     TH1D* h_phoqgDphi[kN_PARTONTYPES];
@@ -99,6 +102,10 @@ int main(int argc, char* argv[]) {
         h_qgEta[i] = new TH1D(Form("h_%sEta", partonTypesStr[i].c_str()),
                 Form(";|#eta^{%s}|;", partonTypesLabel[i].c_str()),
                 nBinsX_eta, axis_eta_min, axis_eta_max);
+
+        h2_qgEta_qgPt[i] = new TH2D(Form("h2_%sEta_%sPt", partonTypesStr[i].c_str(), partonTypesStr[i].c_str()),
+                Form(";|#eta^{%s}|;p_{T}^{%s}", partonTypesLabel[i].c_str(), partonTypesLabel[i].c_str()),
+                nBinsX_eta, axis_eta_min, axis_eta_max, nBinsX_pt, axis_pt_min, axis_pt_max);
 
         h_phoqgDeta[i] = new TH1D(Form("h_pho%sDeta", partonTypesStr[i].c_str()),
                 Form(";#Delta#eta_{#gamma %s} = |#eta^{#gamma} - #eta^{%s}|;", partonTypesLabel[i].c_str(), partonTypesLabel[i].c_str()),
@@ -155,6 +162,7 @@ int main(int argc, char* argv[]) {
 
         h_phoPt->Fill(phoPt);
         h_phoEta->Fill(TMath::Abs(phoEta));
+        h2_phoEta_phoPt->Fill(TMath::Abs(phoEta), phoPt);
         h2_qscale_phoPt->Fill(phoPt, event->scale());
         h2_qscale_phoEta->Fill(TMath::Abs(phoEta), event->scale());
 
@@ -168,6 +176,7 @@ int main(int argc, char* argv[]) {
 
         h_qgPt[kInclusive]->Fill(qgPt);
         h_qgEta[kInclusive]->Fill(TMath::Abs(qgEta));
+        h2_qgEta_qgPt[kInclusive]->Fill(TMath::Abs(qgEta), qgPt);
         h_phoqgDeta[kInclusive]->Fill(phoqgDeta);
         h_phoqgDphi[kInclusive]->Fill(phoqgDphi);
         h_phoqgX[kInclusive]->Fill(phoqgX);
@@ -180,6 +189,7 @@ int main(int argc, char* argv[]) {
 
         h_qgPt[iQG]->Fill(qgPt);
         h_qgEta[iQG]->Fill(TMath::Abs(qgEta));
+        h2_qgEta_qgPt[iQG]->Fill(TMath::Abs(qgEta), qgPt);
         h_phoqgDeta[iQG]->Fill(phoqgDeta);
         h_phoqgDphi[iQG]->Fill(phoqgDphi);
         h_phoqgX[iQG]->Fill(phoqgX);
@@ -203,6 +213,8 @@ int main(int argc, char* argv[]) {
         h_qgPt[i]->Scale(1./h_qgPt[i]->Integral(), "width");
         h_qgEta[i]->Scale(1./h_qgEta[i]->Integral(), "width");
         h_phoqgDeta[i]->Scale(1./h_phoqgDeta[i]->Integral(), "width");
+        h_phoqgDphi[i]->Scale(1./h_phoqgDphi[i]->Integral(), "width");
+        h_phoqgX[i]->Scale(1./h_phoqgX[i]->Integral(), "width");
 
         if (i != kInclusive) {
             h_phoPt_qgRatio[i]->Divide(h_phoPt_qgRatio[kInclusive]);

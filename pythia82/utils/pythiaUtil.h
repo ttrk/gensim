@@ -4,6 +4,7 @@
 
 #include "Pythia8/Pythia.h"
 #include "Pythia8/Event.h"
+#include "Pythia8/ParticleData.h"
 #include "Pythia8/Basics.h"
 
 #include <string>
@@ -18,6 +19,7 @@ bool isQuark(Pythia8::Particle particle);
 bool isGluon(Pythia8::Particle particle);
 bool isGamma(Pythia8::Particle particle);
 bool isNeutrino(Pythia8::Particle particle);
+bool isCharged(Pythia8::Particle particle, Pythia8::ParticleData& particleData);
 void fillPartonLevelEvent(Pythia8::Event& event, Pythia8::Event& partonLevelEvent);
 void fillFinalEvent(Pythia8::Event& event, Pythia8::Event& finalEvent);
 
@@ -44,6 +46,11 @@ bool isGamma(Pythia8::Particle particle)
 bool isNeutrino(Pythia8::Particle particle)
 {
     return (particle.idAbs() == 12 || particle.idAbs() == 14 || particle.idAbs() == 16);
+}
+
+bool isCharged(Pythia8::Particle particle, Pythia8::ParticleData& particleData)
+{
+    return (particleData.charge(particle.id()) != 0);
 }
 
 /*

@@ -18,6 +18,7 @@ bool isQuark(Pythia8::Particle particle);
 bool isGluon(Pythia8::Particle particle);
 bool isGamma(Pythia8::Particle particle);
 bool isNeutrino(Pythia8::Particle particle);
+void fillPartonLevelEvent(Pythia8::Event& event, Pythia8::Event& partonLevelEvent);
 
 bool isParton(Pythia8::Particle particle)
 {
@@ -42,6 +43,28 @@ bool isGamma(Pythia8::Particle particle)
 bool isNeutrino(Pythia8::Particle particle)
 {
     return (particle.idAbs() == 12 || particle.idAbs() == 14 || particle.idAbs() == 16);
+}
+
+/*
+ * derived from main73.cc example
+ * generic function to extract the particles that existed right before the hadronization machinery was invoked
+ */
+void fillPartonLevelEvent(Pythia8::Event& event, Pythia8::Event& partonLevelEvent)
+{
+    // Copy over all particles that existed right before hadronization.
+    partonLevelEvent.reset();
+    int nEventSize = event.size();
+    for (int i = 0; i < nEventSize; ++i)
+
+        if (event[i].isFinalPartonLevel()) {
+            int iNew = partonLevelEvent.append(event[i]);
+
+            // Set copied properties more appropriately :
+            // positive status, original location as "mother", and with no daughters.
+            partonLevelEvent[iNew].statusPos();
+            partonLevelEvent[iNew].mothers(i, i);
+            partonLevelEvent[iNew].daughters(0, 0);
+        }
 }
 
 #endif /* PYTHIAUTIL_H_ */

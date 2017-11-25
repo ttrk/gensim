@@ -12,6 +12,7 @@
 #include "dictionary/dict4RootDct.cc"
 // dictionary is needed to avoid the following error :
 // Error in <TTree::Branch>: The pointer specified for event is not of a class known to ROOT
+#include "utils/pythiaUtil.h"
 
 using namespace Pythia8;
 
@@ -49,12 +50,18 @@ int main(int argc, char* argv[]) {
 
     // Set up the ROOT TFile and TTree.
     TFile *outFile = TFile::Open(outFileName.c_str(), "RECREATE");
-    Event *event = &pythia.event;
-    TTree *T = new TTree("T","ev1 Tree");
-    T->Branch("event",&event);
+    Pythia8::Event *event = &pythia.event;
+    TTree *treeEvt = new TTree("evt","event tree");
+    treeEvt->Branch("event",&event);
 
-    // Begin event loop.
+    // Parton Level event records.
+    Pythia8::Event eventPartonLevel;
+    eventPartonLevel.init("Parton Level event record", &pythia.particleData);
+    TTree *treeEvtParton = new TTree("evtParton","parton level event tree");
+    treeEvtParton->Branch("event", &eventPartonLevel);
+
     int iAbort = 0;
+    std::cout << "Loop START" << std::endl;
     for (int iEvent = 0; iEvent < nEvent; ++iEvent) {
         // Generate events. Quit if many failures.
         if (!pythia.next()) {
@@ -63,26 +70,27 @@ int main(int argc, char* argv[]) {
             break;
         }
 
+        fillPartonLevelEvent(*event, eventPartonLevel);
+
         // Fill the pythia event into the TTree.
         // Warning: the files will rapidly become large if all events
         // are saved. In some cases it may be convenient to do some
         // processing of events and only save those that appear
         // interesting for future analyses.
-        T->Fill();
-
-        // End event loop.
+        treeEvt->Fill();
+        treeEvtParton->Fill();
     }
+    std::cout << "Loop END" << std::endl;
 
     // Statistics on event generation.
     pythia.stat();
 
-    //  Write tree.
-    T->Print();
-    T->Write("", TObject::kOverwrite);
+    treeEvt->Print();
+    treeEvt->Write("", TObject::kOverwrite);
+    treeEvtParton->Write("", TObject::kOverwrite);
 
     std::cout<<"Closing the output file"<<std::endl;
     outFile->Close();
 
-    // Done.
     return 0;
 }

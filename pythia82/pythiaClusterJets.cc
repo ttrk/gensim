@@ -28,7 +28,8 @@ using namespace Pythia8;
 enum CONSTITUENTS {
     kFinal,         // final state particles (after hadronization)
     kFinalCh,       // charged final state particles
-    kParton,
+    kParton,        // final partons (before hadronization)
+    kPartonHard,    // final partons originating from one of the hard scatterers
     kN_CONSTITUENTS
 };
 
@@ -51,14 +52,21 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
 
     // Set up the ROOT TFile and TTree.
     TFile* inputFile = TFile::Open(inputFileName.c_str(),"READ");
-    Pythia8::Event *event = 0;
+    Pythia8::Event* eventAll = 0;
 
     std::string evtTreePath = "evt";
-    if (constituentType == CONSTITUENTS::kParton) {
-        evtTreePath = "evtParton";
-    }
     TTree* treeEvt = (TTree*)inputFile->Get(evtTreePath.c_str());
-    treeEvt->SetBranchAddress("event", &event);
+    treeEvt->SetBranchAddress("event", &eventAll);
+
+    Pythia8::Event* eventParton = 0;
+    std::string evtPartonTreePath = "evtParton";
+    TTree* treeEvtParton = (TTree*)inputFile->Get(evtPartonTreePath.c_str());
+    treeEvtParton->SetBranchAddress("event", &eventParton);
+
+    Pythia8::Event* event = eventAll;
+    if (constituentType == CONSTITUENTS::kParton || constituentType == CONSTITUENTS::kPartonHard) {
+        event = eventParton;
+    }
 
     std::cout << "initialize the Pythia class to obtain info that is not accessible through event TTree." << std::endl;
     std::cout << "##### Pythia initialize #####" << std::endl;
@@ -80,6 +88,10 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
         jetTreeName = Form("ak%djetsParton", dR);
         jetTreeTitle = Form("partonic jets with R = %.1f", jetRadius);
     }
+    else if (constituentType == CONSTITUENTS::kPartonHard) {
+        jetTreeName = Form("ak%djetsPartonHard", dR);
+        jetTreeTitle = Form("partonic jets from hard scattering with R = %.1f", jetRadius);
+    }
     std::cout << "jetTreeName = " << jetTreeName.c_str() << std::endl;
     std::cout << "jetTreeTitle = " << jetTreeTitle.c_str() << std::endl;
 
@@ -99,6 +111,7 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
 
         fjt.clearEvent();
         treeEvt->GetEntry(iEvent);
+        treeEvtParton->GetEntry(iEvent);
 
         // Reset Fastjet input
         fjParticles.resize(0);
@@ -111,6 +124,10 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
             }
             else if (constituentType == CONSTITUENTS::kFinalCh) {
                 if (!((*event)[i].isFinal() && isCharged((*event)[i], pythia.particleData))) continue;
+            }
+            else if (constituentType == CONSTITUENTS::kPartonHard) {
+                int iOrig = (*event)[i].mother1();
+                if (!(isAncestor(eventAll, iOrig, 5) || isAncestor(eventAll, iOrig, 6))) continue;
             }
 
             // No neutrinos

@@ -12,9 +12,17 @@ inputFiles=(
 "./photon/pythiaGenerateAndWrite_promptPhoton.root"
 "./photon/pythiaGenerateAndWrite_promptPhoton.root"
 "./photon/pythiaGenerateAndWrite_promptPhoton.root"
+"./photon/pythiaGenerateAndWrite_promptPhoton.root"
+"./photon/pythiaGenerateAndWrite_promptPhoton.root"
+"./photon/pythiaGenerateAndWrite_promptPhoton.root"
+"./photon/pythiaGenerateAndWrite_promptPhoton.root"
 );
 
 outputFiles=(
+"./photon/pythiaClusterJets_promptPhoton.root"
+"./photon/pythiaClusterJets_promptPhoton.root"
+"./photon/pythiaClusterJets_promptPhoton.root"
+"./photon/pythiaClusterJets_promptPhoton.root"
 "./photon/pythiaClusterJets_promptPhoton.root"
 "./photon/pythiaClusterJets_promptPhoton.root"
 "./photon/pythiaClusterJets_promptPhoton.root"
@@ -30,15 +38,23 @@ jetRadii=(
 "3"
 "3"
 "3"
+"3"
+"4"
 "4"
 "4"
 "4"
 "5"
 "7"
 "8"
+"8"
+"8"
 );
 
 minJetPts=(
+"5"
+"5"
+"5"
+"5"
 "5"
 "5"
 "5"
@@ -54,12 +70,16 @@ constituentTypes=(
 "0"
 "1"
 "2"
+"3"
 "0"
 "1"
 "2"
+"3"
 "0"
 "0"
 "0"
+"2"
+"3"
 );
 
 arrayIndices=${!outputFiles[*]}

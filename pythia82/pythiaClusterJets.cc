@@ -24,10 +24,18 @@
 
 using namespace Pythia8;
 
-void pythiaClusterJets(std::string inputFileName = "pythiaEvents.root", std::string outputFileName = "pythiaClusterJets_out.root",
-                       int dR = 3, int minJetPt = 5);
+// types of particles to be used in jet clustering
+enum CONSTITUENTS {
+    kFinal,         // final state particles (after hadronization)
+    kFinalCh,       // charged final state particles
+    kParton,
+    kN_CONSTITUENTS
+};
 
-void pythiaClusterJets(std::string inputFileName, std::string outputFileName, int dR, int minJetPt)
+void pythiaClusterJets(std::string inputFileName = "pythiaEvents.root", std::string outputFileName = "pythiaClusterJets_out.root",
+                       int dR = 3, int minJetPt = 5, int constituentType = 0);
+
+void pythiaClusterJets(std::string inputFileName, std::string outputFileName, int dR, int minJetPt, int constituentType)
 {
     std::cout << "running pythiaClusterJets()" << std::endl;
 
@@ -38,37 +46,59 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
     std::cout << "outputFileName = " << outputFileName.c_str() << std::endl;
     std::cout << "jetRadius = " << jetRadius << std::endl;
     std::cout << "minJetPt = " << minJetPt << std::endl;
+    std::cout << "constituentType = " << constituentType << std::endl;
     std::cout << "##### Parameters - END #####" << std::endl;
 
     // Set up the ROOT TFile and TTree.
-    TFile *inputFile = TFile::Open(inputFileName.c_str(),"READ");
+    TFile* inputFile = TFile::Open(inputFileName.c_str(),"READ");
     Pythia8::Event *event = 0;
-    TTree *T = (TTree*)inputFile->Get("T");
-    T->SetBranchAddress("event", &event);
 
-    // Create file on which histogram(s) can be saved.
+    std::string evtTreePath = "evt";
+    if (constituentType == CONSTITUENTS::kParton) {
+        evtTreePath = "evtParton";
+    }
+    TTree* treeEvt = (TTree*)inputFile->Get(evtTreePath.c_str());
+    treeEvt->SetBranchAddress("event", &event);
+
+    std::cout << "initialize the Pythia class to obtain info that is not accessible through event TTree." << std::endl;
+    std::cout << "##### Pythia initialize #####" << std::endl;
+    Pythia pythia;
+    std::cout << "##### Pythia initialize - END #####" << std::endl;
+
     TFile* outputFile = new TFile(outputFileName.c_str(), "UPDATE");
 
     fastjet::JetDefinition* fjJetDefn = 0;
     fjJetDefn = new fastjet::JetDefinition(fastjet::antikt_algorithm, jetRadius);
 
-    TTree* jetTreeOut = new TTree(Form("ak%djets", dR), Form("jets with R = %.1f", jetRadius));
+    std::string jetTreeName = Form("ak%djets", dR);
+    std::string jetTreeTitle = Form("jets with R = %.1f", jetRadius);
+    if (constituentType == CONSTITUENTS::kFinalCh) {
+        jetTreeName = Form("ak%djetsCh", dR);
+        jetTreeTitle = Form("charged particle jets with R = %.1f", jetRadius);
+    }
+    else if (constituentType == CONSTITUENTS::kParton) {
+        jetTreeName = Form("ak%djetsParton", dR);
+        jetTreeTitle = Form("partonic jets with R = %.1f", jetRadius);
+    }
+    std::cout << "jetTreeName = " << jetTreeName.c_str() << std::endl;
+    std::cout << "jetTreeTitle = " << jetTreeTitle.c_str() << std::endl;
+
+    TTree* jetTree = new TTree(jetTreeName.c_str(), jetTreeTitle.c_str());
     fastJetTree fjt;
-    fjt.branchTree(jetTreeOut);
+    fjt.branchTree(jetTree);
 
     // Fastjet input
     std::vector<fastjet::PseudoJet> fjParticles;
 
-    // print out some infos
     std::cout << "Clustering with " << fjJetDefn->description().c_str() << std::endl;
 
-    int nEvents = T->GetEntries();
+    int nEvents = treeEvt->GetEntries();
     std::cout << "nEvents = " << nEvents << std::endl;
     std::cout << "Loop STARTED" << std::endl;
     for (int iEvent = 0; iEvent < nEvents; ++iEvent) {
 
         fjt.clearEvent();
-        T->GetEntry(iEvent);
+        treeEvt->GetEntry(iEvent);
 
         // Reset Fastjet input
         fjParticles.resize(0);
@@ -76,14 +106,18 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
         int eventSize = event->size();
         for (int i = 0; i < eventSize; ++i) {
 
-            // Final state only
-            if (!(*event)[i].isFinal())      continue;
+            if (constituentType == CONSTITUENTS::kFinal) {
+                if (!(*event)[i].isFinal()) continue;
+            }
+            else if (constituentType == CONSTITUENTS::kFinalCh) {
+                if (!((*event)[i].isFinal() && isCharged((*event)[i], pythia.particleData))) continue;
+            }
 
             // No neutrinos
             if (isNeutrino((*event)[i]))     continue;
 
-            // Only |eta| < 3.6
-            if (std::fabs((*event)[i].eta()) > 3.6) continue;
+            // Only |eta| < 5
+            if (std::fabs((*event)[i].eta()) > 5) continue;
 
             // Store as input to Fastjet
             fastjet::PseudoJet fjParticle((*event)[i].px(),
@@ -96,12 +130,11 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
         }
 
         // Run Fastjet algorithm
-        std::vector<fastjet::PseudoJet> inclusiveJets, sortedJets;
         fastjet::ClusterSequence clustSeq(fjParticles, *fjJetDefn);
 
-        // Extract inclusive jets sorted by pT (note minimum pT of 20.0 GeV)
-        inclusiveJets = clustSeq.inclusive_jets(minJetPt);
-        sortedJets    = sorted_by_pt(inclusiveJets);
+        // Extract inclusive jets sorted by pT (note the minimum pT)
+        std::vector<fastjet::PseudoJet> inclusiveJets = clustSeq.inclusive_jets(minJetPt);
+        std::vector<fastjet::PseudoJet> sortedJets    = sorted_by_pt(inclusiveJets);
 
         int nSortedJets = sortedJets.size();
         for (int i = 0; i < nSortedJets; ++i) {
@@ -112,7 +145,7 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
             fjt.nJet++;
         }
 
-        jetTreeOut->Fill();
+        jetTree->Fill();
     }
     std::cout << "Loop ENDED" << std::endl;
     std::cout<<"Closing the input file"<<std::endl;
@@ -127,7 +160,11 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
 
 int main(int argc, char* argv[]) {
 
-    if (argc == 5) {
+    if (argc == 6) {
+        pythiaClusterJets(argv[1], argv[2], std::atoi(argv[3]), std::atoi(argv[4]), std::atoi(argv[5]));
+        return 0;
+    }
+    else if (argc == 5) {
         pythiaClusterJets(argv[1], argv[2], std::atoi(argv[3]), std::atoi(argv[4]));
         return 0;
     }
@@ -145,7 +182,7 @@ int main(int argc, char* argv[]) {
     }
     else {
         std::cout << "Usage : \n" <<
-                "./pythiaClusterJets.exe <inputFileName> <outputFileName> <jetRadius> <minJetPt>"
+                "./pythiaClusterJets.exe <inputFileName> <outputFileName> <jetRadius> <minJetPt> <constituentType>"
                 << std::endl;
         return 1;
     }

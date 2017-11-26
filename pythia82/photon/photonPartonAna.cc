@@ -20,6 +20,7 @@
 // dictionary to read Pythia8::Event
 #include "../dictionary/dict4RootDct.cc"
 #include "../utils/pythiaUtil.h"
+#include "../utils/physicsUtil.h"
 
 #include <iostream>
 #include <string>
@@ -45,8 +46,12 @@ int main(int argc, char* argv[]) {
 
     TFile *inputFile = TFile::Open(inputFileName.c_str(),"READ");
     Pythia8::Event *event = 0;
-    TTree *T = (TTree*)inputFile->Get("evt");
-    T->SetBranchAddress("event", &event);
+    TTree *treeEvt = (TTree*)inputFile->Get("evt");
+    treeEvt->SetBranchAddress("event", &event);
+
+    Pythia8::Event *eventParton = 0;
+    TTree* treeEvtParton = (TTree*)inputFile->Get("evtParton");
+    treeEvtParton->SetBranchAddress("event", &eventParton);
 
     TFile* outputFile = new TFile(outputFileName.c_str(), "RECREATE");
 
@@ -94,6 +99,11 @@ int main(int argc, char* argv[]) {
     TH2D* h2_qscale_phoqgDeta[kN_PARTONTYPES];
     // photon histograms split for parton types
     TH1D* h_phoPt_qgRatio[kN_PARTONTYPES];
+    // histograms for energy and multiplicity distribution of final partons as func. of angle with the initial parton
+    TH1D* h_finalqg_qg_dR[kN_PARTONTYPES][kN_PARTONTYPES];
+    TH1D* h_finalqg_qg_dR_wE[kN_PARTONTYPES][kN_PARTONTYPES];
+    TH1D* h_finalqg_qg_dR_cdf[kN_PARTONTYPES][kN_PARTONTYPES];
+    TH1D* h_finalqg_qg_dR_wE_cdf[kN_PARTONTYPES][kN_PARTONTYPES];
     for (int i = 0; i < kN_PARTONTYPES; ++i) {
         h_qgPt[i] = new TH1D(Form("h_%sPt", partonTypesStr[i].c_str()),
                 Form(";p_{T}^{%s};", partonTypesLabel[i].c_str()),
@@ -134,14 +144,23 @@ int main(int argc, char* argv[]) {
         h_phoPt_qgRatio[i] = new TH1D(Form("h_phoPt_%sRatio", partonTypesStr[i].c_str()),
                 ";p_{T}^{#gamma};",
                 nBinsX_pt, axis_pt_min, axis_pt_max);
+
+        for (int j = 0; j < kN_PARTONTYPES; ++j) {
+            h_finalqg_qg_dR[i][j] = new TH1D(Form("h_final%s_%s_dR", partonTypesStr[j].c_str(), partonTypesStr[i].c_str()),
+                    Form(";#DeltaR_{%s final %s};", partonTypesLabel[i].c_str(), partonTypesLabel[j].c_str()), nBinsX_eta, 0, 1.5);
+
+            h_finalqg_qg_dR_wE[i][j] = new TH1D(Form("h_final%s_%s_dR_wE", partonTypesStr[j].c_str(), partonTypesStr[i].c_str()),
+                    Form(";#DeltaR_{%s final %s};", partonTypesLabel[i].c_str(), partonTypesLabel[j].c_str()), nBinsX_eta, 0, 1.5);
+        }
     }
 
-    int nEvents = T->GetEntries();
+    int nEvents = treeEvt->GetEntries();
     std::cout << "nEvents = " << nEvents << std::endl;
     std::cout << "Loop STARTED" << std::endl;
     for (int iEvent = 0; iEvent < nEvents; ++iEvent) {
 
-        T->GetEntry(iEvent);
+        treeEvt->GetEntry(iEvent);
+        treeEvtParton->GetEntry(iEvent);
 
         // hard scatterer analysis
         // outgoing particles are at index 5 and 6
@@ -166,6 +185,7 @@ int main(int argc, char* argv[]) {
         h2_qscale_phoPt->Fill(phoPt, event->scale());
         h2_qscale_phoEta->Fill(TMath::Abs(phoEta), event->scale());
 
+        double qgE = (*event)[iParton].e();
         double qgPt = (*event)[iParton].pT();
         double qgEta = (*event)[iParton].eta();
         double qgPhi = (*event)[iParton].phi();
@@ -174,29 +194,50 @@ int main(int argc, char* argv[]) {
         double phoqgDphi = std::acos(cos(phoPhi - qgPhi));
         double phoqgX = qgPt / phoPt;
 
-        h_qgPt[kInclusive]->Fill(qgPt);
-        h_qgEta[kInclusive]->Fill(TMath::Abs(qgEta));
-        h2_qgEta_qgPt[kInclusive]->Fill(TMath::Abs(qgEta), qgPt);
-        h_phoqgDeta[kInclusive]->Fill(phoqgDeta);
-        h_phoqgDphi[kInclusive]->Fill(phoqgDphi);
-        h_phoqgX[kInclusive]->Fill(phoqgX);
-        h2_phoEta_qgEta[kInclusive]->Fill(phoEta, qgEta);
-        h2_phoPhi_qgPhi[kInclusive]->Fill(phoPhi, qgPhi);
-        h2_qscale_phoqgDeta[kInclusive]->Fill(phoqgDeta, event->scale());
-        h_phoPt_qgRatio[kInclusive]->Fill(phoPt);
-
         int iQG = (isQuark((*event)[iParton])) ? kQuark : kGluon;
 
-        h_qgPt[iQG]->Fill(qgPt);
-        h_qgEta[iQG]->Fill(TMath::Abs(qgEta));
-        h2_qgEta_qgPt[iQG]->Fill(TMath::Abs(qgEta), qgPt);
-        h_phoqgDeta[iQG]->Fill(phoqgDeta);
-        h_phoqgDphi[iQG]->Fill(phoqgDphi);
-        h_phoqgX[iQG]->Fill(phoqgX);
-        h2_phoEta_qgEta[iQG]->Fill(phoEta, qgEta);
-        h2_phoPhi_qgPhi[iQG]->Fill(phoPhi, qgPhi);
-        h2_qscale_phoqgDeta[iQG]->Fill(phoqgDeta, event->scale());
-        h_phoPt_qgRatio[iQG]->Fill(phoPt);
+        std::vector<int> typesQG = {kInclusive, iQG};
+        int nTypesQG = typesQG.size();
+
+        for (int j = 0; j < nTypesQG; ++j) {
+            int k = typesQG[j];
+
+            h_qgPt[k]->Fill(qgPt);
+            h_qgEta[k]->Fill(TMath::Abs(qgEta));
+            h2_qgEta_qgPt[k]->Fill(TMath::Abs(qgEta), qgPt);
+            h_phoqgDeta[k]->Fill(phoqgDeta);
+            h_phoqgDphi[k]->Fill(phoqgDphi);
+            h_phoqgX[k]->Fill(phoqgX);
+            h2_phoEta_qgEta[k]->Fill(phoEta, qgEta);
+            h2_phoPhi_qgPhi[k]->Fill(phoPhi, qgPhi);
+            h2_qscale_phoqgDeta[k]->Fill(phoqgDeta, event->scale());
+            h_phoPt_qgRatio[k]->Fill(phoPt);
+        }
+
+        int eventPartonSize = eventParton->size();
+        for (int i = 0; i < eventPartonSize; ++i) {
+            int indexOrig = (*eventParton)[i].mother1();
+
+            if (isAncestor(event, indexOrig, iParton)) {
+                double parton_qg_dR = getDR(qgEta, qgPhi, (*event)[indexOrig].eta(), (*event)[indexOrig].phi());
+                double wE = (*event)[indexOrig].e() / qgE;
+
+                int iFinalQG = (isQuark((*event)[indexOrig])) ? kQuark : kGluon;
+                std::vector<int> typesFinalQG = {kInclusive, iFinalQG};
+                int nTypesFinalQG = typesFinalQG.size();
+
+                for (int j1 = 0; j1 < nTypesQG; ++j1) {
+                    int k1 = typesQG[j1];
+
+                    for (int j2 = 0; j2 < nTypesFinalQG; ++j2) {
+                        int k2 = typesFinalQG[j2];
+
+                        h_finalqg_qg_dR[k1][k2]->Fill(parton_qg_dR);
+                        h_finalqg_qg_dR_wE[k1][k2]->Fill(parton_qg_dR, wE);
+                    }
+                }
+            }
+        }
     }
     std::cout << "Loop ENDED" << std::endl;
     std::cout << "Closing the input file" << std::endl;
@@ -210,11 +251,23 @@ int main(int argc, char* argv[]) {
 
     for (int i = 0; i < kN_PARTONTYPES; ++i) {
 
+        double nPartons = h_qgPt[i]->GetEntries();
+
         h_qgPt[i]->Scale(1./h_qgPt[i]->Integral(), "width");
         h_qgEta[i]->Scale(1./h_qgEta[i]->Integral(), "width");
         h_phoqgDeta[i]->Scale(1./h_phoqgDeta[i]->Integral(), "width");
         h_phoqgDphi[i]->Scale(1./h_phoqgDphi[i]->Integral(), "width");
         h_phoqgX[i]->Scale(1./h_phoqgX[i]->Integral(), "width");
+
+        for (int j = 0; j < kN_PARTONTYPES; ++j) {
+            h_finalqg_qg_dR_cdf[i][j] = (TH1D*)h_finalqg_qg_dR[i][j]->GetCumulative(true, "_cdf");
+            h_finalqg_qg_dR_wE_cdf[i][j] = (TH1D*)h_finalqg_qg_dR_wE[i][j]->GetCumulative(true, "_cdf");
+
+            h_finalqg_qg_dR[i][j]->Scale(1./nPartons, "width");
+            h_finalqg_qg_dR_wE[i][j]->Scale(1./nPartons, "width");
+            h_finalqg_qg_dR_cdf[i][j]->Scale(1./nPartons);
+            h_finalqg_qg_dR_wE_cdf[i][j]->Scale(1./nPartons);
+        }
 
         if (i != kInclusive) {
             h_phoPt_qgRatio[i]->Divide(h_phoPt_qgRatio[kInclusive]);

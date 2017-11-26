@@ -45,7 +45,7 @@ int main(int argc, char* argv[]) {
 
     TFile *inputFile = TFile::Open(inputFileName.c_str(),"READ");
     Pythia8::Event *event = 0;
-    TTree *T = (TTree*)inputFile->Get("T");
+    TTree *T = (TTree*)inputFile->Get("evt");
     T->SetBranchAddress("event", &event);
 
     TFile* outputFile = new TFile(outputFileName.c_str(), "RECREATE");
@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
     double axis_eta_min = 0;
     double axis_eta_max = 5;
     int nBinsX_phi = 20;
-    int nBinsX_phoqgX = 20;
+    int nBinsX_phoqgX = 16;
     double axis_phoqgX_min = 0;
     double axis_phoqgX_max = 2;
     TH1D* h_phoPt = new TH1D("h_phoPt",";p_{T}^{#gamma};", nBinsX_pt, axis_pt_min, axis_pt_max);
@@ -108,15 +108,15 @@ int main(int argc, char* argv[]) {
                 nBinsX_eta, axis_eta_min, axis_eta_max, nBinsX_pt, axis_pt_min, axis_pt_max);
 
         h_phoqgDeta[i] = new TH1D(Form("h_pho%sDeta", partonTypesStr[i].c_str()),
-                Form(";#Delta#eta_{#gamma %s} = |#eta^{#gamma} - #eta^{%s}|;", partonTypesLabel[i].c_str(), partonTypesLabel[i].c_str()),
+                Form(";#Delta#eta_{%s#gamma} = |#eta^{%s} - #eta^{#gamma}|;", partonTypesLabel[i].c_str(), partonTypesLabel[i].c_str()),
                 nBinsX_eta, axis_eta_min, 1.5*axis_eta_max);
 
         h_phoqgDphi[i] = new TH1D(Form("h_pho%sDphi", partonTypesStr[i].c_str()),
-                Form(";#Delta#phi_{#gamma %s} = |#phi^{#gamma} - #phi^{%s}|;", partonTypesLabel[i].c_str(), partonTypesLabel[i].c_str()),
+                Form(";#Delta#phi_{%s#gamma} = |#phi^{%s} - #phi^{#gamma}|;", partonTypesLabel[i].c_str(), partonTypesLabel[i].c_str()),
                 nBinsX_phi, 0, TMath::Pi()+1e-12);
 
         h_phoqgX[i] = new TH1D(Form("h_pho%sX", partonTypesStr[i].c_str()),
-                Form(";X_{#gamma %s} = p_{T}^{%s}/p_{T}^{#gamma};", partonTypesLabel[i].c_str(), partonTypesLabel[i].c_str()),
+                Form(";x_{%s#gamma} = p_{T}^{%s}/p_{T}^{#gamma};", partonTypesLabel[i].c_str(), partonTypesLabel[i].c_str()),
                 nBinsX_phoqgX, axis_phoqgX_min, axis_phoqgX_max);
 
         h2_phoEta_qgEta[i] = new TH2D(Form("h2_phoEta_%sEta", partonTypesStr[i].c_str()),
@@ -128,7 +128,7 @@ int main(int argc, char* argv[]) {
                 nBinsX_phi, -TMath::Pi(), TMath::Pi(), nBinsX_phi, -TMath::Pi(), TMath::Pi());
 
         h2_qscale_phoqgDeta[i] = new TH2D(Form("h2_qscale_pho%sDeta", partonTypesStr[i].c_str()),
-                Form(";#Delta#eta_{#gamma %s} = |#eta^{#gamma} - #eta^{%s}|;Q", partonTypesLabel[i].c_str(), partonTypesLabel[i].c_str()),
+                Form(";#Delta#eta_{%s#gamma} = |#eta^{%s} - #eta^{#gamma}|;Q", partonTypesLabel[i].c_str(), partonTypesLabel[i].c_str()),
                 nBinsX_eta, axis_eta_min, axis_eta_max, nBinsX_pt, axis_pt_min, axis_pt_max);
 
         h_phoPt_qgRatio[i] = new TH1D(Form("h_phoPt_%sRatio", partonTypesStr[i].c_str()),

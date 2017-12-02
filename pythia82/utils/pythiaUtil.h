@@ -18,6 +18,7 @@ bool isParton(Pythia8::Particle particle);
 bool isQuark(Pythia8::Particle particle);
 bool isGluon(Pythia8::Particle particle);
 bool isGamma(Pythia8::Particle particle);
+bool isZboson(Pythia8::Particle particle);
 bool isNeutrino(Pythia8::Particle particle);
 bool isCharged(Pythia8::Particle particle, Pythia8::ParticleData& particleData);
 bool isAncestor(Pythia8::Event* evtPtr, int iParticle, int iAncestor);
@@ -42,6 +43,11 @@ bool isGluon(Pythia8::Particle particle)
 bool isGamma(Pythia8::Particle particle)
 {
     return (particle.id() == 22);
+}
+
+bool isZboson(Pythia8::Particle particle)
+{
+    return (particle.id() == 23);
 }
 
 bool isNeutrino(Pythia8::Particle particle)

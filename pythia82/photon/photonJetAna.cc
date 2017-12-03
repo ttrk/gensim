@@ -16,6 +16,7 @@
 #include "TH2D.h"
 #include "TVirtualPad.h"
 #include "TApplication.h"
+#include "TLorentzVector.h"
 
 // dictionary to read Pythia8::Event
 #include "../dictionary/dict4RootDct.cc"
@@ -57,15 +58,43 @@ int main(int argc, char* argv[]) {
     std::cout << "outputFileName = " << outputFileName.c_str() << std::endl;
     std::cout << "##### Parameters - END #####" << std::endl;
 
-    TFile *eventFile = TFile::Open(eventFileName.c_str(),"READ");
-    Pythia8::Event *event = 0;
-    TTree *T = (TTree*)eventFile->Get("evt");
-    T->SetBranchAddress("event", &event);
+    // Set up the ROOT TFile and TTree.
+    TFile* eventFile = TFile::Open(eventFileName.c_str(),"READ");
+    Pythia8::Event* eventAll = 0;
+
+    std::string evtTreePath = "evt";
+    TTree* treeEvt = (TTree*)eventFile->Get(evtTreePath.c_str());
+    treeEvt->SetBranchAddress("event", &eventAll);
+
+    Pythia8::Event* eventParton = 0;
+    std::string evtPartonTreePath = "evtParton";
+    TTree* treeEvtParton = (TTree*)eventFile->Get(evtPartonTreePath.c_str());
+    treeEvtParton->SetBranchAddress("event", &eventParton);
+
+    Pythia8::Event* event = eventAll;
+    Pythia8::Event* eventParticle = eventAll;
 
     TFile *jetFile = TFile::Open(jetFileName.c_str(),"READ");
     fastJetTree fjt;
     TTree *jetTree = (TTree*)jetFile->Get(jetTreeName.c_str());
     fjt.setupTreeForReading(jetTree);
+
+    std::string akStr = "ak";
+    std::string jetStr = "jets";
+    int jetStrPos = jetTreeName.find(jetStr.c_str());
+    std::string jetRStr = jetTreeName.substr(akStr.size(), jetStrPos - akStr.size());
+    double jetR = std::atof(jetRStr.c_str()) / 10;
+    double jetR2 = jetR * jetR;
+
+    std::cout << "##### Parameters (cont'd.) #####" << std::endl;
+    std::cout << "jetR = " << jetR << std::endl;
+    std::cout << "##### Parameters (cont'd.) - END #####" << std::endl;
+
+
+    std::cout << "initialize the Pythia class to obtain info that is not accessible through event TTree." << std::endl;
+    std::cout << "##### Pythia initialize #####" << std::endl;
+    Pythia pythia;
+    std::cout << "##### Pythia initialize - END #####" << std::endl;
 
     TFile* outputFile = new TFile(outputFileName.c_str(), "RECREATE");
 
@@ -100,6 +129,19 @@ int main(int argc, char* argv[]) {
     std::string partonTypesStr[kN_PARTONTYPES] = {"parton", "q", "g"};
     std::string partonTypesLabel[kN_PARTONTYPES] = {"q/g", "q", "g"};
 
+    enum PARTICLETYPES {
+        kHadron,
+        kHadronCh,
+        kParton,
+        kPartonHard,
+        kN_PARTICLETYPES
+    };
+    std::string particleTypesStr[kN_PARTICLETYPES] = {"hadron", "hadronCh", "parton", "partonHard"};
+    std::string particleTypesLabel[kN_PARTICLETYPES] = {"h^{0,#pm}", "h^{#pm}", "q/g", "q/g"};
+    int nBinsX_xijet = 10;
+    double axis_xijet_min = 0;
+    double axis_xijet_max = 5;
+
     // photon histograms
     TH1D* h_phoPt_qg[kN_PARTONTYPES];
     // parton histograms
@@ -119,6 +161,8 @@ int main(int argc, char* argv[]) {
     TH2D* h2_qscale_phoqgDeta[kN_PARTONTYPES];
     // photon histograms split for parton types
     TH1D* h_phoPt_qgRatio[kN_PARTONTYPES];
+    // jet FF histograms split by particle types
+    TH1D* h_xijet[kN_PARTONTYPES][kN_PARTICLETYPES];
     for (int i = 0; i < kN_PARTONTYPES; ++i) {
         h_phoPt_qg[i] = new TH1D(Form("h_phoPt_%s", partonTypesStr[i].c_str()),
                 Form(";p_{T}^{#gamma} (recoil is %s);", partonTypesLabel[i].c_str()),
@@ -181,9 +225,20 @@ int main(int argc, char* argv[]) {
         h_phoPt_qgRatio[i] = new TH1D(Form("h_phoPt_%sRatio", partonTypesStr[i].c_str()),
                 ";p_{T}^{#gamma};",
                 nBinsX_pt, axis_pt_min, axis_pt_max);
+
+        for (int j = 0; j < kN_PARTICLETYPES; ++j) {
+
+            std::string pjetVecStr = "#bf{p}^{jet}";
+            std::string ptrkVecStr = Form("#bf{p}^{%s}", particleTypesLabel[j].c_str());
+            std::string xiJetStr = Form("#xi^{jet} = ln{{|%s|^{2}}/{%s #bf{#dot} %s}}",
+                                        pjetVecStr.c_str(), ptrkVecStr.c_str(), pjetVecStr.c_str());
+            h_xijet[i][j] = new TH1D(Form("h_xijet_%s_%s", partonTypesStr[i].c_str(), particleTypesStr[j].c_str()),
+                    Form("%s jet - particles are %s;%s;", partonTypesLabel[i].c_str(), particleTypesLabel[j].c_str(), xiJetStr.c_str()),
+                    nBinsX_xijet, axis_xijet_min, axis_xijet_max);
+        }
     }
 
-    int nEvents = T->GetEntries();
+    int nEvents = treeEvt->GetEntries();
     int nEventsJets = jetTree->GetEntries();
     std::cout << "nEvents = " << nEvents << std::endl;
     std::cout << "nEventsJets = " << nEventsJets << std::endl;
@@ -195,7 +250,8 @@ int main(int argc, char* argv[]) {
     std::cout << "Loop STARTED" << std::endl;
     for (int iEvent = 0; iEvent < nEvents; ++iEvent) {
 
-        T->GetEntry(iEvent);
+        treeEvt->GetEntry(iEvent);
+        treeEvtParton->GetEntry(iEvent);
         jetTree->GetEntry(iEvent);
 
         // jet analysis
@@ -254,8 +310,8 @@ int main(int argc, char* argv[]) {
 
             if (!(std::acos(cos(phoPhi - jetphi)) > 7 * TMath::Pi() / 8)) continue;
 
-            for (int j = 0; j < nTypesQG; ++j) {
-                int k = typesQG[j];
+            for (int jQG = 0; jQG < nTypesQG; ++jQG) {
+                int k = typesQG[jQG];
                 h_qgPt[k]->Fill(jetpt);
                 h_qgEta[k]->Fill(TMath::Abs(jeteta));
                 h2_qgEta_qgPt[k]->Fill(TMath::Abs(jeteta), jetpt);
@@ -269,6 +325,52 @@ int main(int argc, char* argv[]) {
                 h2_phoPhi_qgPhi[k]->Fill(phoPhi, jetphi);
                 h2_qscale_phoqgDeta[k]->Fill(detajg, event->scale());
                 h_phoPt_qgRatio[k]->Fill(phoPt);
+            }
+
+            TLorentzVector vecJet;
+            vecJet.SetPtEtaPhiM(jetpt, jeteta, jetphi, 0);
+            for (int iPartType = 0; iPartType < kN_PARTICLETYPES; ++iPartType) {
+
+                eventParticle = eventAll;
+                if (iPartType == PARTICLETYPES::kParton || iPartType == PARTICLETYPES::kPartonHard) {
+                    eventParticle = eventParton;
+                }
+
+                int eventParticleSize = eventParticle->size();
+                for (int j = 0; j < eventParticleSize; ++j) {
+
+                    if (iPartType == PARTICLETYPES::kHadron) {
+                        if (!(*eventParticle)[j].isFinal()) continue;
+                    }
+                    else if (iPartType == PARTICLETYPES::kHadronCh) {
+                        if (!((*eventParticle)[j].isFinal() && isCharged((*eventParticle)[j], pythia.particleData))) continue;
+                    }
+                    else if (iPartType == PARTICLETYPES::kPartonHard) {
+                        int iOrig = (*eventParticle)[j].mother1();
+                        if (!(isAncestor(eventAll, iOrig, 5) || isAncestor(eventAll, iOrig, 6))) continue;
+                    }
+
+                    if ((!(*eventParticle)[j].pT() > 1)) continue;
+
+                    double partPt = (*eventParticle)[j].pT();
+                    double partEta = (*eventParticle)[j].eta();
+                    double partPhi = (*eventParticle)[j].phi();
+
+                    if (!(getDR2(jeteta, jetphi, partEta, partPhi) < jetR2))  continue;
+
+                    TLorentzVector vecPart;
+                    vecPart.SetPtEtaPhiM(partPt, partEta, partPhi, 0);
+
+                    double angle = vecJet.Angle(vecPart.Vect());
+                    double z = vecPart.P() * cos(angle) / vecJet.P();
+
+                    double xi = log(1.0/z);
+
+                    for (int jQG = 0; jQG < nTypesQG; ++jQG) {
+                        int k = typesQG[jQG];
+                        h_xijet[k][iPartType]->Fill(xi);
+                    }
+                }
             }
         }
     }
@@ -287,6 +389,8 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i < kN_PARTONTYPES; ++i) {
 
         double nPho = h_phoPt_qg[i]->GetEntries();
+        double nJet = h_qgPt[i]->GetEntries();
+
         h_phoPt_qg[i]->Scale(1./h_phoPt_qg[i]->Integral(), "width");
 
         h_qgPt[i]->Scale(1./nPho, "width");
@@ -294,6 +398,10 @@ int main(int argc, char* argv[]) {
         h_phoqgDeta[i]->Scale(1./nPho, "width");
         h_phoqgDphi[i]->Scale(1./nPho, "width");
         h_phoqgX[i]->Scale(1./nPho, "width");
+
+        for (int j = 0; j < kN_PARTICLETYPES; ++j) {
+            h_xijet[i][j]->Scale(1./nJet, "width");
+        }
 
         if (i != kInclusive) {
             h_phoPt_qgRatio[i]->Divide(h_phoPt_qgRatio[kInclusive]);

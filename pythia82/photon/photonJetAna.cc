@@ -142,6 +142,10 @@ int main(int argc, char* argv[]) {
     double axis_xijet_min = 0;
     double axis_xijet_max = 5;
 
+    double axis_js_min = 0;
+    double axis_js_max = 1.0;
+    int nBinsX_js = axis_js_max / 0.05;
+
     // photon histograms
     TH1D* h_phoPt_qg[kN_PARTONTYPES];
     // parton histograms
@@ -163,6 +167,8 @@ int main(int argc, char* argv[]) {
     TH1D* h_phoPt_qgRatio[kN_PARTONTYPES];
     // jet FF histograms split by particle types
     TH1D* h_xijet[kN_PARTONTYPES][kN_PARTICLETYPES];
+    TH1D* h_jetshape[kN_PARTONTYPES][kN_PARTICLETYPES];
+    TH1D* h_jetshape_normJet[kN_PARTONTYPES][kN_PARTICLETYPES];
     for (int i = 0; i < kN_PARTONTYPES; ++i) {
         h_phoPt_qg[i] = new TH1D(Form("h_phoPt_%s", partonTypesStr[i].c_str()),
                 Form(";p_{T}^{#gamma} (recoil is %s);", partonTypesLabel[i].c_str()),
@@ -230,11 +236,15 @@ int main(int argc, char* argv[]) {
 
             std::string pjetVecStr = "#bf{p}^{jet}";
             std::string ptrkVecStr = Form("#bf{p}^{%s}", particleTypesLabel[j].c_str());
-            std::string xiJetStr = Form("#xi^{jet} = ln{{|%s|^{2}}/{%s #bf{#dot} %s}}",
+            std::string xiJetStr = Form("#xi^{jet} = ln (|%s|^{2} / %s #bf{#dot} %s)",
                                         pjetVecStr.c_str(), ptrkVecStr.c_str(), pjetVecStr.c_str());
             h_xijet[i][j] = new TH1D(Form("h_xijet_%s_%s", partonTypesStr[i].c_str(), particleTypesStr[j].c_str()),
                     Form("%s jet - particles are %s;%s;", partonTypesLabel[i].c_str(), particleTypesLabel[j].c_str(), xiJetStr.c_str()),
                     nBinsX_xijet, axis_xijet_min, axis_xijet_max);
+
+            h_jetshape[i][j] = new TH1D(Form("h_jetshape_%s_%s", partonTypesStr[i].c_str(), particleTypesStr[j].c_str()),
+                                Form("%s jet - particles are %s;r;#rho(r)", partonTypesLabel[i].c_str(), particleTypesLabel[j].c_str()),
+                                nBinsX_js, axis_js_min, axis_js_max);
         }
     }
 
@@ -356,16 +366,20 @@ int main(int argc, char* argv[]) {
                     double partEta = (*eventParticle)[j].eta();
                     double partPhi = (*eventParticle)[j].phi();
 
-                    if (!(getDR2(jeteta, jetphi, partEta, partPhi) < jetR2))  continue;
+                    double dR_jet_particle = getDR(jeteta, jetphi, partEta, partPhi);
+                    for (int jQG = 0; jQG < nTypesQG; ++jQG) {
+                        int k = typesQG[jQG];
+                        h_jetshape[k][iPartType]->Fill(dR_jet_particle, partPt / jetpt);
+                    }
+
+                    if (!(dR_jet_particle < jetR))  continue;
 
                     TLorentzVector vecPart;
                     vecPart.SetPtEtaPhiM(partPt, partEta, partPhi, 0);
 
                     double angle = vecJet.Angle(vecPart.Vect());
                     double z = vecPart.P() * cos(angle) / vecJet.P();
-
                     double xi = log(1.0/z);
-
                     for (int jQG = 0; jQG < nTypesQG; ++jQG) {
                         int k = typesQG[jQG];
                         h_xijet[k][iPartType]->Fill(xi);
@@ -401,6 +415,11 @@ int main(int argc, char* argv[]) {
 
         for (int j = 0; j < kN_PARTICLETYPES; ++j) {
             h_xijet[i][j]->Scale(1./nJet, "width");
+
+            h_jetshape_normJet[i][j] = (TH1D*)h_jetshape[i][j]->Clone(Form("%s_normJet", h_jetshape[i][j]->GetName()));
+
+            h_jetshape[i][j]->Scale(1./h_jetshape[i][j]->Integral(1, h_jetshape[i][j]->FindBin(jetR)-1), "width");
+            h_jetshape_normJet[i][j]->Scale(1./nJet, "width");
         }
 
         if (i != kInclusive) {

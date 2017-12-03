@@ -111,9 +111,10 @@ int main(int argc, char* argv[]) {
     int nBinsX_phoqgX = 16;
     double axis_phoqgX_min = 0;
     double axis_phoqgX_max = 2;
-    std::string strPhoPt = "p_{T}^{#gamma}";
-    std::string strPhoEta = "#eta^{#gamma}";
-    std::string strPhoPhi = "#phi^{#gamma}";
+    std::string strPho = "#gamma";
+    std::string strPhoPt = Form("p_{T}^{%s}", strPho.c_str());
+    std::string strPhoEta = Form("#eta^{%s}", strPho.c_str());
+    std::string strPhoPhi = Form("#phi^{%s}", strPho.c_str());
 
     TH1D* h_phoPt = new TH1D("h_phoPt",Form(";%s;", strPhoPt.c_str()), nBinsX_pt, axis_pt_min, axis_pt_max);
     TH1D* h_phoEta = new TH1D("h_phoEta",Form(";|%s|;", strPhoEta.c_str()), nBinsX_eta, axis_eta_min, axis_eta_max);
@@ -179,11 +180,11 @@ int main(int argc, char* argv[]) {
         std::string strPartonEta = Form("#eta^{%s}", partonTypesLabel[i].c_str());
         std::string strPartonPhi = Form("#phi^{%s}", partonTypesLabel[i].c_str());
 
-        std::string strPhoPartonX = Form("x_{%s#gamma} = %s/%s", partonTypesLabel[i].c_str(), strPartonPt.c_str(), strPhoPt.c_str());
-        std::string strPhoPartonDeta = Form("#Delta#eta_{%s#gamma} = |%s - %s|",
-                partonTypesLabel[i].c_str(), strPartonEta.c_str(), strPhoEta.c_str());
-        std::string strPhoPartonDphi = Form("#Delta#phi_{%s#gamma} = |%s - %s|",
-                        partonTypesLabel[i].c_str(), strPartonPhi.c_str(), strPhoPhi.c_str());
+        std::string strPhoPartonX = Form("x_{%s%s} = %s/%s", partonTypesLabel[i].c_str(), strPho.c_str(), strPartonPt.c_str(), strPhoPt.c_str());
+        std::string strPhoPartonDeta = Form("#Delta#eta_{%s%s} = |%s - %s|",
+                partonTypesLabel[i].c_str(), strPho.c_str(), strPartonEta.c_str(), strPhoEta.c_str());
+        std::string strPhoPartonDphi = Form("#Delta#phi_{%s%s} = |%s - %s|",
+                partonTypesLabel[i].c_str(), strPho.c_str(), strPartonPhi.c_str(), strPhoPhi.c_str());
 
         h_phoPt_qg[i] = new TH1D(Form("h_phoPt_%s", partonTypesStr[i].c_str()),
                 Form(";%s (recoil is %s);", strPhoPt.c_str(), partonTypesLabel[i].c_str()),

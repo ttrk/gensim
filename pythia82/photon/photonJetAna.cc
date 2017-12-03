@@ -174,70 +174,71 @@ int main(int argc, char* argv[]) {
     TH1D* h_jetshape[kN_PARTONTYPES][kN_PARTICLETYPES];
     TH1D* h_jetshape_normJet[kN_PARTONTYPES][kN_PARTICLETYPES];
     for (int i = 0; i < kN_PARTONTYPES; ++i) {
+
+        std::string strPartonPt = Form("p_{T}^{%s}", partonTypesLabel[i].c_str());
+        std::string strPartonEta = Form("#eta^{%s}", partonTypesLabel[i].c_str());
+        std::string strPartonPhi = Form("#phi^{%s}", partonTypesLabel[i].c_str());
+
+        std::string strPhoPartonX = Form("x_{%s#gamma} = %s/%s", partonTypesLabel[i].c_str(), strPartonPt.c_str(), strPhoPt.c_str());
+        std::string strPhoPartonDeta = Form("#Delta#eta_{%s#gamma} = |%s - %s|",
+                partonTypesLabel[i].c_str(), strPartonEta.c_str(), strPhoEta.c_str());
+        std::string strPhoPartonDphi = Form("#Delta#phi_{%s#gamma} = |%s - %s|",
+                        partonTypesLabel[i].c_str(), strPartonPhi.c_str(), strPhoPhi.c_str());
+
         h_phoPt_qg[i] = new TH1D(Form("h_phoPt_%s", partonTypesStr[i].c_str()),
                 Form(";%s (recoil is %s);", strPhoPt.c_str(), partonTypesLabel[i].c_str()),
                 nBinsX_pt, axis_pt_min, axis_pt_max);
 
         h_qgPt[i] = new TH1D(Form("h_%sPt", partonTypesStr[i].c_str()),
-                Form(";p_{T}^{%s};", partonTypesLabel[i].c_str()),
+                Form(";%s;", strPartonPt.c_str()),
                 nBinsX_pt, axis_pt_min, axis_pt_max);
 
         h_qgEta[i] = new TH1D(Form("h_%sEta", partonTypesStr[i].c_str()),
-                Form(";|#eta^{%s}|;", partonTypesLabel[i].c_str()),
+                Form(";|%s|;", strPartonEta.c_str()),
                 nBinsX_eta, axis_eta_min, axis_eta_max);
 
         h2_qgEta_qgPt[i] = new TH2D(Form("h2_%sEta_%sPt", partonTypesStr[i].c_str(), partonTypesStr[i].c_str()),
-                Form(";|#eta^{%s}|;p_{T}^{%s}", partonTypesLabel[i].c_str(), partonTypesLabel[i].c_str()),
+                Form(";|%s|;%s", strPartonEta.c_str(), strPartonPt.c_str()),
                 nBinsX_eta, axis_eta_min, axis_eta_max, nBinsX_pt, axis_pt_min, axis_pt_max);
 
         h2_phoqgX_phoPt[i] = new TH2D(Form("h2_pho%sX_phoPt", partonTypesStr[i].c_str()),
-                Form(";x_{%s#gamma} = p_{T}^{%s}/%s;%s", partonTypesLabel[i].c_str(), partonTypesLabel[i].c_str(),
-                                                         strPhoPt.c_str(), strPhoPt.c_str()),
+                Form(";%s;%s", partonTypesLabel[i].c_str(), strPhoPartonX.c_str(), strPhoPt.c_str()),
                 nBinsX_phoqgX, axis_phoqgX_min, axis_phoqgX_max, nBinsX_pt, axis_pt_min, axis_pt_max);
 
         h2_phoqgX_phoEta[i] = new TH2D(Form("h2_pho%sX_phoEta", partonTypesStr[i].c_str()),
-                Form(";x_{%s#gamma} = p_{T}^{%s}/%s;|%s|", partonTypesLabel[i].c_str(), partonTypesLabel[i].c_str(),
-                                                           strPhoPt.c_str(), strPhoEta.c_str()),
+                Form(";%s;|%s|", strPhoPartonX.c_str(), strPhoEta.c_str()),
                 nBinsX_phoqgX, axis_phoqgX_min, axis_phoqgX_max, nBinsX_eta, axis_eta_min, axis_eta_max);
 
         h2_phoqgX_phoqgDeta[i] = new TH2D(Form("h2_pho%sX_pho%sDeta", partonTypesStr[i].c_str(), partonTypesStr[i].c_str()),
-                Form(";x_{%s#gamma} = p_{T}^{%s}/%s;#Delta#eta_{%s#gamma} = |#eta^{%s} - %s|",
-                          partonTypesLabel[i].c_str(), partonTypesLabel[i].c_str(), strPhoPt.c_str(),
-                          partonTypesLabel[i].c_str(), partonTypesLabel[i].c_str(), strPhoEta.c_str()),
+                Form(";%s;%s", strPhoPartonX.c_str(), strPhoPartonDeta.c_str()),
                 nBinsX_phoqgX, axis_phoqgX_min, axis_phoqgX_max, nBinsX_eta, axis_eta_min, axis_eta_max);
 
         h2_phoqgX_phoqgDphi[i] = new TH2D(Form("h2_pho%sX_pho%sDphi", partonTypesStr[i].c_str(), partonTypesStr[i].c_str()),
-                Form(";x_{%s#gamma} = p_{T}^{%s}/%s;#Delta#phi_{%s#gamma} = |#phi^{%s} - %s|",
-                          partonTypesLabel[i].c_str(), partonTypesLabel[i].c_str(), strPhoPt.c_str(),
-                          partonTypesLabel[i].c_str(), partonTypesLabel[i].c_str(), strPhoPhi.c_str()),
+                Form(";%s;%s", strPhoPartonX.c_str(), strPhoPartonDphi.c_str()),
                 nBinsX_phoqgX, axis_phoqgX_min, axis_phoqgX_max, nBinsX_phi, 7 * TMath::Pi() / 8, TMath::Pi()+1e-12);
 
         h_phoqgDeta[i] = new TH1D(Form("h_pho%sDeta", partonTypesStr[i].c_str()),
-                Form(";#Delta#eta_{%s#gamma} = |#eta^{%s} - %s|;",
-                        partonTypesLabel[i].c_str(), partonTypesLabel[i].c_str(), strPhoEta.c_str()),
+                Form(";%s;", strPhoPartonDeta.c_str()),
                 nBinsX_eta, axis_eta_min, 1.5*axis_eta_max);
 
         h_phoqgDphi[i] = new TH1D(Form("h_pho%sDphi", partonTypesStr[i].c_str()),
-                Form(";#Delta#phi_{%s#gamma} = |#phi^{%s} - %s|;",
-                        partonTypesLabel[i].c_str(), partonTypesLabel[i].c_str(), strPhoPhi.c_str()),
+                Form(";%s;", strPhoPartonDphi.c_str()),
                 nBinsX_phi, 0, TMath::Pi()+1e-12);
 
         h_phoqgX[i] = new TH1D(Form("h_pho%sX", partonTypesStr[i].c_str()),
-                Form(";x_{%s#gamma} = p_{T}^{%s}/%s;",
-                        partonTypesLabel[i].c_str(), partonTypesLabel[i].c_str(), strPhoPt.c_str()),
+                Form(";%s;", strPhoPartonX.c_str()),
                 nBinsX_phoqgX, axis_phoqgX_min, axis_phoqgX_max);
 
         h2_phoEta_qgEta[i] = new TH2D(Form("h2_phoEta_%sEta", partonTypesStr[i].c_str()),
-                Form(";%s;#eta^{%s}", strPhoEta.c_str(), partonTypesLabel[i].c_str()),
+                Form(";%s;%s", strPhoEta.c_str(), strPartonEta.c_str()),
                 nBinsX_eta, -1*axis_eta_max, axis_eta_max, nBinsX_eta, -1*axis_eta_max, axis_eta_max);
 
         h2_phoPhi_qgPhi[i] = new TH2D(Form("h2_phoPhi_%sPhi", partonTypesStr[i].c_str()),
-                Form(";%s;#phi^{%s}", strPhoPhi.c_str(), partonTypesLabel[i].c_str()),
+                Form(";%s;%s", strPhoPhi.c_str(), strPartonPhi.c_str()),
                 nBinsX_phi, -TMath::Pi(), TMath::Pi(), nBinsX_phi, -TMath::Pi(), TMath::Pi());
 
         h2_qscale_phoqgDeta[i] = new TH2D(Form("h2_qscale_pho%sDeta", partonTypesStr[i].c_str()),
-                Form(";#Delta#eta_{%s#gamma} = |#eta^{%s} - %s|;Q",
-                        partonTypesLabel[i].c_str(), partonTypesLabel[i].c_str(), strPhoEta.c_str()),
+                Form(";%s;Q", strPhoPartonDeta.c_str()),
                 nBinsX_eta, axis_eta_min, axis_eta_max, nBinsX_pt, axis_pt_min, axis_pt_max);
 
         h_phoPt_qgRatio[i] = new TH1D(Form("h_phoPt_%sRatio", partonTypesStr[i].c_str()),

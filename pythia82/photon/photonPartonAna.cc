@@ -207,43 +207,43 @@ int main(int argc, char* argv[]) {
         treeEvtParton->GetEntry(iEvent);
 
         // hard scatterer analysis
-        // outgoing particles are at index 5 and 6
-        int ip1 = 5;
-        int ip2 = 6;
-        int iPho = -1;
-        if ((isGamma((*event)[ip1])) && (isParton((*event)[ip2])))
-            iPho = ip1;
-        else if ((isGamma((*event)[ip2])) && (isParton((*event)[ip1])))
-            iPho = ip2;
-        if (iPho == -1) continue;
+        // outgoing particles of the hardest subprocess are at index 5 and 6
+        int ip1H = 5;
+        int ip2H = 6;
+        int iphoH = -1;
+        if ((isGamma((*event)[ip1H])) && (isParton((*event)[ip2H])))
+            iphoH = ip1H;
+        else if ((isGamma((*event)[ip2H])) && (isParton((*event)[ip1H])))
+            iphoH = ip2H;
+        if (iphoH == -1) continue;
 
-        int iParton = (iPho == ip1) ? ip2 : ip1;
+        int iPartonH = (iphoH == ip1H) ? ip2H : ip1H;
 
-        double phoPt = (*event)[iPho].pT();
-        double phoEta = (*event)[iPho].eta();
-        double phoPhi = (*event)[iPho].phi();
-        double phoY = (*event)[iPho].y();
+        double hardPho_pt = (*event)[iphoH].pT();
+        double hardPho_eta = (*event)[iphoH].eta();
+        double hardPho_phi = (*event)[iphoH].phi();
+        double hardPho_y = (*event)[iphoH].y();
 
-        h_phoPt->Fill(phoPt);
-        h_phoEta->Fill(TMath::Abs(phoEta));
-        h_phoY->Fill(TMath::Abs(phoY));
-        h2_phoEta_phoPt->Fill(TMath::Abs(phoEta), phoPt);
-        h2_phoY_phoPt->Fill(TMath::Abs(phoY), phoPt);
-        h2_qscale_phoPt->Fill(phoPt, event->scale());
-        h2_qscale_phoEta->Fill(TMath::Abs(phoEta), event->scale());
+        h_phoPt->Fill(hardPho_pt);
+        h_phoEta->Fill(TMath::Abs(hardPho_eta));
+        h_phoY->Fill(TMath::Abs(hardPho_y));
+        h2_phoEta_phoPt->Fill(TMath::Abs(hardPho_eta), hardPho_pt);
+        h2_phoY_phoPt->Fill(TMath::Abs(hardPho_y), hardPho_pt);
+        h2_qscale_phoPt->Fill(hardPho_pt, event->scale());
+        h2_qscale_phoEta->Fill(TMath::Abs(hardPho_eta), event->scale());
 
-        double qgE = (*event)[iParton].e();
-        double qgPt = (*event)[iParton].pT();
-        double qgEta = (*event)[iParton].eta();
-        double qgPhi = (*event)[iParton].phi();
-        double qgY = (*event)[iParton].y();
+        double hardQG_e = (*event)[iPartonH].e();
+        double hardQG_pt = (*event)[iPartonH].pT();
+        double hardQG_eta = (*event)[iPartonH].eta();
+        double hardQG_phi = (*event)[iPartonH].phi();
+        double hardQG_y = (*event)[iPartonH].y();
 
-        double phoqgDeta = TMath::Abs(phoEta - qgEta);
-        double phoqgDphi = std::acos(cos(phoPhi - qgPhi));
-        double phoqgDy = TMath::Abs(phoY - qgY);
-        double phoqgX = qgPt / phoPt;
+        double hardPhoQG_deta = TMath::Abs(hardPho_eta - hardQG_eta);
+        double hardPhoQG_dphi = std::acos(cos(hardPho_phi - hardQG_phi));
+        double hardPhoQG_dy = TMath::Abs(hardPho_y - hardQG_y);
+        double hardPhoQG_X = hardQG_pt / hardPho_pt;
 
-        int iQG = (isQuark((*event)[iParton])) ? kQuark : kGluon;
+        int iQG = (isQuark((*event)[iPartonH])) ? kQuark : kGluon;
 
         std::vector<int> typesQG = {kInclusive, iQG};
         int nTypesQG = typesQG.size();
@@ -251,29 +251,29 @@ int main(int argc, char* argv[]) {
         for (int j = 0; j < nTypesQG; ++j) {
             int k = typesQG[j];
 
-            h_qgPt[k]->Fill(qgPt);
-            h_qgEta[k]->Fill(TMath::Abs(qgEta));
-            h_qgY[k]->Fill(TMath::Abs(qgY));
-            h2_qgEta_qgPt[k]->Fill(TMath::Abs(qgEta), qgPt);
-            h2_qgY_qgPt[k]->Fill(TMath::Abs(qgY), qgPt);
-            h_phoqgDeta[k]->Fill(phoqgDeta);
-            h_phoqgDphi[k]->Fill(phoqgDphi);
-            h_phoqgDy[k]->Fill(phoqgDy);
-            h_phoqgX[k]->Fill(phoqgX);
-            h2_phoEta_qgEta[k]->Fill(phoEta, qgEta);
-            h2_phoPhi_qgPhi[k]->Fill(phoPhi, qgPhi);
-            h2_phoY_qgY[k]->Fill(phoY, qgY);
-            h2_qscale_phoqgDeta[k]->Fill(phoqgDeta, event->scale());
-            h_phoPt_qgRatio[k]->Fill(phoPt);
+            h_qgPt[k]->Fill(hardQG_pt);
+            h_qgEta[k]->Fill(TMath::Abs(hardQG_eta));
+            h_qgY[k]->Fill(TMath::Abs(hardQG_y));
+            h2_qgEta_qgPt[k]->Fill(TMath::Abs(hardQG_eta), hardQG_pt);
+            h2_qgY_qgPt[k]->Fill(TMath::Abs(hardQG_y), hardQG_pt);
+            h_phoqgDeta[k]->Fill(hardPhoQG_deta);
+            h_phoqgDphi[k]->Fill(hardPhoQG_dphi);
+            h_phoqgDy[k]->Fill(hardPhoQG_dy);
+            h_phoqgX[k]->Fill(hardPhoQG_X);
+            h2_phoEta_qgEta[k]->Fill(hardPho_eta, hardQG_eta);
+            h2_phoPhi_qgPhi[k]->Fill(hardPho_phi, hardQG_phi);
+            h2_phoY_qgY[k]->Fill(hardPho_y, hardQG_y);
+            h2_qscale_phoqgDeta[k]->Fill(hardPhoQG_deta, event->scale());
+            h_phoPt_qgRatio[k]->Fill(hardPho_pt);
         }
 
         int eventPartonSize = eventParton->size();
         for (int i = 0; i < eventPartonSize; ++i) {
             int indexOrig = (*eventParton)[i].mother1();
 
-            if (isAncestor(event, indexOrig, iParton)) {
-                double parton_qg_dR = getDR(qgEta, qgPhi, (*event)[indexOrig].eta(), (*event)[indexOrig].phi());
-                double wE = (*event)[indexOrig].e() / qgE;
+            if (isAncestor(event, indexOrig, iPartonH)) {
+                double parton_qg_dR = getDR(hardQG_eta, hardQG_phi, (*event)[indexOrig].eta(), (*event)[indexOrig].phi());
+                double wE = (*event)[indexOrig].e() / hardQG_e;
 
                 int iFinalQG = (isQuark((*event)[indexOrig])) ? kQuark : kGluon;
                 std::vector<int> typesFinalQG = {kInclusive, iFinalQG};

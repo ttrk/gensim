@@ -70,8 +70,11 @@ int main(int argc, char* argv[]) {
     double axis_phoqgX_max = 2;
     TH1D* h_phoPt = new TH1D("h_phoPt",";p_{T}^{#gamma};", nBinsX_pt, axis_pt_min, axis_pt_max);
     TH1D* h_phoEta = new TH1D("h_phoEta",";|#eta^{#gamma}|;", nBinsX_eta, axis_eta_min, axis_eta_max);
+    TH1D* h_phoY = new TH1D("h_phoY",";|y^{#gamma}|;", nBinsX_eta, axis_eta_min, axis_eta_max);
     TH2D* h2_phoEta_phoPt = new TH2D("h2_phoEta_phoPt",";|#eta^{#gamma}|;p_{T}^{#gamma}",
             nBinsX_eta, axis_eta_min, axis_eta_max, nBinsX_pt, axis_pt_min, axis_pt_max);
+    TH2D* h2_phoY_phoPt = new TH2D("h2_phoY_phoPt",";|y^{#gamma}|;p_{T}^{#gamma}",
+                nBinsX_eta, axis_eta_min, axis_eta_max, nBinsX_pt, axis_pt_min, axis_pt_max);
 
     // event info
     TH2D* h2_qscale_phoPt = new TH2D("h2_qscale_phoPt", ";p_{T}^{#gamma};Q", nBinsX_pt, axis_pt_min, axis_pt_max, nBinsX_pt, axis_pt_min, axis_pt_max);
@@ -89,13 +92,17 @@ int main(int argc, char* argv[]) {
     // parton histograms
     TH1D* h_qgPt[kN_PARTONTYPES];
     TH1D* h_qgEta[kN_PARTONTYPES];
+    TH1D* h_qgY[kN_PARTONTYPES];
     TH2D* h2_qgEta_qgPt[kN_PARTONTYPES];
+    TH2D* h2_qgY_qgPt[kN_PARTONTYPES];
     // photon-parton histograms
     TH1D* h_phoqgDeta[kN_PARTONTYPES];
     TH1D* h_phoqgDphi[kN_PARTONTYPES];
+    TH1D* h_phoqgDy[kN_PARTONTYPES];
     TH1D* h_phoqgX[kN_PARTONTYPES];
     TH2D* h2_phoEta_qgEta[kN_PARTONTYPES];
     TH2D* h2_phoPhi_qgPhi[kN_PARTONTYPES];
+    TH2D* h2_phoY_qgY[kN_PARTONTYPES];
     TH2D* h2_qscale_phoqgDeta[kN_PARTONTYPES];
     // photon histograms split for parton types
     TH1D* h_phoPt_qgRatio[kN_PARTONTYPES];
@@ -113,8 +120,16 @@ int main(int argc, char* argv[]) {
                 Form(";|#eta^{%s}|;", partonTypesLabel[i].c_str()),
                 nBinsX_eta, axis_eta_min, axis_eta_max);
 
+        h_qgY[i] = new TH1D(Form("h_%sY", partonTypesStr[i].c_str()),
+                Form(";|y^{%s}|;", partonTypesLabel[i].c_str()),
+                nBinsX_eta, axis_eta_min, axis_eta_max);
+
         h2_qgEta_qgPt[i] = new TH2D(Form("h2_%sEta_%sPt", partonTypesStr[i].c_str(), partonTypesStr[i].c_str()),
                 Form(";|#eta^{%s}|;p_{T}^{%s}", partonTypesLabel[i].c_str(), partonTypesLabel[i].c_str()),
+                nBinsX_eta, axis_eta_min, axis_eta_max, nBinsX_pt, axis_pt_min, axis_pt_max);
+
+        h2_qgY_qgPt[i] = new TH2D(Form("h2_%sY_%sPt", partonTypesStr[i].c_str(), partonTypesStr[i].c_str()),
+                Form(";|y^{%s}|;p_{T}^{%s}", partonTypesLabel[i].c_str(), partonTypesLabel[i].c_str()),
                 nBinsX_eta, axis_eta_min, axis_eta_max, nBinsX_pt, axis_pt_min, axis_pt_max);
 
         h_phoqgDeta[i] = new TH1D(Form("h_pho%sDeta", partonTypesStr[i].c_str()),
@@ -124,6 +139,10 @@ int main(int argc, char* argv[]) {
         h_phoqgDphi[i] = new TH1D(Form("h_pho%sDphi", partonTypesStr[i].c_str()),
                 Form(";#Delta#phi_{%s#gamma} = |#phi^{%s} - #phi^{#gamma}|;", partonTypesLabel[i].c_str(), partonTypesLabel[i].c_str()),
                 nBinsX_phi, 0, TMath::Pi()+1e-12);
+
+        h_phoqgDy[i] = new TH1D(Form("h_pho%sDy", partonTypesStr[i].c_str()),
+                Form(";#Deltay_{%s#gamma} = |y^{%s} - y^{#gamma}|;", partonTypesLabel[i].c_str(), partonTypesLabel[i].c_str()),
+                nBinsX_eta, axis_eta_min, 1.5*axis_eta_max);
 
         h_phoqgX[i] = new TH1D(Form("h_pho%sX", partonTypesStr[i].c_str()),
                 Form(";x_{%s#gamma} = p_{T}^{%s}/p_{T}^{#gamma};", partonTypesLabel[i].c_str(), partonTypesLabel[i].c_str()),
@@ -136,6 +155,10 @@ int main(int argc, char* argv[]) {
         h2_phoPhi_qgPhi[i] = new TH2D(Form("h2_phoPhi_%sPhi", partonTypesStr[i].c_str()),
                 Form(";#phi^{#gamma};#phi^{%s}", partonTypesLabel[i].c_str()),
                 nBinsX_phi, -TMath::Pi(), TMath::Pi(), nBinsX_phi, -TMath::Pi(), TMath::Pi());
+
+        h2_phoY_qgY[i] = new TH2D(Form("h2_phoY_%sY", partonTypesStr[i].c_str()),
+                Form(";y^{#gamma};y^{%s}", partonTypesLabel[i].c_str()),
+                nBinsX_eta, -1*axis_eta_max, axis_eta_max, nBinsX_eta, -1*axis_eta_max, axis_eta_max);
 
         h2_qscale_phoqgDeta[i] = new TH2D(Form("h2_qscale_pho%sDeta", partonTypesStr[i].c_str()),
                 Form(";#Delta#eta_{%s#gamma} = |#eta^{%s} - #eta^{#gamma}|;Q", partonTypesLabel[i].c_str(), partonTypesLabel[i].c_str()),
@@ -178,10 +201,13 @@ int main(int argc, char* argv[]) {
         double phoPt = (*event)[iPho].pT();
         double phoEta = (*event)[iPho].eta();
         double phoPhi = (*event)[iPho].phi();
+        double phoY = (*event)[iPho].y();
 
         h_phoPt->Fill(phoPt);
         h_phoEta->Fill(TMath::Abs(phoEta));
+        h_phoY->Fill(TMath::Abs(phoY));
         h2_phoEta_phoPt->Fill(TMath::Abs(phoEta), phoPt);
+        h2_phoY_phoPt->Fill(TMath::Abs(phoY), phoPt);
         h2_qscale_phoPt->Fill(phoPt, event->scale());
         h2_qscale_phoEta->Fill(TMath::Abs(phoEta), event->scale());
 
@@ -189,9 +215,11 @@ int main(int argc, char* argv[]) {
         double qgPt = (*event)[iParton].pT();
         double qgEta = (*event)[iParton].eta();
         double qgPhi = (*event)[iParton].phi();
+        double qgY = (*event)[iParton].y();
 
         double phoqgDeta = TMath::Abs(phoEta - qgEta);
         double phoqgDphi = std::acos(cos(phoPhi - qgPhi));
+        double phoqgDy = TMath::Abs(phoY - qgY);
         double phoqgX = qgPt / phoPt;
 
         int iQG = (isQuark((*event)[iParton])) ? kQuark : kGluon;
@@ -204,12 +232,16 @@ int main(int argc, char* argv[]) {
 
             h_qgPt[k]->Fill(qgPt);
             h_qgEta[k]->Fill(TMath::Abs(qgEta));
+            h_qgY[k]->Fill(TMath::Abs(qgY));
             h2_qgEta_qgPt[k]->Fill(TMath::Abs(qgEta), qgPt);
+            h2_qgY_qgPt[k]->Fill(TMath::Abs(qgY), qgPt);
             h_phoqgDeta[k]->Fill(phoqgDeta);
             h_phoqgDphi[k]->Fill(phoqgDphi);
+            h_phoqgDy[k]->Fill(phoqgDy);
             h_phoqgX[k]->Fill(phoqgX);
             h2_phoEta_qgEta[k]->Fill(phoEta, qgEta);
             h2_phoPhi_qgPhi[k]->Fill(phoPhi, qgPhi);
+            h2_phoY_qgY[k]->Fill(phoY, qgY);
             h2_qscale_phoqgDeta[k]->Fill(phoqgDeta, event->scale());
             h_phoPt_qgRatio[k]->Fill(phoPt);
         }
@@ -248,6 +280,7 @@ int main(int argc, char* argv[]) {
 
     h_phoPt->Scale(1./h_phoPt->Integral(), "width");
     h_phoEta->Scale(1./h_phoEta->Integral(), "width");
+    h_phoY->Scale(1./h_phoY->Integral(), "width");
 
     for (int i = 0; i < kN_PARTONTYPES; ++i) {
 
@@ -255,8 +288,10 @@ int main(int argc, char* argv[]) {
 
         h_qgPt[i]->Scale(1./h_qgPt[i]->Integral(), "width");
         h_qgEta[i]->Scale(1./h_qgEta[i]->Integral(), "width");
+        h_qgY[i]->Scale(1./h_qgY[i]->Integral(), "width");
         h_phoqgDeta[i]->Scale(1./h_phoqgDeta[i]->Integral(), "width");
         h_phoqgDphi[i]->Scale(1./h_phoqgDphi[i]->Integral(), "width");
+        h_phoqgDy[i]->Scale(1./h_phoqgDy[i]->Integral(), "width");
         h_phoqgX[i]->Scale(1./h_phoqgX[i]->Integral(), "width");
 
         for (int j = 0; j < kN_PARTONTYPES; ++j) {

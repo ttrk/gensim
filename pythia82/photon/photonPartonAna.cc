@@ -88,6 +88,10 @@ int main(int argc, char* argv[]) {
     TH2D* h2_phoEta_phoPt[kN_STATUSES];
     TH2D* h2_phoY_phoPt[kN_STATUSES];
 
+    // ratio / difference of hard process photon and outgoing photon pt / eta
+    TH2D* h2_phoPt_ratio_sHard_sOut;
+    TH2D* h2_phoEta_diff_sHard_sOut;
+
     for (int i = 0; i < kN_STATUSES; ++i) {
 
         h_phoPt[i] = new TH1D(Form("h_%s_phoPt", statusesStr[i].c_str()), Form(";%s;", strPhoPt.c_str()),
@@ -104,6 +108,13 @@ int main(int argc, char* argv[]) {
                 Form(";|%s|;%s", strPhoY.c_str(), strPhoPt.c_str()),
                 nBinsX_eta, axis_eta_min, axis_eta_max, nBinsX_pt, axis_pt_min, axis_pt_max);
     }
+
+    h2_phoPt_ratio_sHard_sOut = new TH2D("h2_phoPt_ratio_sHard_sOut",
+            Form(";%s (hard process);%s (hard process) / %s (outgoing)", strPhoPt.c_str(), strPhoPt.c_str(), strPhoPt.c_str()),
+            nBinsX_pt, axis_pt_min, axis_pt_max, 40, 0.4, 1.6);
+    h2_phoEta_diff_sHard_sOut = new TH2D("h2_phoEta_diff_sHard_sOut",
+            Form(";|%s|;%s (hard process) - %s (outgoing)", strPhoEta.c_str(), strPhoEta.c_str(), strPhoEta.c_str()),
+            nBinsX_eta, axis_eta_min, axis_eta_max, 40, -0.5, 0.5);
 
     // event info
     TH2D* h2_qscale_phoPt = new TH2D("h2_qscale_phoPt", ";p_{T}^{#gamma};Q", nBinsX_pt, axis_pt_min, axis_pt_max, nBinsX_pt, axis_pt_min, axis_pt_max);
@@ -284,6 +295,9 @@ int main(int argc, char* argv[]) {
             h2_phoEta_phoPt[i]->Fill(TMath::Abs(phoEta[i]), phoPt[i]);
             h2_phoY_phoPt[i]->Fill(TMath::Abs(phoY[i]), phoPt[i]);
         }
+        h2_phoPt_ratio_sHard_sOut->Fill(phoPt[kHard], phoPt[kHard] / phoPt[kOut]);
+        h2_phoEta_diff_sHard_sOut->Fill(TMath::Abs(phoEta[kHard]), phoEta[kHard] - phoEta[kOut]);
+
         h2_qscale_phoPt->Fill(phoPt[kHard], event->scale());
         h2_qscale_phoEta->Fill(TMath::Abs(phoEta[kHard]), event->scale());
 

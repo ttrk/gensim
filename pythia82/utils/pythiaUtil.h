@@ -21,6 +21,7 @@ bool isGamma(Pythia8::Particle particle);
 bool isZboson(Pythia8::Particle particle);
 bool isNeutrino(Pythia8::Particle particle);
 bool isCharged(Pythia8::Particle particle, Pythia8::ParticleData& particleData);
+bool hasDaughter(Pythia8::Particle particle);
 bool isAncestor(Pythia8::Event* evtPtr, int iParticle, int iAncestor);
 void fillPartonLevelEvent(Pythia8::Event& event, Pythia8::Event& partonLevelEvent);
 void fillFinalEvent(Pythia8::Event& event, Pythia8::Event& finalEvent);
@@ -58,6 +59,11 @@ bool isNeutrino(Pythia8::Particle particle)
 bool isCharged(Pythia8::Particle particle, Pythia8::ParticleData& particleData)
 {
     return (particleData.charge(particle.id()) != 0);
+}
+
+bool hasDaughter(Pythia8::Particle particle)
+{
+    return (particle.daughter1() != 0 || particle.daughter2() != 0);
 }
 
 /*

@@ -57,6 +57,13 @@ int main(int argc, char* argv[]) {
 
     TH1::SetDefaultSumw2();
 
+    enum STATUSES {
+        kHard,
+        kOut,
+        kN_STATUSES
+    };
+    std::string statusesStr[kN_STATUSES] = {"sHard", "sOut"};
+
     // photon histograms
     int nBinsX_pt = 30;
     double axis_pt_min = 60;
@@ -75,13 +82,28 @@ int main(int argc, char* argv[]) {
     std::string strPhoPhi = Form("#phi^{%s}", strPho.c_str());
     std::string strPhoY = Form("y^{%s}", strPho.c_str());
 
-    TH1D* h_phoPt = new TH1D("h_phoPt",Form(";%s;", strPhoPt.c_str()), nBinsX_pt, axis_pt_min, axis_pt_max);
-    TH1D* h_phoEta = new TH1D("h_phoEta",Form(";|%s|;", strPhoEta.c_str()), nBinsX_eta, axis_eta_min, axis_eta_max);
-    TH1D* h_phoY = new TH1D("h_phoY",Form(";|%s|;", strPhoY.c_str()), nBinsX_eta, axis_eta_min, axis_eta_max);
-    TH2D* h2_phoEta_phoPt = new TH2D("h2_phoEta_phoPt",Form(";|%s|;%s", strPhoEta.c_str(), strPhoPt.c_str()),
-            nBinsX_eta, axis_eta_min, axis_eta_max, nBinsX_pt, axis_pt_min, axis_pt_max);
-    TH2D* h2_phoY_phoPt = new TH2D("h2_phoY_phoPt",Form(";|%s|;%s", strPhoY.c_str(), strPhoPt.c_str()),
-            nBinsX_eta, axis_eta_min, axis_eta_max, nBinsX_pt, axis_pt_min, axis_pt_max);
+    TH1D* h_phoPt[kN_STATUSES];
+    TH1D* h_phoEta[kN_STATUSES];
+    TH1D* h_phoY[kN_STATUSES];
+    TH2D* h2_phoEta_phoPt[kN_STATUSES];
+    TH2D* h2_phoY_phoPt[kN_STATUSES];
+
+    for (int i = 0; i < kN_STATUSES; ++i) {
+
+        h_phoPt[i] = new TH1D(Form("h_%s_phoPt", statusesStr[i].c_str()), Form(";%s;", strPhoPt.c_str()),
+                nBinsX_pt, axis_pt_min, axis_pt_max);
+        h_phoEta[i] = new TH1D(Form("h_%s_phoEta", statusesStr[i].c_str()), Form(";|%s|;", strPhoEta.c_str()),
+                nBinsX_eta, axis_eta_min, axis_eta_max);
+        h_phoY[i] = new TH1D(Form("h_%s_phoY", statusesStr[i].c_str()), Form(";|%s|;", strPhoY.c_str()),
+                nBinsX_eta, axis_eta_min, axis_eta_max);
+
+        h2_phoEta_phoPt[i] = new TH2D(Form("h2_%s_phoEta_phoPt", statusesStr[i].c_str()),
+                Form(";|%s|;%s", strPhoEta.c_str(), strPhoPt.c_str()),
+                nBinsX_eta, axis_eta_min, axis_eta_max, nBinsX_pt, axis_pt_min, axis_pt_max);
+        h2_phoY_phoPt[i] = new TH2D(Form("h2_%s_phoY_phoPt", statusesStr[i].c_str()),
+                Form(";|%s|;%s", strPhoY.c_str(), strPhoPt.c_str()),
+                nBinsX_eta, axis_eta_min, axis_eta_max, nBinsX_pt, axis_pt_min, axis_pt_max);
+    }
 
     // event info
     TH2D* h2_qscale_phoPt = new TH2D("h2_qscale_phoPt", ";p_{T}^{#gamma};Q", nBinsX_pt, axis_pt_min, axis_pt_max, nBinsX_pt, axis_pt_min, axis_pt_max);
@@ -210,27 +232,60 @@ int main(int argc, char* argv[]) {
         // outgoing particles of the hardest subprocess are at index 5 and 6
         int ip1H = 5;
         int ip2H = 6;
-        int iphoH = -1;
+        int iPhoH = -1;
         if ((isGamma((*event)[ip1H])) && (isParton((*event)[ip2H])))
-            iphoH = ip1H;
+            iPhoH = ip1H;
         else if ((isGamma((*event)[ip2H])) && (isParton((*event)[ip1H])))
-            iphoH = ip2H;
-        if (iphoH == -1) continue;
+            iPhoH = ip2H;
+        if (iPhoH == -1) continue;
 
-        int iPartonH = (iphoH == ip1H) ? ip2H : ip1H;
+        int iPartonH = (iPhoH == ip1H) ? ip2H : ip1H;
 
-        double hardPho_pt = (*event)[iphoH].pT();
-        double hardPho_eta = (*event)[iphoH].eta();
-        double hardPho_phi = (*event)[iphoH].phi();
-        double hardPho_y = (*event)[iphoH].y();
+        int eventPartonSize = eventParton->size();
+        // search the hard scattering photon in outgoing particles
+        int iOutPho = -1;
+        int nOutPhoCand = 0;
+        for (int i = 0; i < eventPartonSize; ++i) {
 
-        h_phoPt->Fill(hardPho_pt);
-        h_phoEta->Fill(TMath::Abs(hardPho_eta));
-        h_phoY->Fill(TMath::Abs(hardPho_y));
-        h2_phoEta_phoPt->Fill(TMath::Abs(hardPho_eta), hardPho_pt);
-        h2_phoY_phoPt->Fill(TMath::Abs(hardPho_y), hardPho_pt);
-        h2_qscale_phoPt->Fill(hardPho_pt, event->scale());
-        h2_qscale_phoEta->Fill(TMath::Abs(hardPho_eta), event->scale());
+            if (!isGamma((*eventParton)[i]))  continue;
+            int indexOrig = (*eventParton)[i].mother1();
+
+            if (hasDaughter((*event)[indexOrig]))  continue;
+
+            // must be a daughter of the hard scattering particle
+            if (!isAncestor(event, indexOrig, iPhoH))  continue;
+
+            nOutPhoCand++;
+            iOutPho = indexOrig;
+        }
+        // there must be exactly one outgoing, final photon
+        if (iOutPho == -1 || nOutPhoCand != 1)  continue;
+
+        std::vector<double> phoPt(kN_STATUSES, -1);
+        std::vector<double> phoEta(kN_STATUSES, -1);
+        std::vector<double> phoPhi(kN_STATUSES, -1);
+        std::vector<double> phoY(kN_STATUSES, -1);
+
+        std::vector<int> indicesPho = {iPhoH, iOutPho};
+        for (int i = 0; i < kN_STATUSES; ++i) {
+            int j = indicesPho[i];
+
+            phoPt[i] = (*event)[j].pT();
+            phoEta[i] = (*event)[j].eta();
+            phoPhi[i] = (*event)[j].phi();
+            phoY[i] = (*event)[j].y();
+        }
+
+        for (int i = 0; i < kN_STATUSES; ++i) {
+
+            h_phoPt[i]->Fill(phoPt[i]);
+            h_phoEta[i]->Fill(TMath::Abs(phoEta[i]));
+            h_phoY[i]->Fill(TMath::Abs(phoY[i]));
+            h2_phoEta_phoPt[i]->Fill(TMath::Abs(phoEta[i]), phoPt[i]);
+            h2_phoY_phoPt[i]->Fill(TMath::Abs(phoY[i]), phoPt[i]);
+        }
+        h2_qscale_phoPt->Fill(phoPt[kHard], event->scale());
+        h2_qscale_phoEta->Fill(TMath::Abs(phoEta[kHard]), event->scale());
 
         double hardQG_e = (*event)[iPartonH].e();
         double hardQG_pt = (*event)[iPartonH].pT();
@@ -238,10 +293,10 @@ int main(int argc, char* argv[]) {
         double hardQG_phi = (*event)[iPartonH].phi();
         double hardQG_y = (*event)[iPartonH].y();
 
-        double hardPhoQG_deta = TMath::Abs(hardPho_eta - hardQG_eta);
-        double hardPhoQG_dphi = std::acos(cos(hardPho_phi - hardQG_phi));
-        double hardPhoQG_dy = TMath::Abs(hardPho_y - hardQG_y);
-        double hardPhoQG_X = hardQG_pt / hardPho_pt;
+        double hardPhoQG_deta = TMath::Abs(phoEta[kHard] - hardQG_eta);
+        double hardPhoQG_dphi = std::acos(cos(phoPhi[kHard] - hardQG_phi));
+        double hardPhoQG_dy = TMath::Abs(phoY[kHard] - hardQG_y);
+        double hardPhoQG_X = hardQG_pt / phoPt[kHard];
 
         int iQG = (isQuark((*event)[iPartonH])) ? kQuark : kGluon;
 
@@ -260,14 +315,13 @@ int main(int argc, char* argv[]) {
             h_phoqgDphi[k]->Fill(hardPhoQG_dphi);
             h_phoqgDy[k]->Fill(hardPhoQG_dy);
             h_phoqgX[k]->Fill(hardPhoQG_X);
-            h2_phoEta_qgEta[k]->Fill(hardPho_eta, hardQG_eta);
-            h2_phoPhi_qgPhi[k]->Fill(hardPho_phi, hardQG_phi);
-            h2_phoY_qgY[k]->Fill(hardPho_y, hardQG_y);
+            h2_phoEta_qgEta[k]->Fill(phoEta[kHard], hardQG_eta);
+            h2_phoPhi_qgPhi[k]->Fill(phoPhi[kHard], hardQG_phi);
+            h2_phoY_qgY[k]->Fill(phoY[kHard], hardQG_y);
             h2_qscale_phoqgDeta[k]->Fill(hardPhoQG_deta, event->scale());
-            h_phoPt_qgRatio[k]->Fill(hardPho_pt);
+            h_phoPt_qgRatio[k]->Fill(phoPt[kHard]);
         }
 
-        int eventPartonSize = eventParton->size();
         for (int i = 0; i < eventPartonSize; ++i) {
             int indexOrig = (*eventParton)[i].mother1();
 
@@ -299,9 +353,12 @@ int main(int argc, char* argv[]) {
     // Save histogram on file and close file.
     std::cout << "saving histograms" << std::endl;
 
-    h_phoPt->Scale(1./h_phoPt->Integral(), "width");
-    h_phoEta->Scale(1./h_phoEta->Integral(), "width");
-    h_phoY->Scale(1./h_phoY->Integral(), "width");
+    for (int i = 0; i < kN_STATUSES; ++i) {
+
+        h_phoPt[i]->Scale(1./h_phoPt[i]->Integral(), "width");
+        h_phoEta[i]->Scale(1./h_phoEta[i]->Integral(), "width");
+        h_phoY[i]->Scale(1./h_phoY[i]->Integral(), "width");
+    }
 
     for (int i = 0; i < kN_PARTONTYPES; ++i) {
 

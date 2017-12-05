@@ -106,13 +106,16 @@ int main(int argc, char* argv[]) {
     TH2D* h2_qscale_phoPt = new TH2D("h2_qscale_phoPt", ";p_{T}^{#gamma};Q", nBinsX_pt, axis_pt_min, axis_pt_max, nBinsX_pt, axis_pt_min, axis_pt_max);
     TH2D* h2_qscale_phoEta = new TH2D("h2_qscale_phoEta", ";|#eta^{#gamma}|;Q", nBinsX_eta, axis_eta_min, axis_eta_max, nBinsX_pt, axis_pt_min, axis_pt_max);
 
-    // ratio / difference of hard process photon and outgoing photon pt / eta
-    TH2D* h2_phoPt_ratio_sHard_sOut = new TH2D("h2_phoPt_ratio_sHard_sOut",
+    // ratio / difference of hard process photon and outgoing photon pt / eta / phi
+    TH2D* h2_phoPt_phoPt_ratio_sHard_sOut = new TH2D("h2_phoPt_phoPt_ratio_sHard_sOut",
             Form(";%s (hard process);%s (hard process) / %s (outgoing)", strPhoPt.c_str(), strPhoPt.c_str(), strPhoPt.c_str()),
             nBinsX_pt, axis_pt_min, axis_pt_max, 40, 0.4, 1.6);
-    TH2D* h2_phoEta_diff_sHard_sOut = new TH2D("h2_phoEta_diff_sHard_sOut",
-            Form(";|%s|;%s (hard process) - %s (outgoing)", strPhoEta.c_str(), strPhoEta.c_str(), strPhoEta.c_str()),
-            nBinsX_eta, axis_eta_min, axis_eta_max, 40, -0.5, 0.5);
+    TH2D* h2_phoPt_phoEta_diff_sHard_sOut = new TH2D("h2_phoPt_phoEta_diff_sHard_sOut",
+            Form(";%s;%s (hard process) - %s (outgoing)", strPhoPt.c_str(), strPhoEta.c_str(), strPhoEta.c_str()),
+            nBinsX_pt, axis_pt_min, axis_pt_max, 40, -0.5, 0.5);
+    TH2D* h2_phoPt_phoPhi_diff_sHard_sOut = new TH2D("h2_phoPt_phoPhi_diff_sHard_sOut",
+            Form(";%s;%s (hard process) - %s (outgoing)", strPhoPt.c_str(), strPhoPhi.c_str(), strPhoPhi.c_str()),
+            nBinsX_pt, axis_pt_min, axis_pt_max, 40, -0.5, 0.5);
 
     enum PARTONTYPES {
         kInclusive,
@@ -290,8 +293,9 @@ int main(int argc, char* argv[]) {
         h2_qscale_phoPt->Fill(phoPt[iStatusPhoton], event->scale());
         h2_qscale_phoEta->Fill(TMath::Abs(phoEta[iStatusPhoton]), event->scale());
 
-        h2_phoPt_ratio_sHard_sOut->Fill(phoPt[kHard], phoPt[kHard] / phoPt[kOut]);
-        h2_phoEta_diff_sHard_sOut->Fill(TMath::Abs(phoEta[kHard]), phoEta[kHard] - phoEta[kOut]);
+        h2_phoPt_phoPt_ratio_sHard_sOut->Fill(phoPt[kHard], phoPt[kHard] / phoPt[kOut]);
+        h2_phoPt_phoEta_diff_sHard_sOut->Fill(phoPt[kHard], phoEta[kHard] - phoEta[kOut]);
+        h2_phoPt_phoPhi_diff_sHard_sOut->Fill(phoPt[kHard], getDPHI(phoPhi[kHard], phoPhi[kOut]));
 
         double hardQG_e = (*event)[iPartonH].e();
         double hardQG_pt = (*event)[iPartonH].pT();

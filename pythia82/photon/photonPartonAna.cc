@@ -88,6 +88,17 @@ int main(int argc, char* argv[]) {
     double axis_phoqgX_min = 0;
     double axis_phoqgX_max = 2;
 
+    int nBinsX_ratio_pt = 50;
+    double axis_ratio_pt_min = 0;
+    double axis_ratio_pt_max = 2;
+
+    int nBinsX_diff_eta = 50;
+    double axis_diff_eta_max = 0.5;
+    double axis_diff_eta_min = -1*axis_diff_eta_max;
+    int nBinsX_diff_phi = 50;
+    double axis_diff_phi_max = 0.5;
+    double axis_diff_phi_min = -1*axis_diff_phi_max;
+
     std::string strPho = "#gamma";
     std::string strPhoPt = Form("p_{T}^{%s}", strPho.c_str());
     std::string strPhoEta = Form("#eta^{%s}", strPho.c_str());
@@ -115,13 +126,13 @@ int main(int argc, char* argv[]) {
     // ratio / difference of outgoing photon and hard process photon pt / eta / phi
     TH2D* h2_pt_phoPt_ratio_sOut_sHard = new TH2D("h2_pt_phoPt_ratio_sOut_sHard",
             Form(";%s (hard process);%s (outgoing) / %s (hard process)", strPhoPt.c_str(), strPhoPt.c_str(), strPhoPt.c_str()),
-            nBinsX_pt, axis_pt_min, axis_pt_max, 40, 0.4, 1.6);
+            nBinsX_pt, axis_pt_min, axis_pt_max, nBinsX_ratio_pt, axis_ratio_pt_min, axis_ratio_pt_max);
     TH2D* h2_pt_phoEta_diff_sOut_sHard = new TH2D("h2_pt_phoEta_diff_sOut_sHard",
             Form(";%s;%s (outgoing) - %s (hard process)", strPhoPt.c_str(), strPhoEta.c_str(), strPhoEta.c_str()),
-            nBinsX_pt, axis_pt_min, axis_pt_max, 40, -0.5, 0.5);
+            nBinsX_pt, axis_pt_min, axis_pt_max, nBinsX_diff_eta, axis_diff_eta_min, axis_diff_eta_max);
     TH2D* h2_pt_phoPhi_diff_sOut_sHard = new TH2D("h2_pt_phoPhi_diff_sOut_sHard",
             Form(";%s;%s (outgoing) - %s (hard process)", strPhoPt.c_str(), strPhoPhi.c_str(), strPhoPhi.c_str()),
-            nBinsX_pt, axis_pt_min, axis_pt_max, 40, -0.5, 0.5);
+            nBinsX_pt, axis_pt_min, axis_pt_max, nBinsX_diff_phi, axis_diff_phi_min, axis_diff_phi_max);
 
     enum PARTONTYPES {
         kInclusive,
@@ -231,15 +242,15 @@ int main(int argc, char* argv[]) {
 
         h2_pt_qgPt_ratio_sOut_sHard[i] = new TH2D(Form("h2_pt_%sPt_ratio_sOut_sHard", partonTypesStr[i].c_str()),
                 Form(";%s (hard process);%s (outgoing) / %s (hard process)", strPartonPt.c_str(), strPartonPt.c_str(), strPartonPt.c_str()),
-                nBinsX_pt, axis_pt_min, axis_pt_max, 40, 0, 2);
+                nBinsX_pt, axis_pt_min, axis_pt_max, nBinsX_ratio_pt, axis_ratio_pt_min, axis_ratio_pt_max);
 
         h2_pt_qgEta_diff_sOut_sHard[i] = new TH2D(Form("h2_pt_%sEta_diff_sOut_sHard", partonTypesStr[i].c_str()),
                 Form(";%s;%s (outgoing) - %s (hard process)", strPartonPt.c_str(), strPartonEta.c_str(), strPartonEta.c_str()),
-                nBinsX_pt, axis_pt_min, axis_pt_max, 40, -0.5, 0.5);
+                nBinsX_pt, axis_pt_min, axis_pt_max, nBinsX_diff_eta, axis_diff_eta_min, axis_diff_eta_max);
 
         h2_pt_qgPhi_diff_sOut_sHard[i] = new TH2D(Form("h2_pt_%sPhi_diff_sOut_sHard", partonTypesStr[i].c_str()),
                 Form(";%s;%s (outgoing) - %s (hard process)", strPartonPt.c_str(), strPartonPhi.c_str(), strPartonPhi.c_str()),
-                nBinsX_pt, axis_pt_min, axis_pt_max, 40, -0.5, 0.5);
+                nBinsX_pt, axis_pt_min, axis_pt_max, nBinsX_diff_phi, axis_diff_phi_min, axis_diff_phi_max);
 
         for (int j = 0; j < kN_PARTONTYPES; ++j) {
             h_finalqg_qg_dR[i][j] = new TH1D(Form("h_final%s_%s_dR", partonTypesStr[j].c_str(), partonTypesStr[i].c_str()),

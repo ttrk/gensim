@@ -112,15 +112,15 @@ int main(int argc, char* argv[]) {
     TH2D* h2_qscale_phoPt = new TH2D("h2_qscale_phoPt", ";p_{T}^{#gamma};Q", nBinsX_pt, axis_pt_min, axis_pt_max, nBinsX_pt, axis_pt_min, axis_pt_max);
     TH2D* h2_qscale_phoEta = new TH2D("h2_qscale_phoEta", ";|#eta^{#gamma}|;Q", nBinsX_eta, axis_eta_min, axis_eta_max, nBinsX_pt, axis_pt_min, axis_pt_max);
 
-    // ratio / difference of hard process photon and outgoing photon pt / eta / phi
-    TH2D* h2_phoPt_phoPt_ratio_sHard_sOut = new TH2D("h2_phoPt_phoPt_ratio_sHard_sOut",
-            Form(";%s (hard process);%s (hard process) / %s (outgoing)", strPhoPt.c_str(), strPhoPt.c_str(), strPhoPt.c_str()),
+    // ratio / difference of outgoing photon and hard process photon pt / eta / phi
+    TH2D* h2_pt_phoPt_ratio_sOut_sHard = new TH2D("h2_pt_phoPt_ratio_sOut_sHard",
+            Form(";%s (hard process);%s (outgoing) / %s (hard process)", strPhoPt.c_str(), strPhoPt.c_str(), strPhoPt.c_str()),
             nBinsX_pt, axis_pt_min, axis_pt_max, 40, 0.4, 1.6);
-    TH2D* h2_phoPt_phoEta_diff_sHard_sOut = new TH2D("h2_phoPt_phoEta_diff_sHard_sOut",
-            Form(";%s;%s (hard process) - %s (outgoing)", strPhoPt.c_str(), strPhoEta.c_str(), strPhoEta.c_str()),
+    TH2D* h2_pt_phoEta_diff_sOut_sHard = new TH2D("h2_pt_phoEta_diff_sOut_sHard",
+            Form(";%s;%s (outgoing) - %s (hard process)", strPhoPt.c_str(), strPhoEta.c_str(), strPhoEta.c_str()),
             nBinsX_pt, axis_pt_min, axis_pt_max, 40, -0.5, 0.5);
-    TH2D* h2_phoPt_phoPhi_diff_sHard_sOut = new TH2D("h2_phoPt_phoPhi_diff_sHard_sOut",
-            Form(";%s;%s (hard process) - %s (outgoing)", strPhoPt.c_str(), strPhoPhi.c_str(), strPhoPhi.c_str()),
+    TH2D* h2_pt_phoPhi_diff_sOut_sHard = new TH2D("h2_pt_phoPhi_diff_sOut_sHard",
+            Form(";%s;%s (outgoing) - %s (hard process)", strPhoPt.c_str(), strPhoPhi.c_str(), strPhoPhi.c_str()),
             nBinsX_pt, axis_pt_min, axis_pt_max, 40, -0.5, 0.5);
 
     enum PARTONTYPES {
@@ -149,6 +149,10 @@ int main(int argc, char* argv[]) {
     TH2D* h2_qscale_phoqgDeta[kN_PARTONTYPES];
     // photon histograms split for parton types
     TH1D* h_phoPt_qgRatio[kN_PARTONTYPES];
+    // ratio / difference of outgoing parton and hard process parton pt / eta / phi
+    TH2D* h2_pt_qgPt_ratio_sOut_sHard[kN_PARTONTYPES];
+    TH2D* h2_pt_qgEta_diff_sOut_sHard[kN_PARTONTYPES];
+    TH2D* h2_pt_qgPhi_diff_sOut_sHard[kN_PARTONTYPES];
     // histograms for energy and multiplicity distribution of final partons as func. of angle with the initial parton
     TH1D* h_finalqg_qg_dR[kN_PARTONTYPES][kN_PARTONTYPES];
     TH1D* h_finalqg_qg_dR_wE[kN_PARTONTYPES][kN_PARTONTYPES];
@@ -225,6 +229,18 @@ int main(int argc, char* argv[]) {
                 Form(";%s;", strPhoPt.c_str()),
                 nBinsX_pt, axis_pt_min, axis_pt_max);
 
+        h2_pt_qgPt_ratio_sOut_sHard[i] = new TH2D(Form("h2_pt_%sPt_ratio_sOut_sHard", partonTypesStr[i].c_str()),
+                Form(";%s (hard process);%s (outgoing) / %s (hard process)", strPartonPt.c_str(), strPartonPt.c_str(), strPartonPt.c_str()),
+                nBinsX_pt, axis_pt_min, axis_pt_max, 40, 0, 2);
+
+        h2_pt_qgEta_diff_sOut_sHard[i] = new TH2D(Form("h2_pt_%sEta_diff_sOut_sHard", partonTypesStr[i].c_str()),
+                Form(";%s;%s (outgoing) - %s (hard process)", strPartonPt.c_str(), strPartonEta.c_str(), strPartonEta.c_str()),
+                nBinsX_pt, axis_pt_min, axis_pt_max, 40, -0.5, 0.5);
+
+        h2_pt_qgPhi_diff_sOut_sHard[i] = new TH2D(Form("h2_pt_%sPhi_diff_sOut_sHard", partonTypesStr[i].c_str()),
+                Form(";%s;%s (outgoing) - %s (hard process)", strPartonPt.c_str(), strPartonPhi.c_str(), strPartonPhi.c_str()),
+                nBinsX_pt, axis_pt_min, axis_pt_max, 40, -0.5, 0.5);
+
         for (int j = 0; j < kN_PARTONTYPES; ++j) {
             h_finalqg_qg_dR[i][j] = new TH1D(Form("h_final%s_%s_dR", partonTypesStr[j].c_str(), partonTypesStr[i].c_str()),
                     Form(";#DeltaR_{%s final %s};", partonTypesLabel[i].c_str(), partonTypesLabel[j].c_str()), nBinsX_eta, 0, 1.5);
@@ -299,9 +315,9 @@ int main(int argc, char* argv[]) {
         h2_qscale_phoPt->Fill(phoPt[iStatusPhoton], event->scale());
         h2_qscale_phoEta->Fill(TMath::Abs(phoEta[iStatusPhoton]), event->scale());
 
-        h2_phoPt_phoPt_ratio_sHard_sOut->Fill(phoPt[kHard], phoPt[kHard] / phoPt[kOut]);
-        h2_phoPt_phoEta_diff_sHard_sOut->Fill(phoPt[kHard], phoEta[kHard] - phoEta[kOut]);
-        h2_phoPt_phoPhi_diff_sHard_sOut->Fill(phoPt[kHard], getDPHI(phoPhi[kHard], phoPhi[kOut]));
+        h2_pt_phoPt_ratio_sOut_sHard->Fill(phoPt[kHard], phoPt[kOut] / phoPt[kHard]);
+        h2_pt_phoEta_diff_sOut_sHard->Fill(phoPt[kHard], phoEta[kOut] - phoEta[kHard]);
+        h2_pt_phoPhi_diff_sOut_sHard->Fill(phoPt[kHard], getDPHI(phoPhi[kOut], phoPhi[kHard]));
 
         // search the hard scattering parton in final parton level particles
         int iOutParton = -1;
@@ -366,6 +382,9 @@ int main(int argc, char* argv[]) {
             h2_phoY_qgY[k]->Fill(phoY[iStatusPhoton], qgY[iStatusParton]);
             h2_qscale_phoqgDeta[k]->Fill(phoqgDeta, event->scale());
             h_phoPt_qgRatio[k]->Fill(phoPt[iStatusPhoton]);
+            h2_pt_qgPt_ratio_sOut_sHard[k]->Fill(qgPt[kHard], qgPt[kOut] / qgPt[kHard]);
+            h2_pt_qgEta_diff_sOut_sHard[k]->Fill(qgPt[kHard], qgEta[kOut] - qgEta[kHard]);
+            h2_pt_qgPhi_diff_sOut_sHard[k]->Fill(qgPt[kHard], getDPHI(qgPhi[kOut], qgPhi[kHard]));
         }
 
         for (int i = 0; i < eventPartonSize; ++i) {

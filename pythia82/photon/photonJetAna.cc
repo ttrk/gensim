@@ -93,7 +93,7 @@ int main(int argc, char* argv[]) {
 
     std::cout << "initialize the Pythia class to obtain info that is not accessible through event TTree." << std::endl;
     std::cout << "##### Pythia initialize #####" << std::endl;
-    Pythia pythia;
+    Pythia8::Pythia pythia;
     std::cout << "##### Pythia initialize - END #####" << std::endl;
 
     TFile* outputFile = new TFile(outputFileName.c_str(), "RECREATE");

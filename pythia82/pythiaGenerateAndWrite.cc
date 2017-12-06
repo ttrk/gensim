@@ -14,8 +14,6 @@
 // Error in <TTree::Branch>: The pointer specified for event is not of a class known to ROOT
 #include "utils/pythiaUtil.h"
 
-using namespace Pythia8;
-
 int main(int argc, char* argv[]) {
 
     // Read in commands from external file.
@@ -30,7 +28,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Generator.
-    Pythia pythia;
+    Pythia8::Pythia pythia;
     pythia.readFile(cardFileName.c_str());
 
     // Extract settings to be used in the main program.

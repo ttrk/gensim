@@ -10,4 +10,4 @@
 
 #include "Pythia8/Pythia.h"
 
-using namespace Pythia8;
+//using namespace Pythia8;      // do not "use namespace" to avoid the following error "reference to ‘ROOT’ is ambiguous"

@@ -11,7 +11,7 @@ outputFiles=(
 );
 
 processCodes=("-1" "201" "202,203")
-processCodesLabels=("procAll" "proc201" "proc202203")
+processCodesSuffixes=("" "_proc201" "_proc202203")
 
 arrayIndices=${!outputFiles[*]}
 indicesProcessCodes=${!processCodes[*]}
@@ -22,10 +22,10 @@ do
     inputFile=${inputFiles[i1]}
 
     processCode=${processCodes[i2]}
-    processCodeLabel=${processCodesLabels[i2]}
+    processCodeSuffix=${processCodesSuffixes[i2]}
 
     outputFileTmp=${outputFiles[i1]}
-    outputFile="${outputFileTmp/.root/_${processCodeLabel}.root}"
+    outputFile="${outputFileTmp/.root/${processCodeSuffix}.root}"
     outputFileLOG="${outputFile/.root/.log}"
     outDir=$(dirname "${outputFile}")
     mkdir -p $outDir

@@ -18,12 +18,12 @@ int main(int argc, char* argv[]) {
 
     // Read in commands from external file.
     std::string cardFileName = "mycard.cmnd";
-    if (argc > 0) {
+    if (argc > 1) {
         cardFileName = argv[1];
     }
 
     std::string outFileName = "pythiaGenerateAndWrite.root";
-    if (argc > 1) {
+    if (argc > 2) {
         outFileName = argv[2];
     }
 

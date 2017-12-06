@@ -31,19 +31,19 @@
 int main(int argc, char* argv[]) {
     std::cout << "running eventInfoAna()" << std::endl;
 
-    std::string inputFileName = "pythiaEvents.root";
-    if (argc > 0) {
+    std::string inputFileName = argv[1];
+    if (argc > 1) {
         inputFileName = argv[1];
     }
 
     std::string outputFileName = "eventInfoAna_out.root";
-    if (argc > 1) {
+    if (argc > 2) {
         outputFileName = argv[2];
     }
 
     // comma separated list of process codes
     std::vector<int> processCodes;
-    if (argc > 2) {
+    if (argc > 3) {
         std::vector<std::string> processCodesStr = split(argv[3], ",");
         for (int i = 0; i < processCodesStr.size(); ++i) {
             processCodes.push_back(std::atoi(processCodesStr.at(i).c_str()));

@@ -31,22 +31,22 @@ int main(int argc, char* argv[]) {
     std::cout << "running photonPartonAna()" << std::endl;
 
     std::string inputFileName = "promptPhoton.root";
-    if (argc > 0) {
+    if (argc > 1) {
         inputFileName = argv[1];
     }
 
     std::string outputFileName = "photonPartonAna_out.root";
-    if (argc > 1) {
+    if (argc > 2) {
         outputFileName = argv[2];
     }
 
     int iStatusPhoton = 0;
-    if (argc > 2) {
+    if (argc > 3) {
         iStatusPhoton = std::atoi(argv[3]);
     }
 
     int iStatusParton = 0;
-    if (argc > 3) {
+    if (argc > 4) {
         iStatusParton = std::atoi(argv[4]);
     }
 

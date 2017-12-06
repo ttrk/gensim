@@ -32,22 +32,22 @@ int main(int argc, char* argv[]) {
     std::cout << "running photonJetAna()" << std::endl;
 
     std::string eventFileName = "promptPhoton.root";
-    if (argc > 0) {
+    if (argc > 1) {
         eventFileName = argv[1];
     }
 
     std::string jetFileName = "jets.root";
-    if (argc > 1) {
+    if (argc > 2) {
         jetFileName = argv[2];
     }
 
     std::string jetTreeName = "ak3jets";
-    if (argc > 2) {
+    if (argc > 3) {
         jetTreeName = argv[3];
     }
 
     std::string outputFileName = "photonJetAna_out.root";
-    if (argc > 3) {
+    if (argc > 4) {
         outputFileName = argv[4];
     }
 

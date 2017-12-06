@@ -20,7 +20,8 @@
 // dictionary to read Pythia8::Event
 #include "../dictionary/dict4RootDct.cc"
 #include "../utils/pythiaUtil.h"
-#include "../utils/physicsUtil.h"
+#include "../../utilities/physicsUtil.h"
+#include "../../utilities/th1Util.h"
 
 #include <iostream>
 #include <string>
@@ -64,6 +65,10 @@ int main(int argc, char* argv[]) {
     Pythia8::Event *eventParton = 0;
     TTree* treeEvtParton = (TTree*)inputFile->Get("evtParton");
     treeEvtParton->SetBranchAddress("event", &eventParton);
+
+    Pythia8::Info *info = 0;
+    TTree* treeEvtInfo = (TTree*)inputFile->Get("evtInfo");
+    treeEvtInfo->SetBranchAddress("info", &info);
 
     TFile* outputFile = new TFile(outputFileName.c_str(), "RECREATE");
 
@@ -158,6 +163,7 @@ int main(int argc, char* argv[]) {
     TH2D* h2_phoPhi_qgPhi[kN_PARTONTYPES];
     TH2D* h2_phoY_qgY[kN_PARTONTYPES];
     TH2D* h2_qscale_phoqgDeta[kN_PARTONTYPES];
+    TH2D* h2_phoqgMeanEta_x1Overx2[kN_PARTONTYPES];
     // photon histograms split for parton types
     TH1D* h_phoPt_qgRatio[kN_PARTONTYPES];
     // ratio / difference of outgoing parton and hard process parton pt / eta / phi
@@ -177,12 +183,14 @@ int main(int argc, char* argv[]) {
         std::string strPartonY = Form("y^{%s}", partonTypesLabel[i].c_str());
 
         std::string strPhoPartonX = Form("x_{%s%s} = %s/%s", partonTypesLabel[i].c_str(), strPho.c_str(), strPartonPt.c_str(), strPhoPt.c_str());
-        std::string strPhoPartonDeta = Form("#Delta#eta_{%s%s} = |%s - %s|",
+        std::string strPhoPartonDeta = Form("#Delta#eta_{%s %s} = |%s - %s|",
                 partonTypesLabel[i].c_str(), strPho.c_str(), strPartonEta.c_str(), strPhoEta.c_str());
-        std::string strPhoPartonDphi = Form("#Delta#phi_{%s%s} = |%s - %s|",
+        std::string strPhoPartonDphi = Form("#Delta#phi_{%s %s} = |%s - %s|",
                 partonTypesLabel[i].c_str(), strPho.c_str(), strPartonPhi.c_str(), strPhoPhi.c_str());
-        std::string strPhoPartonDy = Form("#Deltay_{%s%s} = |%s - %s|",
+        std::string strPhoPartonDy = Form("#Deltay_{%s %s} = |%s - %s|",
                 partonTypesLabel[i].c_str(), strPho.c_str(), strPartonY.c_str(), strPhoY.c_str());
+        std::string strPhoPartonMeanEta = Form("#eta_{ave %s %s} = (%s + %s) / 2",
+                partonTypesLabel[i].c_str(), strPho.c_str(), strPartonEta.c_str(), strPhoEta.c_str());
 
         h_qgPt[i] = new TH1D(Form("h_%sPt", partonTypesStr[i].c_str()),
                 Form(";%s;", strPartonPt.c_str()),
@@ -236,6 +244,14 @@ int main(int argc, char* argv[]) {
                 Form(";%s;Q", strPhoPartonDeta.c_str()),
                 nBinsX_eta, axis_eta_min, axis_eta_max, nBinsX_pt, axis_pt_min, axis_pt_max);
 
+        int nBins_x1Overx2 = 50;
+        std::vector<double> binsVec = calcBinsLogScale(0.001, 1000, nBins_x1Overx2);
+        double binsArr[nBins_x1Overx2+1];
+        std::copy(binsVec.begin(), binsVec.end(), binsArr);
+        h2_phoqgMeanEta_x1Overx2[i] = new TH2D(Form("h2_pho%sMeanEta_x1Overx2", partonTypesStr[i].c_str()),
+                Form(";%s;x_{1} / x_{2}", strPhoPartonMeanEta.c_str()),
+                nBinsX_eta, -0.8*axis_eta_max, 0.8*axis_eta_max, nBins_x1Overx2, binsArr);
+
         h_phoPt_qgRatio[i] = new TH1D(Form("h_phoPt_%sRatio", partonTypesStr[i].c_str()),
                 Form(";%s;", strPhoPt.c_str()),
                 nBinsX_pt, axis_pt_min, axis_pt_max);
@@ -268,6 +284,7 @@ int main(int argc, char* argv[]) {
 
         treeEvt->GetEntry(iEvent);
         treeEvtParton->GetEntry(iEvent);
+        treeEvtInfo->GetEntry(iEvent);
 
         // hard scatterer analysis
         // outgoing particles of the hardest subprocess are at index 5 and 6
@@ -370,6 +387,7 @@ int main(int argc, char* argv[]) {
         double phoqgDphi = std::acos(cos(phoPhi[iStatusPhoton] - qgPhi[iStatusParton]));
         double phoqgDy = TMath::Abs(phoY[iStatusPhoton] - qgY[iStatusParton]);
         double phoqgX = qgPt[iStatusParton] / phoPt[iStatusPhoton];
+        double phoqgMeanEta = 0.5*(phoEta[iStatusPhoton] + qgEta[iStatusParton]);
 
         int iQG = (isQuark((*event)[iPartonH])) ? kQuark : kGluon;
 
@@ -392,6 +410,7 @@ int main(int argc, char* argv[]) {
             h2_phoPhi_qgPhi[k]->Fill(phoPhi[iStatusPhoton], qgPhi[iStatusParton]);
             h2_phoY_qgY[k]->Fill(phoY[iStatusPhoton], qgY[iStatusParton]);
             h2_qscale_phoqgDeta[k]->Fill(phoqgDeta, event->scale());
+            h2_phoqgMeanEta_x1Overx2[k]->Fill(phoqgMeanEta, info->x1()/info->x2());
             h_phoPt_qgRatio[k]->Fill(phoPt[iStatusPhoton]);
             h2_pt_qgPt_ratio_sOut_sHard[k]->Fill(qgPt[kHard], qgPt[kOut] / qgPt[kHard]);
             h2_pt_qgEta_diff_sOut_sHard[k]->Fill(qgPt[kHard], qgEta[kOut] - qgEta[kHard]);

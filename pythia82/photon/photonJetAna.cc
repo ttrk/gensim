@@ -21,12 +21,12 @@
 // dictionary to read Pythia8::Event
 #include "../dictionary/dict4RootDct.cc"
 #include "../utils/pythiaUtil.h"
-#include "../utils/physicsUtil.h"
 #include "../../fastjet3/fastJetTree.h"
 
 #include <iostream>
 #include <string>
 #include <vector>
+#include "../../utilities/physicsUtil.h"
 
 int main(int argc, char* argv[]) {
     std::cout << "running photonJetAna()" << std::endl;
@@ -111,6 +111,7 @@ int main(int argc, char* argv[]) {
     int nBinsX_phoqgX = 16;
     double axis_phoqgX_min = 0;
     double axis_phoqgX_max = 2;
+
     std::string strPho = "#gamma";
     std::string strPhoPt = Form("p_{T}^{%s}", strPho.c_str());
     std::string strPhoEta = Form("#eta^{%s}", strPho.c_str());

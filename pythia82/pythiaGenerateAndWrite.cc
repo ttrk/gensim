@@ -60,6 +60,11 @@ int main(int argc, char* argv[]) {
     TTree *treeEvtParton = new TTree("evtParton","parton level event tree");
     treeEvtParton->Branch("event", &eventPartonLevel);
 
+    // general information about the event
+    Pythia8::Info *info = &pythia.info;
+    TTree *treeEvtInfo = new TTree("evtInfo","event info tree");
+    treeEvtInfo->Branch("info",&info);
+
     int iAbort = 0;
     std::cout << "Loop START" << std::endl;
     for (int iEvent = 0; iEvent < nEvent; ++iEvent) {
@@ -79,6 +84,7 @@ int main(int argc, char* argv[]) {
         // interesting for future analyses.
         treeEvt->Fill();
         treeEvtParton->Fill();
+        treeEvtInfo->Fill();
     }
     std::cout << "Loop END" << std::endl;
 
@@ -88,6 +94,7 @@ int main(int argc, char* argv[]) {
     treeEvt->Print();
     treeEvt->Write("", TObject::kOverwrite);
     treeEvtParton->Write("", TObject::kOverwrite);
+    treeEvtInfo->Write("", TObject::kOverwrite);
 
     std::cout<<"Closing the output file"<<std::endl;
     outFile->Close();

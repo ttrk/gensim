@@ -22,6 +22,7 @@
 #include "utils/pythiaUtil.h"
 #include "../utilities/physicsUtil.h"
 #include "../utilities/th1Util.h"
+#include "../utilities/systemUtil.h"
 
 #include <iostream>
 #include <string>
@@ -40,9 +41,27 @@ int main(int argc, char* argv[]) {
         outputFileName = argv[2];
     }
 
+    // comma separated list of process codes
+    std::vector<int> processCodes;
+    if (argc > 2) {
+        std::vector<std::string> processCodesStr = split(argv[3], ",");
+        for (int i = 0; i < processCodesStr.size(); ++i) {
+            processCodes.push_back(std::atoi(processCodesStr.at(i).c_str()));
+        }
+
+        if (std::string(argv[3]).size() > 0 && processCodes.size() == 0)
+            processCodes.push_back(std::atoi(argv[3]));
+    }
+    int nProcessCodes = processCodes.size();
+
     std::cout << "##### Parameters #####" << std::endl;
     std::cout << "inputFileName = " << inputFileName.c_str() << std::endl;
     std::cout << "outputFileName = " << outputFileName.c_str() << std::endl;
+    std::cout << "processCodes = { ";
+    for (int i = 0; i < nProcessCodes; ++i) {
+        std::cout << processCodes.at(i) << " ";
+    }
+    std::cout << "}" << std::endl;
     std::cout << "##### Parameters - END #####" << std::endl;
 
     TFile *inputFile = TFile::Open(inputFileName.c_str(),"READ");
@@ -105,6 +124,16 @@ int main(int argc, char* argv[]) {
         treeEvt->GetEntry(iEvent);
         treeEvtParton->GetEntry(iEvent);
         treeEvtInfo->GetEntry(iEvent);
+
+        bool passedProcess = (nProcessCodes == 0);
+        for (int i = 0; i < nProcessCodes; ++i) {
+            if (processCodes[i] == -1 ||
+                processCodes[i] == info->code())  {
+                passedProcess = true;
+                break;
+            }
+        }
+        if (!passedProcess)  continue;
 
         std::vector<Pythia8::Particle> incomingPartons;
         incomingPartons.push_back(Pythia8::Particle(info->id1()));

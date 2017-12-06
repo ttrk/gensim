@@ -28,30 +28,22 @@
 #include <string>
 #include <vector>
 
-int main(int argc, char* argv[]) {
+void eventInfoAna(std::string inputFileName = "pythiaEvents.root", std::string outputFileName = "eventInfoAna_out.root",
+                  std::string processList = "");
+
+void eventInfoAna(std::string inputFileName, std::string outputFileName, std::string processList)
+{
     std::cout << "running eventInfoAna()" << std::endl;
-
-    std::string inputFileName = argv[1];
-    if (argc > 1) {
-        inputFileName = argv[1];
-    }
-
-    std::string outputFileName = "eventInfoAna_out.root";
-    if (argc > 2) {
-        outputFileName = argv[2];
-    }
 
     // comma separated list of process codes
     std::vector<int> processCodes;
-    if (argc > 3) {
-        std::vector<std::string> processCodesStr = split(argv[3], ",");
-        for (int i = 0; i < processCodesStr.size(); ++i) {
-            processCodes.push_back(std::atoi(processCodesStr.at(i).c_str()));
-        }
-
-        if (std::string(argv[3]).size() > 0 && processCodes.size() == 0)
-            processCodes.push_back(std::atoi(argv[3]));
+    std::vector<std::string> processCodesStr = split(processList, ",");
+    for (int i = 0; i < processCodesStr.size(); ++i) {
+        processCodes.push_back(std::atoi(processCodesStr.at(i).c_str()));
     }
+    if (std::string(processList).size() > 0 && processCodes.size() == 0)
+        processCodes.push_back(std::atoi(processList.c_str()));
+
     int nProcessCodes = processCodes.size();
 
     std::cout << "##### Parameters #####" << std::endl;
@@ -181,6 +173,26 @@ int main(int argc, char* argv[]) {
     outputFile->Close();
 
     std::cout << "running eventInfoAna() - END" << std::endl;
+}
 
-    return 0;
+int main(int argc, char* argv[]) {
+
+    if (argc == 4) {
+        eventInfoAna(argv[1], argv[2], argv[3]);
+        return 0;
+    }
+    else if (argc == 3) {
+        eventInfoAna(argv[1], argv[2]);
+        return 0;
+    }
+    else if (argc == 2) {
+        eventInfoAna(argv[1]);
+        return 0;
+    }
+    else {
+        std::cout << "Usage : \n" <<
+                "./eventInfoAna.exe <inputFileName> <outputFileName> <processList>"
+                << std::endl;
+        return 1;
+    }
 }

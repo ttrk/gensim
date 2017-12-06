@@ -27,28 +27,12 @@
 #include <string>
 #include <vector>
 
-int main(int argc, char* argv[]) {
+void photonPartonAna(std::string inputFileName = "promptPhoton.root", std::string outputFileName = "photonPartonAna_out.root",
+                     int iStatusPhoton = 0, int iStatusParton = 0);
+
+void photonPartonAna(std::string inputFileName, std::string outputFileName, int iStatusPhoton, int iStatusParton)
+{
     std::cout << "running photonPartonAna()" << std::endl;
-
-    std::string inputFileName = "promptPhoton.root";
-    if (argc > 1) {
-        inputFileName = argv[1];
-    }
-
-    std::string outputFileName = "photonPartonAna_out.root";
-    if (argc > 2) {
-        outputFileName = argv[2];
-    }
-
-    int iStatusPhoton = 0;
-    if (argc > 3) {
-        iStatusPhoton = std::atoi(argv[3]);
-    }
-
-    int iStatusParton = 0;
-    if (argc > 4) {
-        iStatusParton = std::atoi(argv[4]);
-    }
 
     std::cout << "##### Parameters #####" << std::endl;
     std::cout << "inputFileName = " << inputFileName.c_str() << std::endl;
@@ -488,6 +472,30 @@ int main(int argc, char* argv[]) {
     outputFile->Close();
 
     std::cout << "running photonPartonAna() - END" << std::endl;
+}
 
-    return 0;
+int main(int argc, char* argv[]) {
+
+    if (argc == 5) {
+        photonPartonAna(argv[1], argv[2], std::atoi(argv[3]), std::atoi(argv[4]));
+        return 0;
+    }
+    else if (argc == 4) {
+        photonPartonAna(argv[1], argv[2], std::atoi(argv[3]));
+        return 0;
+    }
+    else if (argc == 3) {
+        photonPartonAna(argv[1], argv[2]);
+        return 0;
+    }
+    else if (argc == 2) {
+        photonPartonAna(argv[1]);
+        return 0;
+    }
+    else {
+        std::cout << "Usage : \n" <<
+                "./photonPartonAna.exe <inputFileName> <outputFileName> <iStatusPhoton> <iStatusParton>"
+                << std::endl;
+        return 1;
+    }
 }

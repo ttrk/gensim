@@ -28,28 +28,12 @@
 #include <vector>
 #include "../../utilities/physicsUtil.h"
 
-int main(int argc, char* argv[]) {
+void photonJetAna(std::string eventFileName = "promptPhoton.root", std::string jetFileName = "jets.root",
+                  std::string jetTreeName = "ak3jets", std::string outputFileName = "photonJetAna_out.root");
+
+void photonJetAna(std::string eventFileName, std::string jetFileName, std::string jetTreeName, std::string outputFileName)
+{
     std::cout << "running photonJetAna()" << std::endl;
-
-    std::string eventFileName = "promptPhoton.root";
-    if (argc > 1) {
-        eventFileName = argv[1];
-    }
-
-    std::string jetFileName = "jets.root";
-    if (argc > 2) {
-        jetFileName = argv[2];
-    }
-
-    std::string jetTreeName = "ak3jets";
-    if (argc > 3) {
-        jetTreeName = argv[3];
-    }
-
-    std::string outputFileName = "photonJetAna_out.root";
-    if (argc > 4) {
-        outputFileName = argv[4];
-    }
 
     std::cout << "##### Parameters #####" << std::endl;
     std::cout << "eventFileName = " << eventFileName.c_str() << std::endl;
@@ -271,7 +255,7 @@ int main(int argc, char* argv[]) {
     if (nEvents != nEventsJets) {
         std::cout << "nEvents and nEventsJets are not same." << std::endl;
         std::cout << "exiting." << std::endl;
-        return -1;
+        return;
     }
     std::cout << "Loop STARTED" << std::endl;
     for (int iEvent = 0; iEvent < nEvents; ++iEvent) {
@@ -451,6 +435,30 @@ int main(int argc, char* argv[]) {
     outputFile->Close();
 
     std::cout << "running photonJetAna() - END" << std::endl;
+}
 
-    return 0;
+int main(int argc, char* argv[]) {
+
+    if (argc == 5) {
+        photonJetAna(argv[1], argv[2], argv[3], argv[4]);
+        return 0;
+    }
+    else if (argc == 4) {
+        photonJetAna(argv[1], argv[2], argv[3]);
+        return 0;
+    }
+    else if (argc == 3) {
+        photonJetAna(argv[1], argv[2]);
+        return 0;
+    }
+    else if (argc == 2) {
+        photonJetAna(argv[1]);
+        return 0;
+    }
+    else {
+        std::cout << "Usage : \n" <<
+                "./photonJetAna.exe <eventFileName> <jetFileName> <jetTreeName> <outputFileName>"
+                << std::endl;
+        return 1;
+    }
 }

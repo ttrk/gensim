@@ -14,21 +14,15 @@
 // Error in <TTree::Branch>: The pointer specified for event is not of a class known to ROOT
 #include "utils/pythiaUtil.h"
 
-int main(int argc, char* argv[]) {
+void pythiaGenerateAndWrite(std::string cardFileName = "mycard.cmnd", std::string outFileName = "pythiaGenerateAndWrite.root");
 
-    // Read in commands from external file.
-    std::string cardFileName = "mycard.cmnd";
-    if (argc > 1) {
-        cardFileName = argv[1];
-    }
-
-    std::string outFileName = "pythiaGenerateAndWrite.root";
-    if (argc > 2) {
-        outFileName = argv[2];
-    }
+void pythiaGenerateAndWrite(std::string cardFileName, std::string outFileName)
+{
+    std::cout << "running pythiaGenerateAndWrite()" << std::endl;
 
     // Generator.
     Pythia8::Pythia pythia;
+    // Read in commands from external file.
     pythia.readFile(cardFileName.c_str());
 
     // Extract settings to be used in the main program.
@@ -97,5 +91,23 @@ int main(int argc, char* argv[]) {
     std::cout<<"Closing the output file"<<std::endl;
     outFile->Close();
 
-    return 0;
+    std::cout << "running pythiaGenerateAndWrite() - END" << std::endl;
+}
+
+int main(int argc, char* argv[]) {
+
+    if (argc == 3) {
+        pythiaGenerateAndWrite(argv[1], argv[2]);
+        return 0;
+    }
+    else if (argc == 2) {
+        pythiaGenerateAndWrite(argv[1]);
+        return 0;
+    }
+    else {
+        std::cout << "Usage : \n" <<
+                "./pythiaGenerateAndWrite.exe <inputFileName> <outputFileName>"
+                << std::endl;
+        return 1;
+    }
 }

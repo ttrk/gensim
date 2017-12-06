@@ -1,5 +1,5 @@
-#ifndef TREEHEADERS_FASTJETTREE_H_
-#define TREEHEADERS_FASTJETTREE_H_
+#ifndef FASTJETTREE_H_
+#define FASTJETTREE_H_
 
 #include <TTree.h>
 #include <TBranch.h>
@@ -58,4 +58,4 @@ void fastJetTree::clearEvent()
     jetphi->clear();
 }
 
-#endif /* TREEHEADERS_FASTJETTREE_H_ */
+#endif /* FASTJETTREE_H_ */

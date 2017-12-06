@@ -22,8 +22,6 @@
 #include <string>
 #include <vector>
 
-using namespace Pythia8;
-
 // types of particles to be used in jet clustering
 enum CONSTITUENTS {
     kFinal,         // final state particles (after hadronization)
@@ -70,7 +68,7 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
 
     std::cout << "initialize the Pythia class to obtain info that is not accessible through event TTree." << std::endl;
     std::cout << "##### Pythia initialize #####" << std::endl;
-    Pythia pythia;
+    Pythia8::Pythia pythia;
     std::cout << "##### Pythia initialize - END #####" << std::endl;
 
     TFile* outputFile = new TFile(outputFileName.c_str(), "UPDATE");

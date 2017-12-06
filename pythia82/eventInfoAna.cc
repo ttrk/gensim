@@ -116,6 +116,7 @@ int main(int argc, char* argv[]) {
                 nBins_x, binsArrX, nBins_y, 0, 1);
     }
 
+    int eventsAnalyzed = 0;
     int nEvents = treeEvt->GetEntries();
     std::cout << "nEvents = " << nEvents << std::endl;
     std::cout << "Loop STARTED" << std::endl;
@@ -134,6 +135,8 @@ int main(int argc, char* argv[]) {
             }
         }
         if (!passedProcess)  continue;
+
+        eventsAnalyzed++;
 
         std::vector<Pythia8::Particle> incomingPartons;
         incomingPartons.push_back(Pythia8::Particle(info->id1()));
@@ -166,6 +169,7 @@ int main(int argc, char* argv[]) {
         }
     }
     std::cout << "Loop ENDED" << std::endl;
+    std::cout << "eventsAnalyzed = " << eventsAnalyzed << std::endl;
     std::cout << "Closing the input file" << std::endl;
     inputFile->Close();
 

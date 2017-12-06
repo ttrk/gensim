@@ -263,6 +263,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    int eventsAnalyzed = 0;
     int nEvents = treeEvt->GetEntries();
     int nEventsJets = jetTree->GetEntries();
     std::cout << "nEvents = " << nEvents << std::endl;
@@ -289,6 +290,8 @@ int main(int argc, char* argv[]) {
         else if ((isGamma((*event)[ip2])) && (isParton((*event)[ip1])))
             iPho = ip2;
         if (iPho == -1) continue;
+
+        eventsAnalyzed++;
 
         int iParton = (iPho == ip1) ? ip2 : ip1;
         int iQG = (isQuark((*event)[iParton])) ? kQuark : kGluon;
@@ -404,6 +407,7 @@ int main(int argc, char* argv[]) {
         }
     }
     std::cout << "Loop ENDED" << std::endl;
+    std::cout << "eventsAnalyzed = " << eventsAnalyzed << std::endl;
     std::cout << "Closing the event file" << std::endl;
     eventFile->Close();
     std::cout << "Closing the jet file" << std::endl;

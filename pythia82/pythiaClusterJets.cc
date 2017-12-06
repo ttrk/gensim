@@ -104,6 +104,7 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
 
     std::cout << "Clustering with " << fjJetDefn->description().c_str() << std::endl;
 
+    int eventsAnalyzed = 0;
     int nEvents = treeEvt->GetEntries();
     std::cout << "nEvents = " << nEvents << std::endl;
     std::cout << "Loop STARTED" << std::endl;
@@ -112,6 +113,8 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
         fjt.clearEvent();
         treeEvt->GetEntry(iEvent);
         treeEvtParton->GetEntry(iEvent);
+
+        eventsAnalyzed++;
 
         // Reset Fastjet input
         fjParticles.resize(0);
@@ -165,6 +168,7 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
         jetTree->Fill();
     }
     std::cout << "Loop ENDED" << std::endl;
+    std::cout << "eventsAnalyzed = " << eventsAnalyzed << std::endl;
     std::cout<<"Closing the input file"<<std::endl;
     inputFile->Close();
 

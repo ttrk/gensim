@@ -277,6 +277,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    int eventsAnalyzed = 0;
     int nEvents = treeEvt->GetEntries();
     std::cout << "nEvents = " << nEvents << std::endl;
     std::cout << "Loop STARTED" << std::endl;
@@ -296,6 +297,8 @@ int main(int argc, char* argv[]) {
         else if ((isGamma((*event)[ip2H])) && (isParton((*event)[ip1H])))
             iPhoH = ip2H;
         if (iPhoH == -1) continue;
+
+        eventsAnalyzed++;
 
         int iPartonH = (iPhoH == ip1H) ? ip2H : ip1H;
 
@@ -442,6 +445,7 @@ int main(int argc, char* argv[]) {
         }
     }
     std::cout << "Loop ENDED" << std::endl;
+    std::cout << "eventsAnalyzed = " << eventsAnalyzed << std::endl;
     std::cout << "Closing the input file" << std::endl;
     inputFile->Close();
 

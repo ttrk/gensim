@@ -128,6 +128,17 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
     };
     std::string particleTypesStr[kN_PARTICLETYPES] = {"hadron", "hadronCh", "parton", "partonHard"};
     std::string particleTypesLabel[kN_PARTICLETYPES] = {"h^{0,#pm}", "h^{#pm}", "q/g", "q/g"};
+
+    enum PTSORTING {
+        kPt1st,
+        kPt2nd,
+        kPt3rd,
+        kPt4thPlus,
+        kN_PTSORTING
+    };
+    std::string ptSortingsStr[kN_PTSORTING] = {"pt1st", "pt2nd", "pt3rd", "pt4thplus"};
+    std::string ptSortingsLabel[kN_PTSORTING] = {"p_{T}^{lead}", "p_{T}^{sublead}", "p_{T}^{3rd}", "p_{T}^{4th +}"};
+
     int nBinsX_xijet = 10;
     double axis_xijet_min = 0;
     double axis_xijet_max = 5;
@@ -159,6 +170,9 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
     TH1D* h_xijet[kN_PARTONTYPES][kN_PARTICLETYPES];
     TH1D* h_jetshape[kN_PARTONTYPES][kN_PARTICLETYPES];
     TH1D* h_jetshape_normJet[kN_PARTONTYPES][kN_PARTICLETYPES];
+    TH1D* h_xijet_ptSort[kN_PARTONTYPES][kN_PARTICLETYPES][kN_PTSORTING];
+    TH1D* h_jetshape_ptSort[kN_PARTONTYPES][kN_PARTICLETYPES][kN_PTSORTING];
+    TH1D* h_jetshape_ptSort_normJet[kN_PARTONTYPES][kN_PARTICLETYPES][kN_PTSORTING];
     for (int i = 0; i < kN_PARTONTYPES; ++i) {
 
         std::string strPartonPt = Form("p_{T}^{%s}", partonTypesLabel[i].c_str());
@@ -244,6 +258,20 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
             h_jetshape[i][j] = new TH1D(Form("h_jetshape_%s_%s", partonTypesStr[i].c_str(), particleTypesStr[j].c_str()),
                                 Form("%s jet - particles are %s;r;#rho(r)", partonTypesLabel[i].c_str(), particleTypesLabel[j].c_str()),
                                 nBinsX_js, axis_js_min, axis_js_max);
+
+            for (int k = 0; k < kN_PTSORTING; ++k) {
+                h_xijet_ptSort[i][j][k] = new TH1D(Form("h_xijet_%s_%s_%s",
+                        partonTypesStr[i].c_str(), particleTypesStr[j].c_str(), ptSortingsStr[k].c_str()),
+                        Form("%s jet - particles are %s, %s;%s;",
+                        partonTypesLabel[i].c_str(), particleTypesLabel[j].c_str(), ptSortingsLabel[k].c_str(), xiJetStr.c_str()),
+                        nBinsX_xijet, axis_xijet_min, axis_xijet_max);
+
+                h_jetshape_ptSort[i][j][k] = new TH1D(Form("h_jetshape_%s_%s_%s",
+                        partonTypesStr[i].c_str(), particleTypesStr[j].c_str(), ptSortingsStr[k].c_str()),
+                        Form("%s jet - particles are %s, %s;r;#rho(r)",
+                        partonTypesLabel[i].c_str(), ptSortingsLabel[k].c_str(), particleTypesLabel[j].c_str()),
+                        nBinsX_js, axis_js_min, axis_js_max);
+            }
         }
     }
 
@@ -348,6 +376,9 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
                     eventParticle = eventParton;
                 }
 
+                std::vector<std::pair<double, int>> pairs_pt_index_ff;
+                std::vector<std::pair<double, int>> pairs_pt_index_js;
+
                 int eventParticleSize = eventParticle->size();
                 for (int j = 0; j < eventParticleSize; ++j) {
 
@@ -373,6 +404,10 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
                         int k = typesQG[jQG];
                         h_jetshape[k][iPartType]->Fill(dR_jet_particle, partPt / jetpt);
                     }
+                    if (dR_jet_particle < jetR) {
+                        // consider only pairs inside jet cone
+                        pairs_pt_index_js.push_back(std::make_pair(partPt, j));
+                    }
 
                     if (!(dR_jet_particle < jetR))  continue;
 
@@ -385,6 +420,75 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
                     for (int jQG = 0; jQG < nTypesQG; ++jQG) {
                         int k = typesQG[jQG];
                         h_xijet[k][iPartType]->Fill(xi);
+                    }
+                    pairs_pt_index_ff.push_back(std::make_pair(partPt, j));
+                }
+
+                int nPairs = -1;
+                // pt sorted jet shape
+                std::sort(pairs_pt_index_js.begin(), pairs_pt_index_js.end());
+                nPairs = pairs_pt_index_js.size();
+                for (int jPair = nPairs - 1; jPair >= 0; --jPair) {
+
+                    int j = pairs_pt_index_js[jPair].second;
+
+                    double partPt = (*eventParticle)[j].pT();
+                    double partEta = (*eventParticle)[j].eta();
+                    double partPhi = (*eventParticle)[j].phi();
+
+                    double dR_jet_particle = getDR(jeteta, jetphi, partEta, partPhi);
+
+                    for (int jQG = 0; jQG < nTypesQG; ++jQG) {
+                        int k = typesQG[jQG];
+
+                        if (jPair == nPairs - 1) {
+                            h_jetshape_ptSort[k][iPartType][kPt1st]->Fill(dR_jet_particle, partPt / jetpt);
+                        }
+                        else if (jPair == nPairs - 2) {
+                            h_jetshape_ptSort[k][iPartType][kPt2nd]->Fill(dR_jet_particle, partPt / jetpt);
+                        }
+                        else if (jPair == nPairs - 3) {
+                            h_jetshape_ptSort[k][iPartType][kPt3rd]->Fill(dR_jet_particle, partPt / jetpt);
+                        }
+                        else {
+                            h_jetshape_ptSort[k][iPartType][kPt4thPlus]->Fill(dR_jet_particle, partPt / jetpt);
+                        }
+                    }
+                }
+
+                // pt sorted FF
+                std::sort(pairs_pt_index_ff.begin(), pairs_pt_index_ff.end());
+                nPairs = pairs_pt_index_ff.size();
+                for (int jPair = nPairs - 1; jPair >= 0; --jPair) {
+
+                    int j = pairs_pt_index_ff[jPair].second;
+
+                    double partPt = (*eventParticle)[j].pT();
+                    double partEta = (*eventParticle)[j].eta();
+                    double partPhi = (*eventParticle)[j].phi();
+
+                    TLorentzVector vecPart;
+                    vecPart.SetPtEtaPhiM(partPt, partEta, partPhi, 0);
+
+                    double angle = vecJet.Angle(vecPart.Vect());
+                    double z = vecPart.P() * cos(angle) / vecJet.P();
+                    double xi = log(1.0/z);
+
+                    for (int jQG = 0; jQG < nTypesQG; ++jQG) {
+                        int k = typesQG[jQG];
+
+                        if (jPair == nPairs - 1) {
+                            h_xijet_ptSort[k][iPartType][kPt1st]->Fill(xi);
+                        }
+                        else if (jPair == nPairs - 2) {
+                            h_xijet_ptSort[k][iPartType][kPt2nd]->Fill(xi);
+                        }
+                        else if (jPair == nPairs - 3) {
+                            h_xijet_ptSort[k][iPartType][kPt3rd]->Fill(xi);
+                        }
+                        else {
+                            h_xijet_ptSort[k][iPartType][kPt4thPlus]->Fill(xi);
+                        }
                     }
                 }
             }
@@ -421,8 +525,21 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
 
             h_jetshape_normJet[i][j] = (TH1D*)h_jetshape[i][j]->Clone(Form("%s_normJet", h_jetshape[i][j]->GetName()));
 
-            h_jetshape[i][j]->Scale(1./h_jetshape[i][j]->Integral(1, h_jetshape[i][j]->FindBin(jetR)-1), "width");
+            double intJetCone = h_jetshape[i][j]->Integral(1, h_jetshape[i][j]->FindBin(jetR)-1);
+            h_jetshape[i][j]->Scale(1./intJetCone, "width");
             h_jetshape_normJet[i][j]->Scale(1./nJet, "width");
+
+
+            for (int k = 0; k < kN_PTSORTING; ++k) {
+
+                h_xijet_ptSort[i][j][k]->Scale(1./nJet, "width");
+
+                h_jetshape_ptSort_normJet[i][j][k] = (TH1D*)h_jetshape_ptSort[i][j][k]->Clone(
+                        Form("%s_normJet", h_jetshape_ptSort[i][j][k]->GetName()));
+
+                h_jetshape_ptSort[i][j][k]->Scale(1./intJetCone, "width");
+                h_jetshape_ptSort_normJet[i][j][k]->Scale(1./nJet, "width");
+            }
         }
 
         if (i != kInclusive) {

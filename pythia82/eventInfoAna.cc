@@ -75,6 +75,10 @@ void eventInfoAna(std::string inputFileName, std::string outputFileName, std::st
 
     TH1::SetDefaultSumw2();
 
+    TH1D* h_nMPI = new TH1D("h_nMPI", ";nMPI;", 25, 0, 25);
+    TH1D* h_nISR = new TH1D("h_nISR", ";nISR;", 45, 0, 45);
+    TH1D* h_nFSR = new TH1D("h_nFSR", ";nFSR;", 50, 0, 250);
+
     enum INCOMINGPARTONS {
         kInclusive,
         kQuark,
@@ -135,6 +139,10 @@ void eventInfoAna(std::string inputFileName, std::string outputFileName, std::st
 
         eventsAnalyzed++;
 
+        h_nMPI->Fill(info->nMPI());
+        h_nISR->Fill(info->nISR());
+        h_nFSR->Fill(info->nFSRinProc());
+
         std::vector<Pythia8::Particle> incomingPartons;
         incomingPartons.push_back(Pythia8::Particle(info->id1()));
         incomingPartons.push_back(Pythia8::Particle(info->id2()));
@@ -169,6 +177,10 @@ void eventInfoAna(std::string inputFileName, std::string outputFileName, std::st
     std::cout << "eventsAnalyzed = " << eventsAnalyzed << std::endl;
     std::cout << "Closing the input file" << std::endl;
     inputFile->Close();
+
+    h_nMPI->Scale(1./h_nMPI->Integral(), "width");
+    h_nISR->Scale(1./h_nISR->Integral(), "width");
+    h_nFSR->Scale(1./h_nFSR->Integral(), "width");
 
     // Save histogram on file and close file.
     std::cout << "saving histograms" << std::endl;

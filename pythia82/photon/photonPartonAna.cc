@@ -122,6 +122,15 @@ void photonPartonAna(std::string inputFileName, std::string outputFileName, int 
     TH2D* h2_pt_phoPhi_diff_sOut_sHard = new TH2D("h2_pt_phoPhi_diff_sOut_sHard",
             Form(";%s;%s (outgoing) - %s (hard process)", strPhoPt.c_str(), strPhoPhi.c_str(), strPhoPhi.c_str()),
             nBinsX_pt, axis_pt_min, axis_pt_max, nBinsX_diff_phi, axis_diff_phi_min, axis_diff_phi_max);
+    TH2D* h2_nMPI_phoPt_ratio_sOut_sHard = new TH2D("h2_nMPI_phoPt_ratio_sOut_sHard",
+            Form(";nMPI;%s (outgoing) / %s (hard process)", strPhoPt.c_str(), strPhoPt.c_str(), strPhoPt.c_str()),
+            25, 0, 25, nBinsX_ratio_pt, axis_ratio_pt_min, axis_ratio_pt_max);
+    TH2D* h2_nISR_phoPt_ratio_sOut_sHard = new TH2D("h2_nISR_phoPt_ratio_sOut_sHard",
+            Form(";nISR;%s (outgoing) / %s (hard process)", strPhoPt.c_str(), strPhoPt.c_str(), strPhoPt.c_str()),
+            45, 0, 45, nBinsX_ratio_pt, axis_ratio_pt_min, axis_ratio_pt_max);
+    TH2D* h2_nFSR_phoPt_ratio_sOut_sHard = new TH2D("h2_nFSR_phoPt_ratio_sOut_sHard",
+            Form(";nFSR;%s (outgoing) / %s (hard process)", strPhoPt.c_str(), strPhoPt.c_str(), strPhoPt.c_str()),
+            50, 0, 250, nBinsX_ratio_pt, axis_ratio_pt_min, axis_ratio_pt_max);
 
     enum PARTONTYPES {
         kInclusive,
@@ -154,6 +163,9 @@ void photonPartonAna(std::string inputFileName, std::string outputFileName, int 
     TH2D* h2_pt_qgPt_ratio_sOut_sHard[kN_PARTONTYPES];
     TH2D* h2_pt_qgEta_diff_sOut_sHard[kN_PARTONTYPES];
     TH2D* h2_pt_qgPhi_diff_sOut_sHard[kN_PARTONTYPES];
+    TH2D* h2_nMPI_qgPt_ratio_sOut_sHard[kN_PARTONTYPES];
+    TH2D* h2_nISR_qgPt_ratio_sOut_sHard[kN_PARTONTYPES];
+    TH2D* h2_nFSR_qgPt_ratio_sOut_sHard[kN_PARTONTYPES];
     // histograms for energy and multiplicity distribution of final partons as func. of angle with the initial parton
     TH1D* h_finalqg_qg_dR[kN_PARTONTYPES][kN_PARTONTYPES];
     TH1D* h_finalqg_qg_dR_wE[kN_PARTONTYPES][kN_PARTONTYPES];
@@ -252,6 +264,18 @@ void photonPartonAna(std::string inputFileName, std::string outputFileName, int 
                 Form(";%s;%s (outgoing) - %s (hard process)", strPartonPt.c_str(), strPartonPhi.c_str(), strPartonPhi.c_str()),
                 nBinsX_pt, axis_pt_min, axis_pt_max, nBinsX_diff_phi, axis_diff_phi_min, axis_diff_phi_max);
 
+        h2_nMPI_qgPt_ratio_sOut_sHard[i] = new TH2D(Form("h2_nMPI_%sPt_ratio_sOut_sHard", partonTypesStr[i].c_str()),
+                Form(";nMPI;%s (outgoing) / %s (hard process)", strPartonPt.c_str(), strPartonPt.c_str(), strPartonPt.c_str()),
+                25, 0, 25, nBinsX_ratio_pt, axis_ratio_pt_min, axis_ratio_pt_max);
+
+        h2_nISR_qgPt_ratio_sOut_sHard[i] = new TH2D(Form("h2_nISR_%sPt_ratio_sOut_sHard", partonTypesStr[i].c_str()),
+                Form(";nISR;%s (outgoing) / %s (hard process)", strPartonPt.c_str(), strPartonPt.c_str(), strPartonPt.c_str()),
+                45, 0, 45, nBinsX_ratio_pt, axis_ratio_pt_min, axis_ratio_pt_max);
+
+        h2_nFSR_qgPt_ratio_sOut_sHard[i] = new TH2D(Form("h2_nFSR_%sPt_ratio_sOut_sHard", partonTypesStr[i].c_str()),
+                Form(";nFSR;%s (outgoing) / %s (hard process)", strPartonPt.c_str(), strPartonPt.c_str(), strPartonPt.c_str()),
+                50, 0, 250, nBinsX_ratio_pt, axis_ratio_pt_min, axis_ratio_pt_max);
+
         for (int j = 0; j < kN_PARTONTYPES; ++j) {
             h_finalqg_qg_dR[i][j] = new TH1D(Form("h_final%s_%s_dR", partonTypesStr[j].c_str(), partonTypesStr[i].c_str()),
                     Form(";#DeltaR_{%s final %s};", partonTypesLabel[i].c_str(), partonTypesLabel[j].c_str()), nBinsX_eta, 0, 1.5);
@@ -333,6 +357,9 @@ void photonPartonAna(std::string inputFileName, std::string outputFileName, int 
         h2_pt_phoPt_ratio_sOut_sHard->Fill(phoPt[kHard], phoPt[kOut] / phoPt[kHard]);
         h2_pt_phoEta_diff_sOut_sHard->Fill(phoPt[kHard], phoEta[kOut] - phoEta[kHard]);
         h2_pt_phoPhi_diff_sOut_sHard->Fill(phoPt[kHard], getDPHI(phoPhi[kOut], phoPhi[kHard]));
+        h2_nMPI_phoPt_ratio_sOut_sHard->Fill(info->nMPI(), phoPt[kOut] / phoPt[kHard]);
+        h2_nISR_phoPt_ratio_sOut_sHard->Fill(info->nISR(), phoPt[kOut] / phoPt[kHard]);
+        h2_nFSR_phoPt_ratio_sOut_sHard->Fill(info->nFSRinProc(), phoPt[kOut] / phoPt[kHard]);
 
         // search the hard scattering parton in final parton level particles
         int iOutParton = -1;
@@ -402,6 +429,9 @@ void photonPartonAna(std::string inputFileName, std::string outputFileName, int 
             h2_pt_qgPt_ratio_sOut_sHard[k]->Fill(qgPt[kHard], qgPt[kOut] / qgPt[kHard]);
             h2_pt_qgEta_diff_sOut_sHard[k]->Fill(qgPt[kHard], qgEta[kOut] - qgEta[kHard]);
             h2_pt_qgPhi_diff_sOut_sHard[k]->Fill(qgPt[kHard], getDPHI(qgPhi[kOut], qgPhi[kHard]));
+            h2_nMPI_qgPt_ratio_sOut_sHard[k]->Fill(info->nMPI(), qgPt[kOut] / qgPt[kHard]);
+            h2_nISR_qgPt_ratio_sOut_sHard[k]->Fill(info->nISR(), qgPt[kOut] / qgPt[kHard]);
+            h2_nFSR_qgPt_ratio_sOut_sHard[k]->Fill(info->nFSRinProc(), qgPt[kOut] / qgPt[kHard]);
         }
 
         for (int i = 0; i < eventPartonSize; ++i) {

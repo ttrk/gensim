@@ -29,9 +29,9 @@
 #include <vector>
 
 void eventInfoAna(std::string inputFileName = "pythiaEvents.root", std::string outputFileName = "eventInfoAna_out.root",
-                  std::string processList = "");
+                  std::string processList = "", int qMin = 0, int qMax = -1);
 
-void eventInfoAna(std::string inputFileName, std::string outputFileName, std::string processList)
+void eventInfoAna(std::string inputFileName, std::string outputFileName, std::string processList, int qMin, int qMax)
 {
     std::cout << "running eventInfoAna()" << std::endl;
 
@@ -54,6 +54,8 @@ void eventInfoAna(std::string inputFileName, std::string outputFileName, std::st
         std::cout << processCodes.at(i) << " ";
     }
     std::cout << "}" << std::endl;
+    std::cout << "qMin = " << qMin << std::endl;
+    std::cout << "qMax = " << qMax << std::endl;
     std::cout << "##### Parameters - END #####" << std::endl;
 
     TFile *inputFile = TFile::Open(inputFileName.c_str(),"READ");
@@ -128,6 +130,9 @@ void eventInfoAna(std::string inputFileName, std::string outputFileName, std::st
         }
         if (!passedProcess)  continue;
 
+        if (info->QFac() < qMin)  continue;
+        if (qMax != -1 && info->QFac() >= qMax)  continue;
+
         eventsAnalyzed++;
 
         std::vector<Pythia8::Particle> incomingPartons;
@@ -177,7 +182,15 @@ void eventInfoAna(std::string inputFileName, std::string outputFileName, std::st
 
 int main(int argc, char* argv[]) {
 
-    if (argc == 4) {
+    if (argc == 6) {
+        eventInfoAna(argv[1], argv[2], argv[3], std::atoi(argv[4]), std::atoi(argv[5]));
+        return 0;
+    }
+    else if (argc == 5) {
+        eventInfoAna(argv[1], argv[2], argv[3], std::atoi(argv[4]));
+        return 0;
+    }
+    else if (argc == 4) {
         eventInfoAna(argv[1], argv[2], argv[3]);
         return 0;
     }

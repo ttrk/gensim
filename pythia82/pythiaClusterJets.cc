@@ -157,6 +157,7 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
         int nSortedJets = sortedJets.size();
         for (int i = 0; i < nSortedJets; ++i) {
 
+            fjt.rawpt->push_back(sortedJets[i].pt());
             fjt.jetpt->push_back(sortedJets[i].pt());
             fjt.jeteta->push_back(sortedJets[i].eta());
             fjt.jetphi->push_back(sortedJets[i].phi_std());

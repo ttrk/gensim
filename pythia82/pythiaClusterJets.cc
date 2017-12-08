@@ -16,6 +16,7 @@
 #include "utils/pythiaUtil.h"
 #include "../fastjet3/fastJetTree.h"
 #include "../utilities/physicsUtil.h"
+#include "../utilities/systemUtil.h"
 
 #include "fastjet/ClusterSequence.hh"
 #include "fastjet/PseudoJet.hh"
@@ -34,9 +35,9 @@ enum CONSTITUENTS {
 };
 
 void pythiaClusterJets(std::string inputFileName = "pythiaEvents.root", std::string outputFileName = "pythiaClusterJets_out.root",
-                       int dR = 3, int minJetPt = 5, int constituentType = 0, int smearJetPt = 0);
+                       int dR = 3, int minJetPt = 5, int constituentType = 0, std::string jetptCSN = "0,0,0");
 
-void pythiaClusterJets(std::string inputFileName, std::string outputFileName, int dR, int minJetPt, int constituentType, int smearJetPt)
+void pythiaClusterJets(std::string inputFileName, std::string outputFileName, int dR, int minJetPt, int constituentType, std::string jetptCSN)
 {
     std::cout << "running pythiaClusterJets()" << std::endl;
 
@@ -48,7 +49,7 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
     std::cout << "jetRadius = " << jetRadius << std::endl;
     std::cout << "minJetPt = " << minJetPt << std::endl;
     std::cout << "constituentType = " << constituentType << std::endl;
-    std::cout << "smearJetPt = " << smearJetPt << std::endl;
+    std::cout << "jetptCSN = " << jetptCSN.c_str() << std::endl;
     std::cout << "##### Parameters - END #####" << std::endl;
 
     // Set up the ROOT TFile and TTree.
@@ -93,9 +94,20 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
         jetTreeName = Form("ak%djetsPartonHard", dR);
         jetTreeTitle = Form("partonic jets from hard scattering with R = %.1f", jetRadius);
     }
-    if (smearJetPt > 0)  {
+    // comma separated list for CSN parameters
+    std::vector<double> csn;
+    std::vector<std::string> csnStr = split(jetptCSN, ",");
+    bool smearJetPt = false;
+    for (int i = 0; i < csnStr.size(); ++i) {
+        double val = std::atof(csnStr.at(i).c_str());
+        csn.push_back(val);
+        smearJetPt |= (val > 0);
+    }
+    smearJetPt &= ((int)csn.size() == 3);
+    // apply smearing if any of the C, S, N is > 0.
+    if (smearJetPt)  {
         jetTreeName.append("Smeared");
-        jetTreeTitle.append(", smeared");
+        jetTreeTitle.append(Form(", smeared with C = %f, S = %f, N = %f", csn.at(0), csn.at(1), csn.at(2)));
     }
 
     std::cout << "jetTreeName = " << jetTreeName.c_str() << std::endl;
@@ -167,10 +179,7 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
         int nSortedJets = sortedJets.size();
         for (int i = 0; i < nSortedJets; ++i) {
 
-            double sf = 1;
-            if (smearJetPt > 0) {
-                sf = getEnergySmearingFactor(rand, sortedJets[i].pt(), 0.06, 0.95, 0);
-            }
+            double sf = smearJetPt ? getEnergySmearingFactor(rand, sortedJets[i].pt(), csn[0], csn[1], csn[2]) : 1;
 
             fjt.rawpt->push_back(sortedJets[i].pt());
             fjt.jetpt->push_back(sf * sortedJets[i].pt());
@@ -196,7 +205,7 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
 int main(int argc, char* argv[]) {
 
     if (argc == 7) {
-        pythiaClusterJets(argv[1], argv[2], std::atoi(argv[3]), std::atoi(argv[4]), std::atoi(argv[5]), std::atoi(argv[6]));
+        pythiaClusterJets(argv[1], argv[2], std::atoi(argv[3]), std::atoi(argv[4]), std::atoi(argv[5]), argv[6]);
         return 0;
     }
     else if (argc == 6) {
@@ -221,7 +230,7 @@ int main(int argc, char* argv[]) {
     }
     else {
         std::cout << "Usage : \n" <<
-                "./pythiaClusterJets.exe <inputFileName> <outputFileName> <jetRadius> <minJetPt> <constituentType> <smearJetPt>"
+                "./pythiaClusterJets.exe <inputFileName> <outputFileName> <jetRadius> <minJetPt> <constituentType> <jetptCSN>"
                 << std::endl;
         return 1;
     }

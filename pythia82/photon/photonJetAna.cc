@@ -169,6 +169,7 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
     TH1D* h_phoqgDeta[kN_PARTONTYPES];
     TH1D* h_phoqgDphi[kN_PARTONTYPES];
     TH1D* h_phoqgX[kN_PARTONTYPES];
+    TH1D* h_phoqgNjet[kN_PARTONTYPES];
     TH2D* h2_phoEta_qgEta[kN_PARTONTYPES];
     TH2D* h2_phoPhi_qgPhi[kN_PARTONTYPES];
     TH2D* h2_qscale_phoqgDeta[kN_PARTONTYPES];
@@ -236,6 +237,10 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
         h_phoqgX[i] = new TH1D(Form("h_pho%sX", partonTypesStr[i].c_str()),
                 Form(";%s;", strPhoPartonX.c_str()),
                 nBinsX_phoqgX, axis_phoqgX_min, axis_phoqgX_max);
+
+        h_phoqgNjet[i] = new TH1D(Form("h_pho%sNjet", partonTypesStr[i].c_str()),
+                Form(";%s;", "nJet"),
+                10, 0, 10);
 
         h2_phoEta_qgEta[i] = new TH2D(Form("h2_phoEta_%sEta", partonTypesStr[i].c_str()),
                 Form(";%s;%s", strPhoEta.c_str(), strPartonEta.c_str()),
@@ -362,6 +367,7 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
             h_phoPt_qg[k]->Fill(phoPt);
         }
 
+        int njetaway = 0;
         for (int i = 0; i < fjt.nJet; ++i) {
 
             double jetpt = (*fjt.jetpt)[i];
@@ -382,6 +388,7 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
             }
 
             if (!(std::acos(cos(phoPhi - jetphi)) > 7 * TMath::Pi() / 8)) continue;
+            njetaway++;
 
             for (int jQG = 0; jQG < nTypesQG; ++jQG) {
                 int k = typesQG[jQG];
@@ -526,6 +533,12 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
                 }
             }
         }
+
+        for (int jQG = 0; jQG < nTypesQG; ++jQG) {
+            int k = typesQG[jQG];
+
+            h_phoqgNjet[k]->Fill(njetaway);
+        }
     }
     std::cout << "Loop ENDED" << std::endl;
     std::cout << "eventsAnalyzed = " << eventsAnalyzed << std::endl;
@@ -552,6 +565,7 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
         h_phoqgDeta[i]->Scale(1./nPho, "width");
         h_phoqgDphi[i]->Scale(1./nPho, "width");
         h_phoqgX[i]->Scale(1./nPho, "width");
+        h_phoqgNjet[i]->Scale(1./nPho, "width");
 
         for (int j = 0; j < kN_PARTICLETYPES; ++j) {
             h_xijet[i][j]->Scale(1./nJet, "width");

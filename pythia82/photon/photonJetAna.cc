@@ -29,9 +29,10 @@
 #include "../../utilities/physicsUtil.h"
 
 void photonJetAna(std::string eventFileName = "promptPhoton.root", std::string jetFileName = "jets.root",
-                  std::string jetTreeName = "ak3jets", std::string outputFileName = "photonJetAna_out.root");
+                  std::string jetTreeName = "ak3jets", std::string outputFileName = "photonJetAna_out.root", int iStatusPhoton = 1);
 
-void photonJetAna(std::string eventFileName, std::string jetFileName, std::string jetTreeName, std::string outputFileName)
+void photonJetAna(std::string eventFileName, std::string jetFileName, std::string jetTreeName, std::string outputFileName,
+                  int iStatusPhoton)
 {
     std::cout << "running photonJetAna()" << std::endl;
 
@@ -40,6 +41,7 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
     std::cout << "jetFileName = " << jetFileName.c_str() << std::endl;
     std::cout << "jetTreeName = " << jetTreeName.c_str() << std::endl;
     std::cout << "outputFileName = " << outputFileName.c_str() << std::endl;
+    std::cout << "iStatusPhoton = " << iStatusPhoton << std::endl;
     std::cout << "##### Parameters - END #####" << std::endl;
 
     // Set up the ROOT TFile and TTree.
@@ -83,6 +85,12 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
     TFile* outputFile = new TFile(outputFileName.c_str(), "RECREATE");
 
     TH1::SetDefaultSumw2();
+
+    enum STATUSES {
+        kHard,
+        kOut,
+        kN_STATUSES
+    };
 
     // photon histograms
     int nBinsX_pt = 30;
@@ -296,17 +304,42 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
         // outgoing particles are at index 5 and 6
         int ip1 = 5;
         int ip2 = 6;
-        int iPho = -1;
+        int iPhoH = -1;
         if ((isGamma((*event)[ip1])) && (isParton((*event)[ip2])))
-            iPho = ip1;
+            iPhoH = ip1;
         else if ((isGamma((*event)[ip2])) && (isParton((*event)[ip1])))
-            iPho = ip2;
-        if (iPho == -1) continue;
+            iPhoH = ip2;
+        if (iPhoH == -1) continue;
+
+        int iParton = (iPhoH == ip1) ? ip2 : ip1;
+        int iQG = (isQuark((*event)[iParton])) ? kQuark : kGluon;
+
+        int iPho = iPhoH;
+        if (iStatusPhoton == kOut) {
+            int eventPartonSize = eventParton->size();
+            // search the hard scattering photon in outgoing particles
+            int iOutPho = -1;
+            int nOutPhoCand = 0;
+            for (int i = 0; i < eventPartonSize; ++i) {
+
+                if (!isGamma((*eventParton)[i]))  continue;
+                int indexOrig = (*eventParton)[i].mother1();
+
+                if (hasDaughter((*event)[indexOrig]))  continue;
+
+                // must be a daughter of the hard scattering particle
+                if (!isAncestor(event, indexOrig, iPhoH))  continue;
+
+                nOutPhoCand++;
+                iOutPho = indexOrig;
+            }
+            // there must be exactly one outgoing, final photon
+            if (iOutPho == -1 || nOutPhoCand != 1)  continue;
+
+            iPho = iOutPho;
+        }
 
         eventsAnalyzed++;
-
-        int iParton = (iPho == ip1) ? ip2 : ip1;
-        int iQG = (isQuark((*event)[iParton])) ? kQuark : kGluon;
 
         double phoPt = (*event)[iPho].pT();
         double phoEta = (*event)[iPho].eta();
@@ -556,7 +589,11 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
 
 int main(int argc, char* argv[]) {
 
-    if (argc == 5) {
+    if (argc == 6) {
+        photonJetAna(argv[1], argv[2], argv[3], argv[4], std::atoi(argv[5]));
+        return 0;
+    }
+    else if (argc == 5) {
         photonJetAna(argv[1], argv[2], argv[3], argv[4]);
         return 0;
     }

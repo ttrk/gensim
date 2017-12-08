@@ -9,11 +9,13 @@
 #include "TSystem.h"
 #include "TVirtualPad.h"
 #include "TApplication.h"
+#include "TRandom3.h"
 
 // dictionary to read Pythia8::Event
 #include "dictionary/dict4RootDct.cc"
 #include "utils/pythiaUtil.h"
 #include "../fastjet3/fastJetTree.h"
+#include "../utilities/physicsUtil.h"
 
 #include "fastjet/ClusterSequence.hh"
 #include "fastjet/PseudoJet.hh"
@@ -32,9 +34,9 @@ enum CONSTITUENTS {
 };
 
 void pythiaClusterJets(std::string inputFileName = "pythiaEvents.root", std::string outputFileName = "pythiaClusterJets_out.root",
-                       int dR = 3, int minJetPt = 5, int constituentType = 0);
+                       int dR = 3, int minJetPt = 5, int constituentType = 0, int smearJetPt = 0);
 
-void pythiaClusterJets(std::string inputFileName, std::string outputFileName, int dR, int minJetPt, int constituentType)
+void pythiaClusterJets(std::string inputFileName, std::string outputFileName, int dR, int minJetPt, int constituentType, int smearJetPt)
 {
     std::cout << "running pythiaClusterJets()" << std::endl;
 
@@ -46,6 +48,7 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
     std::cout << "jetRadius = " << jetRadius << std::endl;
     std::cout << "minJetPt = " << minJetPt << std::endl;
     std::cout << "constituentType = " << constituentType << std::endl;
+    std::cout << "smearJetPt = " << smearJetPt << std::endl;
     std::cout << "##### Parameters - END #####" << std::endl;
 
     // Set up the ROOT TFile and TTree.
@@ -90,6 +93,11 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
         jetTreeName = Form("ak%djetsPartonHard", dR);
         jetTreeTitle = Form("partonic jets from hard scattering with R = %.1f", jetRadius);
     }
+    if (smearJetPt > 0)  {
+        jetTreeName.append("Smeared");
+        jetTreeTitle.append(", smeared");
+    }
+
     std::cout << "jetTreeName = " << jetTreeName.c_str() << std::endl;
     std::cout << "jetTreeTitle = " << jetTreeTitle.c_str() << std::endl;
 
@@ -102,6 +110,7 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
 
     std::cout << "Clustering with " << fjJetDefn->description().c_str() << std::endl;
 
+    TRandom3 rand(12345);
     int eventsAnalyzed = 0;
     int nEvents = treeEvt->GetEntries();
     std::cout << "nEvents = " << nEvents << std::endl;
@@ -150,6 +159,7 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
         // Run Fastjet algorithm
         fastjet::ClusterSequence clustSeq(fjParticles, *fjJetDefn);
 
+
         // Extract inclusive jets sorted by pT (note the minimum pT)
         std::vector<fastjet::PseudoJet> inclusiveJets = clustSeq.inclusive_jets(minJetPt);
         std::vector<fastjet::PseudoJet> sortedJets    = sorted_by_pt(inclusiveJets);
@@ -157,8 +167,13 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
         int nSortedJets = sortedJets.size();
         for (int i = 0; i < nSortedJets; ++i) {
 
+            double sf = 1;
+            if (smearJetPt > 0) {
+                sf = getEnergySmearingFactor(rand, sortedJets[i].pt(), 0.06, 0.95, 0);
+            }
+
             fjt.rawpt->push_back(sortedJets[i].pt());
-            fjt.jetpt->push_back(sortedJets[i].pt());
+            fjt.jetpt->push_back(sf * sortedJets[i].pt());
             fjt.jeteta->push_back(sortedJets[i].eta());
             fjt.jetphi->push_back(sortedJets[i].phi_std());
             fjt.nJet++;
@@ -180,7 +195,11 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
 
 int main(int argc, char* argv[]) {
 
-    if (argc == 6) {
+    if (argc == 7) {
+        pythiaClusterJets(argv[1], argv[2], std::atoi(argv[3]), std::atoi(argv[4]), std::atoi(argv[5]), std::atoi(argv[6]));
+        return 0;
+    }
+    else if (argc == 6) {
         pythiaClusterJets(argv[1], argv[2], std::atoi(argv[3]), std::atoi(argv[4]), std::atoi(argv[5]));
         return 0;
     }
@@ -202,7 +221,7 @@ int main(int argc, char* argv[]) {
     }
     else {
         std::cout << "Usage : \n" <<
-                "./pythiaClusterJets.exe <inputFileName> <outputFileName> <jetRadius> <minJetPt> <constituentType>"
+                "./pythiaClusterJets.exe <inputFileName> <outputFileName> <jetRadius> <minJetPt> <constituentType> <smearJetPt>"
                 << std::endl;
         return 1;
     }

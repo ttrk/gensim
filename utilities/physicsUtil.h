@@ -3,6 +3,7 @@
  */
 
 #include <TMath.h>
+#include <TRandom3.h>
 
 #include <string>
 #include <vector>
@@ -16,6 +17,8 @@ double getDPHI(double phi1, double phi2);
 double getAbsDPHI(double phi1, double phi2);
 double getDR(double eta1, double phi1, double eta2, double phi2);
 double getDR2(double eta1, double phi1, double eta2, double phi2);
+double getResolution(double pt, double C, double S, double N);
+double getEnergySmearingFactor(TRandom3 &rand, double pt, double C, double S, double N);
 
 double getDETA(double eta1, double eta2)
 {
@@ -62,6 +65,25 @@ double getDR2(double eta1, double phi1, double eta2, double phi2)
     return (deta*deta + dphi*dphi);
 }
 
+/*
+ * calculate resolution using CSN parameterization
+ */
+double getResolution(double pt, double C, double S, double N)
+{
+    return TMath::Sqrt( C*C + (S*S)/pt + (N*N)/(pt*pt) );
+}
+
+double getEnergySmearingFactor(TRandom3 &rand, double pt, double C, double S, double N)
+{
+    double sigma = getResolution(pt, C, S, N);
+
+    double smearFactor = -1;
+    while (smearFactor < 0) {
+        smearFactor = rand.Gaus(1, sigma);
+    }
+
+    return smearFactor;
+}
 
 #endif /* PHYSICSUTIL_H_ */
 

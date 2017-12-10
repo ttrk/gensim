@@ -152,6 +152,7 @@ void photonPartonAna(std::string inputFileName, std::string outputFileName, int 
     TH1D* h_phoqgDphi[kN_PARTONTYPES];
     TH1D* h_phoqgDy[kN_PARTONTYPES];
     TH1D* h_phoqgX[kN_PARTONTYPES];
+    TH1D* h_phoqgMeanEta[kN_PARTONTYPES];
     TH2D* h2_phoEta_qgEta[kN_PARTONTYPES];
     TH2D* h2_phoPhi_qgPhi[kN_PARTONTYPES];
     TH2D* h2_phoY_qgY[kN_PARTONTYPES];
@@ -187,6 +188,8 @@ void photonPartonAna(std::string inputFileName, std::string outputFileName, int 
                 partonTypesLabel[i].c_str(), strPho.c_str(), strPartonY.c_str(), strPhoY.c_str());
         std::string strPhoPartonMeanEta = Form("#eta_{ave %s %s} = (%s + %s) / 2",
                 partonTypesLabel[i].c_str(), strPho.c_str(), strPartonEta.c_str(), strPhoEta.c_str());
+        std::string strPhoPartonMeanEtaAbs = Form("|#eta_{ave %s %s}| = |%s + %s| / 2",
+                        partonTypesLabel[i].c_str(), strPho.c_str(), strPartonEta.c_str(), strPhoEta.c_str());
 
         h_qgPt[i] = new TH1D(Form("h_%sPt", partonTypesStr[i].c_str()),
                 Form(";%s;", strPartonPt.c_str()),
@@ -223,6 +226,10 @@ void photonPartonAna(std::string inputFileName, std::string outputFileName, int 
         h_phoqgX[i] = new TH1D(Form("h_pho%sX", partonTypesStr[i].c_str()),
                 Form(";%s;", strPhoPartonX.c_str()),
                 nBinsX_phoqgX, axis_phoqgX_min, axis_phoqgX_max);
+
+        h_phoqgMeanEta[i] = new TH1D(Form("h_pho%sMeanEta", partonTypesStr[i].c_str()),
+                Form(";%s;", strPhoPartonMeanEtaAbs.c_str()),
+                nBinsX_eta, 0, 0.8*axis_eta_max);
 
         h2_phoEta_qgEta[i] = new TH2D(Form("h2_phoEta_%sEta", partonTypesStr[i].c_str()),
                 Form(";%s;%s", strPhoEta.c_str(), strPartonEta.c_str()),
@@ -420,6 +427,7 @@ void photonPartonAna(std::string inputFileName, std::string outputFileName, int 
             h_phoqgDphi[k]->Fill(phoqgDphi);
             h_phoqgDy[k]->Fill(phoqgDy);
             h_phoqgX[k]->Fill(phoqgX);
+            h_phoqgMeanEta[k]->Fill(TMath::Abs(phoqgMeanEta));
             h2_phoEta_qgEta[k]->Fill(phoEta[iStatusPhoton], qgEta[iStatusParton]);
             h2_phoPhi_qgPhi[k]->Fill(phoPhi[iStatusPhoton], qgPhi[iStatusParton]);
             h2_phoY_qgY[k]->Fill(phoY[iStatusPhoton], qgY[iStatusParton]);
@@ -481,6 +489,7 @@ void photonPartonAna(std::string inputFileName, std::string outputFileName, int 
         h_phoqgDphi[i]->Scale(1./h_phoqgDphi[i]->Integral(), "width");
         h_phoqgDy[i]->Scale(1./h_phoqgDy[i]->Integral(), "width");
         h_phoqgX[i]->Scale(1./h_phoqgX[i]->Integral(), "width");
+        h_phoqgMeanEta[i]->Scale(1./h_phoqgMeanEta[i]->Integral(), "width");
 
         for (int j = 0; j < kN_PARTONTYPES; ++j) {
             h_finalqg_qg_dR_cdf[i][j] = (TH1D*)h_finalqg_qg_dR[i][j]->GetCumulative(true, "_cdf");

@@ -157,7 +157,7 @@ void photonPartonAna(std::string inputFileName, std::string outputFileName, int 
     TH2D* h2_phoPhi_qgPhi[kN_PARTONTYPES];
     TH2D* h2_phoY_qgY[kN_PARTONTYPES];
     TH2D* h2_qscale_phoqgDeta[kN_PARTONTYPES];
-    TH2D* h2_phoqgMeanEta_x1Overx2[kN_PARTONTYPES];
+    TH2D* h2_phoqgMeanEta_x1overx2[kN_PARTONTYPES];
     // photon histograms split for parton types
     TH1D* h_phoPt_qgRatio[kN_PARTONTYPES];
     // ratio / difference of outgoing parton and hard process parton pt / eta / phi
@@ -251,7 +251,7 @@ void photonPartonAna(std::string inputFileName, std::string outputFileName, int 
         std::vector<double> binsVec = calcBinsLogScale(0.001, 1000, nBins_x1Overx2);
         double binsArr[nBins_x1Overx2+1];
         std::copy(binsVec.begin(), binsVec.end(), binsArr);
-        h2_phoqgMeanEta_x1Overx2[i] = new TH2D(Form("h2_pho%sMeanEta_x1Overx2", partonTypesStr[i].c_str()),
+        h2_phoqgMeanEta_x1overx2[i] = new TH2D(Form("h2_pho%sMeanEta_x1overx2", partonTypesStr[i].c_str()),
                 Form(";%s;x_{1} / x_{2}", strPhoPartonMeanEta.c_str()),
                 nBinsX_eta, -0.8*axis_eta_max, 0.8*axis_eta_max, nBins_x1Overx2, binsArr);
 
@@ -432,7 +432,7 @@ void photonPartonAna(std::string inputFileName, std::string outputFileName, int 
             h2_phoPhi_qgPhi[k]->Fill(phoPhi[iStatusPhoton], qgPhi[iStatusParton]);
             h2_phoY_qgY[k]->Fill(phoY[iStatusPhoton], qgY[iStatusParton]);
             h2_qscale_phoqgDeta[k]->Fill(phoqgDeta, event->scale());
-            h2_phoqgMeanEta_x1Overx2[k]->Fill(phoqgMeanEta, info->x1()/info->x2());
+            h2_phoqgMeanEta_x1overx2[k]->Fill(phoqgMeanEta, info->x1()/info->x2());
             h_phoPt_qgRatio[k]->Fill(phoPt[iStatusPhoton]);
             h2_pt_qgPt_ratio_sOut_sHard[k]->Fill(qgPt[kHard], qgPt[kOut] / qgPt[kHard]);
             h2_pt_qgEta_diff_sOut_sHard[k]->Fill(qgPt[kHard], qgEta[kOut] - qgEta[kHard]);

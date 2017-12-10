@@ -128,14 +128,14 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
     std::string partonTypesLabel[kN_PARTONTYPES] = {"q/g", "q", "g"};
 
     enum PARTICLETYPES {
-        kHadron,
-        kHadronCh,
+        kFinal,
+        kFinalCh,
         kParton,
         kPartonHard,
         kN_PARTICLETYPES
     };
-    std::string particleTypesStr[kN_PARTICLETYPES] = {"hadron", "hadronCh", "parton", "partonHard"};
-    std::string particleTypesLabel[kN_PARTICLETYPES] = {"h^{0,#pm}", "h^{#pm}", "q/g", "q/g"};
+    std::string particleTypesStr[kN_PARTICLETYPES] = {"final", "finalCh", "parton", "partonHard"};
+    std::string particleTypesLabel[kN_PARTICLETYPES] = {"final^{0,#pm}", "final^{#pm}", "q/g", "q/g"};
 
     enum PTSORTING {
         kPt1st,
@@ -422,10 +422,10 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
                 int eventParticleSize = eventParticle->size();
                 for (int j = 0; j < eventParticleSize; ++j) {
 
-                    if (iPartType == PARTICLETYPES::kHadron) {
+                    if (iPartType == PARTICLETYPES::kFinal) {
                         if (!(*eventParticle)[j].isFinal()) continue;
                     }
-                    else if (iPartType == PARTICLETYPES::kHadronCh) {
+                    else if (iPartType == PARTICLETYPES::kFinalCh) {
                         if (!((*eventParticle)[j].isFinal() && isCharged((*eventParticle)[j], pythia.particleData))) continue;
                     }
                     else if (iPartType == PARTICLETYPES::kPartonHard) {

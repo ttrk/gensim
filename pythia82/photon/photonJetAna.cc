@@ -177,9 +177,11 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
     TH1D* h_phoPt_qgRatio[kN_PARTONTYPES];
     // jet FF histograms split by particle types
     TH1D* h_xijet[kN_PARTONTYPES][kN_PARTICLETYPES];
+    TH1D* h_xipho[kN_PARTONTYPES][kN_PARTICLETYPES];
     TH1D* h_jetshape[kN_PARTONTYPES][kN_PARTICLETYPES];
     TH1D* h_jetshape_normJet[kN_PARTONTYPES][kN_PARTICLETYPES];
     TH1D* h_xijet_ptSort[kN_PARTONTYPES][kN_PARTICLETYPES][kN_PTSORTING];
+    TH1D* h_xipho_ptSort[kN_PARTONTYPES][kN_PARTICLETYPES][kN_PTSORTING];
     TH1D* h_jetshape_ptSort[kN_PARTONTYPES][kN_PARTICLETYPES][kN_PTSORTING];
     TH1D* h_jetshape_ptSort_normJet[kN_PARTONTYPES][kN_PARTICLETYPES][kN_PTSORTING];
     for (int i = 0; i < kN_PARTONTYPES; ++i) {
@@ -264,8 +266,18 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
             std::string ptrkVecStr = Form("#bf{p}^{%s}", particleTypesLabel[j].c_str());
             std::string xiJetStr = Form("#xi^{jet} = ln (|%s|^{2} / %s #bf{#dot} %s)",
                                         pjetVecStr.c_str(), ptrkVecStr.c_str(), pjetVecStr.c_str());
+
+            std::string pTphoVecStr = Form("#bf{p}^{%s}_{T}", strPho.c_str());
+            std::string pTtrkVecStr = Form("#bf{p}^{%s}_{T}", particleTypesLabel[j].c_str());
+            std::string xiPhoStr = Form("#xi^{%s}_{T} = ln ( -|%s|^{2} / %s #bf{#dot} %s)", strPho.c_str(),
+                                        pTphoVecStr.c_str(), pTtrkVecStr.c_str(), pTphoVecStr.c_str());
+
             h_xijet[i][j] = new TH1D(Form("h_xijet_%s_%s", partonTypesStr[i].c_str(), particleTypesStr[j].c_str()),
                     Form("%s jet - particles are %s;%s;", partonTypesLabel[i].c_str(), particleTypesLabel[j].c_str(), xiJetStr.c_str()),
+                    nBinsX_xijet, axis_xijet_min, axis_xijet_max);
+
+            h_xipho[i][j] = new TH1D(Form("h_xipho_%s_%s", partonTypesStr[i].c_str(), particleTypesStr[j].c_str()),
+                    Form("%s jet - particles are %s;%s;", partonTypesLabel[i].c_str(), particleTypesLabel[j].c_str(), xiPhoStr.c_str()),
                     nBinsX_xijet, axis_xijet_min, axis_xijet_max);
 
             h_jetshape[i][j] = new TH1D(Form("h_jetshape_%s_%s", partonTypesStr[i].c_str(), particleTypesStr[j].c_str()),
@@ -277,6 +289,12 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
                         partonTypesStr[i].c_str(), particleTypesStr[j].c_str(), ptSortingsStr[k].c_str()),
                         Form("%s jet - particles are %s, %s;%s;",
                         partonTypesLabel[i].c_str(), particleTypesLabel[j].c_str(), ptSortingsLabel[k].c_str(), xiJetStr.c_str()),
+                        nBinsX_xijet, axis_xijet_min, axis_xijet_max);
+
+                h_xipho_ptSort[i][j][k] = new TH1D(Form("h_xipho_%s_%s_%s",
+                        partonTypesStr[i].c_str(), particleTypesStr[j].c_str(), ptSortingsStr[k].c_str()),
+                        Form("%s jet - particles are %s, %s;%s;",
+                        partonTypesLabel[i].c_str(), particleTypesLabel[j].c_str(), ptSortingsLabel[k].c_str(), xiPhoStr.c_str()),
                         nBinsX_xijet, axis_xijet_min, axis_xijet_max);
 
                 h_jetshape_ptSort[i][j][k] = new TH1D(Form("h_jetshape_%s_%s_%s",
@@ -349,6 +367,9 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
         double phoPt = (*event)[iPho].pT();
         double phoEta = (*event)[iPho].eta();
         double phoPhi = (*event)[iPho].phi();
+
+        TLorentzVector vecTPho;
+        vecTPho.SetPtEtaPhiM(phoPt, 0, phoPhi, 0);
 
         if (!(phoPt > 60)) continue;
         if (!(TMath::Abs(phoEta) < 1.44)) continue;
@@ -451,15 +472,25 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
 
                     if (!(dR_jet_particle < jetR))  continue;
 
+                    double angle = 0;
+                    double z = 0;
+                    // xijet
                     TLorentzVector vecPart;
                     vecPart.SetPtEtaPhiM(partPt, partEta, partPhi, 0);
+                    angle = vecJet.Angle(vecPart.Vect());
+                    z = vecPart.P() * cos(angle) / vecJet.P();
+                    double xijet = log(1.0/z);
+                    // xipho
+                    TLorentzVector vecTPart;
+                    vecTPart.SetPtEtaPhiM(partPt, 0, partPhi, 0);
+                    angle = vecTPho.Angle(vecTPart.Vect());
+                    z = partPt * fabs(cos(angle)) / phoPt;
+                    double xipho = log(1.0/z);
 
-                    double angle = vecJet.Angle(vecPart.Vect());
-                    double z = vecPart.P() * cos(angle) / vecJet.P();
-                    double xi = log(1.0/z);
                     for (int jQG = 0; jQG < nTypesQG; ++jQG) {
                         int k = typesQG[jQG];
-                        h_xijet[k][iPartType]->Fill(xi);
+                        h_xijet[k][iPartType]->Fill(xijet);
+                        h_xipho[k][iPartType]->Fill(xipho);
                     }
                     pairs_pt_index_ff.push_back(std::make_pair(partPt, j));
                 }
@@ -507,27 +538,39 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
                     double partEta = (*eventParticle)[j].eta();
                     double partPhi = (*eventParticle)[j].phi();
 
+                    double angle = 0;
+                    double z = 0;
+                    // xijet
                     TLorentzVector vecPart;
                     vecPart.SetPtEtaPhiM(partPt, partEta, partPhi, 0);
-
-                    double angle = vecJet.Angle(vecPart.Vect());
-                    double z = vecPart.P() * cos(angle) / vecJet.P();
-                    double xi = log(1.0/z);
+                    angle = vecJet.Angle(vecPart.Vect());
+                    z = vecPart.P() * cos(angle) / vecJet.P();
+                    double xijet = log(1.0/z);
+                    // xipho
+                    TLorentzVector vecTPart;
+                    vecTPart.SetPtEtaPhiM(partPt, 0, partPhi, 0);
+                    angle = vecTPho.Angle(vecTPart.Vect());
+                    z = partPt * fabs(cos(angle)) / phoPt;
+                    double xipho = log(1.0/z);
 
                     for (int jQG = 0; jQG < nTypesQG; ++jQG) {
                         int k = typesQG[jQG];
 
                         if (jPair == nPairs - 1) {
-                            h_xijet_ptSort[k][iPartType][kPt1st]->Fill(xi);
+                            h_xijet_ptSort[k][iPartType][kPt1st]->Fill(xijet);
+                            h_xipho_ptSort[k][iPartType][kPt1st]->Fill(xipho);
                         }
                         else if (jPair == nPairs - 2) {
-                            h_xijet_ptSort[k][iPartType][kPt2nd]->Fill(xi);
+                            h_xijet_ptSort[k][iPartType][kPt2nd]->Fill(xijet);
+                            h_xipho_ptSort[k][iPartType][kPt2nd]->Fill(xipho);
                         }
                         else if (jPair == nPairs - 3) {
-                            h_xijet_ptSort[k][iPartType][kPt3rd]->Fill(xi);
+                            h_xijet_ptSort[k][iPartType][kPt3rd]->Fill(xijet);
+                            h_xipho_ptSort[k][iPartType][kPt3rd]->Fill(xipho);
                         }
                         else {
-                            h_xijet_ptSort[k][iPartType][kPt4thPlus]->Fill(xi);
+                            h_xijet_ptSort[k][iPartType][kPt4thPlus]->Fill(xijet);
+                            h_xipho_ptSort[k][iPartType][kPt4thPlus]->Fill(xipho);
                         }
                     }
                 }
@@ -569,6 +612,7 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
 
         for (int j = 0; j < kN_PARTICLETYPES; ++j) {
             h_xijet[i][j]->Scale(1./nJet, "width");
+            h_xipho[i][j]->Scale(1./nJet, "width");
 
             h_jetshape_normJet[i][j] = (TH1D*)h_jetshape[i][j]->Clone(Form("%s_normJet", h_jetshape[i][j]->GetName()));
 
@@ -580,6 +624,7 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
             for (int k = 0; k < kN_PTSORTING; ++k) {
 
                 h_xijet_ptSort[i][j][k]->Scale(1./nJet, "width");
+                h_xipho_ptSort[i][j][k]->Scale(1./nJet, "width");
 
                 h_jetshape_ptSort_normJet[i][j][k] = (TH1D*)h_jetshape_ptSort[i][j][k]->Clone(
                         Form("%s_normJet", h_jetshape_ptSort[i][j][k]->GetName()));

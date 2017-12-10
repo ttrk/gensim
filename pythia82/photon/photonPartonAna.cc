@@ -66,9 +66,9 @@ void photonPartonAna(std::string inputFileName, std::string outputFileName, int 
     std::string statusesStr[kN_STATUSES] = {"sHard", "sOut"};
 
     // photon histograms
-    int nBinsX_pt = 30;
+    int nBinsX_pt = 36;
     double axis_pt_min = 60;
-    double axis_pt_max = 150+axis_pt_min;
+    double axis_pt_max = 180+axis_pt_min;
     int nBinsX_eta = 20;
     double axis_eta_min = 0;
     double axis_eta_max = 5;
@@ -335,7 +335,7 @@ void photonPartonAna(std::string inputFileName, std::string outputFileName, int 
             iOutPho = indexOrig;
         }
         // there must be exactly one outgoing, final photon
-        if (iOutPho == -1 || nOutPhoCand != 1)  continue;
+        if ((iOutPho == -1 || nOutPhoCand != 1) && iStatusPhoton == kOut)  continue;
 
         std::vector<double> phoPt(kN_STATUSES, -1);
         std::vector<double> phoEta(kN_STATUSES, -1);
@@ -384,8 +384,8 @@ void photonPartonAna(std::string inputFileName, std::string outputFileName, int 
                 ptMax = (*event)[indexOrig].pT();
             }
         }
-        // there must be exactly one outgoing, final photon
-        if (iOutParton == -1)  continue;
+        // there must be exactly one outgoing, final parton
+        if (iOutParton == -1 && iStatusParton == kOut)  continue;
 
         std::vector<double> qgE(kN_STATUSES, -1);
         std::vector<double> qgPt(kN_STATUSES, -1);

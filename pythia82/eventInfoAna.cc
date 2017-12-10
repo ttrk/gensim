@@ -74,6 +74,21 @@ void eventInfoAna(std::string inputFileName, std::string outputFileName, std::st
     TFile* outputFile = new TFile(outputFileName.c_str(), "RECREATE");
 
     TH1::SetDefaultSumw2();
+    std::vector<double> binsXVec = {};
+    std::vector<double> binsYVec = {};
+
+    int nBinsX_q = 60;
+    double axis_q_min = 0;
+    double axis_q_max = 300+axis_q_min;
+
+    TH1D* h_q = new TH1D("h_q", ";Q (GeV);", nBinsX_q, axis_q_min, axis_q_max);
+
+    int nBins_x1Overx2 = 50;
+    binsYVec = calcBinsLogScale(5*0.0001, 5*1000, nBins_x1Overx2);
+    double binsArrY[nBins_x1Overx2+1];
+    std::copy(binsYVec.begin(), binsYVec.end(), binsArrY);
+    TH2D* h2_q_x1overx2 = new TH2D("h2_q_x1overx2", ";Q (GeV);x_{1} / x_{2}",
+            nBinsX_q, axis_q_min, axis_q_max, nBins_x1Overx2, binsArrY);
 
     TH1D* h_nMPI = new TH1D("h_nMPI", ";nMPI;", 25, 0, 25);
     TH1D* h_nISR = new TH1D("h_nISR", ";nISR;", 45, 0, 45);
@@ -98,7 +113,7 @@ void eventInfoAna(std::string inputFileName, std::string outputFileName, std::st
     for (int i = 0; i < kN_INCOMINGPARTONS; ++i) {
 
         int nBins_x = 100;
-        std::vector<double> binsXVec = calcBinsLogScale(0.001, 1, nBins_x);
+        binsXVec = calcBinsLogScale(0.001, 1, nBins_x);
         double binsArrX[nBins_x+1];
         std::copy(binsXVec.begin(), binsXVec.end(), binsArrX);
 
@@ -139,6 +154,9 @@ void eventInfoAna(std::string inputFileName, std::string outputFileName, std::st
 
         eventsAnalyzed++;
 
+        h_q->Fill(info->QFac());
+        h2_q_x1overx2->Fill(info->QFac(), info->x1() / info->x2());
+
         h_nMPI->Fill(info->nMPI());
         h_nISR->Fill(info->nISR());
         h_nFSR->Fill(info->nFSRinProc());
@@ -177,6 +195,8 @@ void eventInfoAna(std::string inputFileName, std::string outputFileName, std::st
     std::cout << "eventsAnalyzed = " << eventsAnalyzed << std::endl;
     std::cout << "Closing the input file" << std::endl;
     inputFile->Close();
+
+    h_q->Scale(1./h_q->Integral(), "width");
 
     h_nMPI->Scale(1./h_nMPI->Integral(), "width");
     h_nISR->Scale(1./h_nISR->Integral(), "width");

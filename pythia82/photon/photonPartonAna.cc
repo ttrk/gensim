@@ -158,8 +158,6 @@ void photonPartonAna(std::string inputFileName, std::string outputFileName, int 
     TH2D* h2_phoY_qgY[kN_PARTONTYPES];
     TH2D* h2_qscale_phoqgDeta[kN_PARTONTYPES];
     TH2D* h2_phoqgMeanEta_x1overx2[kN_PARTONTYPES];
-    // photon histograms split for parton types
-    TH1D* h_phoPt_qgRatio[kN_PARTONTYPES];
     // ratio / difference of outgoing parton and hard process parton pt / eta / phi
     TH2D* h2_pt_qgPt_ratio_sOut_sHard[kN_PARTONTYPES];
     TH2D* h2_pt_qgEta_diff_sOut_sHard[kN_PARTONTYPES];
@@ -257,10 +255,6 @@ void photonPartonAna(std::string inputFileName, std::string outputFileName, int 
                 Form(";%s;x_{1} / x_{2}", strPhoPartonMeanEta.c_str()),
                 nBinsX_eta, -0.8*axis_eta_max, 0.8*axis_eta_max, nBins_x1Overx2, binsArr);
 
-        h_phoPt_qgRatio[i] = new TH1D(Form("h_phoPt_%sRatio", partonTypesStr[i].c_str()),
-                Form(";%s;", strPhoPt.c_str()),
-                nBinsX_pt, axis_pt_min, axis_pt_max);
-
         h2_pt_qgPt_ratio_sOut_sHard[i] = new TH2D(Form("h2_pt_%sPt_ratio_sOut_sHard", partonTypesStr[i].c_str()),
                 Form(";%s (hard process);%s (outgoing) / %s (hard process)", strPartonPt.c_str(), strPartonPt.c_str(), strPartonPt.c_str()),
                 nBinsX_pt, axis_pt_min, axis_pt_max, nBinsX_ratio_pt, axis_ratio_pt_min, axis_ratio_pt_max);
@@ -300,6 +294,27 @@ void photonPartonAna(std::string inputFileName, std::string outputFileName, int 
             h_finalqg_qg_dR_wE[i][j] = new TH1D(Form("h_final%s_%s_dR_wE", partonTypesStr[j].c_str(), partonTypesStr[i].c_str()),
                     Form(";#DeltaR_{%s final %s};", partonTypesLabel[i].c_str(), partonTypesLabel[j].c_str()), nBinsX_eta, 0, 1.5);
         }
+    }
+
+    enum PARTONTYPES2 {
+        kInc,
+        kQ,
+        kG,
+        kudsQ,
+        kbctQ,
+        kN_PARTONTYPES2
+    };
+    std::string partonTypes2Str[kN_PARTONTYPES2] = {"parton", "q", "g", "uds", "bct"};
+    std::string partonTypes2Label[kN_PARTONTYPES2] = {"q/g", "q", "g", "u/d/s", "b/c/t"};
+
+    // photon histograms split for parton types
+    TH1D* h_phoPt_qgRatio[kN_PARTONTYPES2];
+
+    for (int i = 0; i < kN_PARTONTYPES2; ++i) {
+
+        h_phoPt_qgRatio[i] = new TH1D(Form("h_phoPt_%sRatio", partonTypes2Str[i].c_str()),
+                Form(";%s;", strPhoPt.c_str()),
+                nBinsX_pt, axis_pt_min, axis_pt_max);
     }
 
     int eventsAnalyzed = 0;
@@ -445,7 +460,6 @@ void photonPartonAna(std::string inputFileName, std::string outputFileName, int 
             h2_phoY_qgY[k]->Fill(phoY[iStatusPhoton], qgY[iStatusParton]);
             h2_qscale_phoqgDeta[k]->Fill(phoqgDeta, event->scale());
             h2_phoqgMeanEta_x1overx2[k]->Fill(phoqgMeanEta, info->x1()/info->x2());
-            h_phoPt_qgRatio[k]->Fill(phoPt[iStatusPhoton]);
             h2_pt_qgPt_ratio_sOut_sHard[k]->Fill(qgPt[kHard], qgPt[kOut] / qgPt[kHard]);
             h2_pt_qgEta_diff_sOut_sHard[k]->Fill(qgPt[kHard], qgEta[kOut] - qgEta[kHard]);
             h2_pt_qgPhi_diff_sOut_sHard[k]->Fill(qgPt[kHard], getDPHI(qgPhi[kOut], qgPhi[kHard]));
@@ -454,6 +468,17 @@ void photonPartonAna(std::string inputFileName, std::string outputFileName, int 
             h2_nMPI_qgPt_ratio_sOut_sHard[k]->Fill(info->nMPI(), qgPt[kOut] / qgPt[kHard]);
             h2_nISR_qgPt_ratio_sOut_sHard[k]->Fill(info->nISR(), qgPt[kOut] / qgPt[kHard]);
             h2_nFSR_qgPt_ratio_sOut_sHard[k]->Fill(info->nFSRinProc(), qgPt[kOut] / qgPt[kHard]);
+        }
+
+        for (int j = 0; j < kN_PARTONTYPES2; ++j) {
+
+            if (j == kInc && !(isParton((*event)[iPartonH])))  continue;
+            else if (j == kQ && !(isQuark((*event)[iPartonH])))  continue;
+            else if (j == kG && !(isGluon((*event)[iPartonH])))  continue;
+            else if (j == kudsQ && !((*event)[iPartonH].idAbs() >= 1 && (*event)[iPartonH].idAbs() <= 3))  continue;
+            else if (j == kbctQ && !((*event)[iPartonH].idAbs() >= 4 && (*event)[iPartonH].idAbs() <= 8))  continue;
+
+            h_phoPt_qgRatio[j]->Fill(phoPt[iStatusPhoton]);
         }
 
         for (int i = 0; i < eventPartonSize; ++i) {
@@ -517,6 +542,9 @@ void photonPartonAna(std::string inputFileName, std::string outputFileName, int 
             h_finalqg_qg_dR_cdf[i][j]->Scale(1./nPartons);
             h_finalqg_qg_dR_wE_cdf[i][j]->Scale(1./nPartons);
         }
+    }
+
+    for (int i = 0; i < kN_PARTONTYPES2; ++i) {
 
         if (i != kInclusive) {
             h_phoPt_qgRatio[i]->Divide(h_phoPt_qgRatio[kInclusive]);

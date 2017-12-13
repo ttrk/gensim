@@ -1,11 +1,9 @@
 #!/bin/bash
 
-progPaths=(
-"./pythiaGenerateAndWrite.exe"
-);
+progPath="./pythiaGenerateAndWrite.exe"
 
 progCards=(
-"./photon/promptPhoton.cmnd"
+"./photon/cards/promptPhoton.cmnd"
 );
 
 outputFiles=(
@@ -15,7 +13,6 @@ outputFiles=(
 arrayIndices=${!outputFiles[*]}
 for i1 in $arrayIndices
 do
-    progPath=${progPaths[i1]}
     progCard=${progCards[i1]}
     outputFile=${outputFiles[i1]}
     outputFileLOG="${outputFile/.root/.log}"

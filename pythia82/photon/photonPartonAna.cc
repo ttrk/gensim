@@ -314,7 +314,7 @@ void photonPartonAna(std::string inputFileName, std::string outputFileName, int 
 
         h_phoPt_qgRatio[i] = new TH1D(Form("h_phoPt_%sRatio", partonTypes2Str[i].c_str()),
                 Form(";%s;", strPhoPt.c_str()),
-                nBinsX_pt, axis_pt_min, axis_pt_max);
+                200, 0, 1000);
     }
 
     int eventsAnalyzed = 0;

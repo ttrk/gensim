@@ -14,6 +14,7 @@ public :
     jeteta = 0;
     jetphi = 0;
     rawpt = 0;
+    rawphi = 0;
 
   };
   ~fastJetTree(){};
@@ -27,6 +28,7 @@ public :
   std::vector<float>   *jeteta;
   std::vector<float>   *jetphi;
   std::vector<float>   *rawpt;     // jet pt before any modification
+  std::vector<float>   *rawphi;    // jet phi before any modification
 
   // List of branches
   TBranch        *b_nJet;   //!
@@ -34,6 +36,7 @@ public :
   TBranch        *b_jeteta;   //!
   TBranch        *b_jetphi;   //!
   TBranch        *b_rawpt;   //!
+  TBranch        *b_rawphi;   //!
 };
 
 void fastJetTree::setupTreeForReading(TTree *t)
@@ -44,6 +47,7 @@ void fastJetTree::setupTreeForReading(TTree *t)
     if (t->GetBranch("jeteta")) t->SetBranchAddress("jeteta", &jeteta, &b_jeteta);
     if (t->GetBranch("jetphi")) t->SetBranchAddress("jetphi", &jetphi, &b_jetphi);
     if (t->GetBranch("rawpt")) t->SetBranchAddress("rawpt", &rawpt, &b_rawpt);
+    if (t->GetBranch("rawphi")) t->SetBranchAddress("rawphi", &rawphi, &b_rawphi);
 }
 
 void fastJetTree::branchTree(TTree *t)
@@ -53,6 +57,7 @@ void fastJetTree::branchTree(TTree *t)
     t->Branch("jeteta", &jeteta);
     t->Branch("jetphi", &jetphi);
     t->Branch("rawpt", &rawpt);
+    t->Branch("rawphi", &rawphi);
 }
 
 void fastJetTree::clearEvent()
@@ -62,6 +67,7 @@ void fastJetTree::clearEvent()
     jeteta->clear();
     jetphi->clear();
     rawpt->clear();
+    rawphi->clear();
 }
 
 #endif /* FASTJETTREE_H_ */

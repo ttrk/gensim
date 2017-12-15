@@ -77,9 +77,9 @@ void eventInfoAna(std::string inputFileName, std::string outputFileName, std::st
     std::vector<double> binsXVec = {};
     std::vector<double> binsYVec = {};
 
-    int nBinsX_q = 60;
+    int nBinsX_q = 200;
     double axis_q_min = 0;
-    double axis_q_max = 300+axis_q_min;
+    double axis_q_max = 1000+axis_q_min;
 
     TH1D* h_q = new TH1D("h_q", ";Q (GeV);", nBinsX_q, axis_q_min, axis_q_max);
 

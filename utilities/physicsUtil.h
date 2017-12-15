@@ -19,6 +19,7 @@ double getDR(double eta1, double phi1, double eta2, double phi2);
 double getDR2(double eta1, double phi1, double eta2, double phi2);
 double getResolution(double pt, double C, double S, double N);
 double getEnergySmearingFactor(TRandom3 &rand, double pt, double C, double S, double N);
+double getAngleSmearing(TRandom3 &rand, double pt, double C, double S, double N);
 
 double getDETA(double eta1, double eta2)
 {
@@ -83,6 +84,13 @@ double getEnergySmearingFactor(TRandom3 &rand, double pt, double C, double S, do
     }
 
     return smearFactor;
+}
+
+double getAngleSmearing(TRandom3 &rand, double pt, double C, double S, double N)
+{
+    double sigma = getResolution(pt, C, S, N);
+
+    return rand.Gaus(0, sigma);
 }
 
 #endif /* PHYSICSUTIL_H_ */

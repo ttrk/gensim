@@ -35,9 +35,10 @@ enum CONSTITUENTS {
 };
 
 void pythiaClusterJets(std::string inputFileName = "pythiaEvents.root", std::string outputFileName = "pythiaClusterJets_out.root",
-                       int dR = 3, int minJetPt = 5, int constituentType = 0, std::string jetptCSN = "0,0,0");
+                       int dR = 3, int minJetPt = 5, int constituentType = 0, std::string jetptCSN = "0,0,0", std::string jetphiCSN = "0,0,0");
 
-void pythiaClusterJets(std::string inputFileName, std::string outputFileName, int dR, int minJetPt, int constituentType, std::string jetptCSN)
+void pythiaClusterJets(std::string inputFileName, std::string outputFileName, int dR, int minJetPt, int constituentType,
+                       std::string jetptCSN, std::string jetphiCSN)
 {
     std::cout << "running pythiaClusterJets()" << std::endl;
 
@@ -95,19 +96,35 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
         jetTreeTitle = Form("partonic jets from hard scattering with R = %.1f", jetRadius);
     }
     // comma separated list for CSN parameters
-    std::vector<double> csn;
-    std::vector<std::string> csnStr = split(jetptCSN, ",");
+    std::vector<double> csnPt;
+    std::vector<std::string> csnStr;
+
+    // energy smearing
+    csnStr = split(jetptCSN, ",");
     bool smearJetPt = false;
     for (int i = 0; i < csnStr.size(); ++i) {
         double val = std::atof(csnStr.at(i).c_str());
-        csn.push_back(val);
+        csnPt.push_back(val);
         smearJetPt |= (val > 0);
     }
-    smearJetPt &= ((int)csn.size() == 3);
+    smearJetPt &= ((int)csnPt.size() == 3);
+
+    // angle smearing
+    std::vector<double> csnPhi;
+    csnStr = split(jetphiCSN, ",");
+    bool smearJetPhi = false;
+    for (int i = 0; i < csnStr.size(); ++i) {
+        double val = std::atof(csnStr.at(i).c_str());
+        csnPhi.push_back(val);
+        smearJetPhi |= (val > 0);
+    }
+    smearJetPhi &= ((int)csnPhi.size() == 3);
+
     // apply smearing if any of the C, S, N is > 0.
-    if (smearJetPt)  {
+    if (smearJetPt || smearJetPhi)  {
         jetTreeName.append("Smeared");
-        jetTreeTitle.append(Form(", smeared with C = %f, S = %f, N = %f", csn.at(0), csn.at(1), csn.at(2)));
+        if (smearJetPt)  jetTreeTitle.append(Form(", pt smeared with C = %.2f, S = %.2f, N = %.2f", csnPt.at(0), csnPt.at(1), csnPt.at(2)));
+        if (smearJetPhi)  jetTreeTitle.append(Form(", phi smeared with C = %.2f, S = %.2f, N = %.2f", csnPhi.at(0), csnPhi.at(1), csnPhi.at(2)));
     }
 
     std::cout << "jetTreeName = " << jetTreeName.c_str() << std::endl;
@@ -122,7 +139,8 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
 
     std::cout << "Clustering with " << fjJetDefn->description().c_str() << std::endl;
 
-    TRandom3 rand(12345);
+    TRandom3 rand1(12345);
+    TRandom3 rand2(6789);
     int eventsAnalyzed = 0;
     int nEvents = treeEvt->GetEntries();
     std::cout << "nEvents = " << nEvents << std::endl;
@@ -179,12 +197,14 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
         int nSortedJets = sortedJets.size();
         for (int i = 0; i < nSortedJets; ++i) {
 
-            double sf = smearJetPt ? getEnergySmearingFactor(rand, sortedJets[i].pt(), csn[0], csn[1], csn[2]) : 1;
+            double sf = smearJetPt ? getEnergySmearingFactor(rand1, sortedJets[i].pt(), csnPt[0], csnPt[1], csnPt[2]) : 1;
+            double sPhi = smearJetPhi ? getAngleSmearing(rand2, sortedJets[i].pt(), csnPt[0], csnPt[1], csnPt[2]) : 0;
 
             fjt.rawpt->push_back(sortedJets[i].pt());
             fjt.jetpt->push_back(sf * sortedJets[i].pt());
             fjt.jeteta->push_back(sortedJets[i].eta());
-            fjt.jetphi->push_back(sortedJets[i].phi_std());
+            fjt.rawphi->push_back(sortedJets[i].phi_std());
+            fjt.jetphi->push_back(sortedJets[i].phi_std() + sPhi);
             fjt.nJet++;
         }
 
@@ -204,7 +224,11 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
 
 int main(int argc, char* argv[]) {
 
-    if (argc == 7) {
+    if (argc == 8) {
+        pythiaClusterJets(argv[1], argv[2], std::atoi(argv[3]), std::atoi(argv[4]), std::atoi(argv[5]), argv[6], argv[7]);
+        return 0;
+    }
+    else if (argc == 7) {
         pythiaClusterJets(argv[1], argv[2], std::atoi(argv[3]), std::atoi(argv[4]), std::atoi(argv[5]), argv[6]);
         return 0;
     }
@@ -230,7 +254,7 @@ int main(int argc, char* argv[]) {
     }
     else {
         std::cout << "Usage : \n" <<
-                "./pythiaClusterJets.exe <inputFileName> <outputFileName> <jetRadius> <minJetPt> <constituentType> <jetptCSN>"
+                "./pythiaClusterJets.exe <inputFileName> <outputFileName> <jetRadius> <minJetPt> <constituentType> <jetptCSN> <jetphiCSN>"
                 << std::endl;
         return 1;
     }

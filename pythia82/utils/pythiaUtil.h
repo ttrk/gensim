@@ -24,6 +24,7 @@ bool isCharged(Pythia8::Particle particle, Pythia8::ParticleData& particleData);
 bool hasDaughter(Pythia8::Particle particle);
 bool isAncestor(Pythia8::Event* evtPtr, int iParticle, int iAncestor);
 std::vector<int> daughterList(Pythia8::Event* evtPtr, int iPart);
+std::vector<int> daughterListRecursive(Pythia8::Event* evtPtr, int iPart);
 void fillPartonLevelEvent(Pythia8::Event& event, Pythia8::Event& partonLevelEvent);
 void fillFinalEvent(Pythia8::Event& event, Pythia8::Event& finalEvent);
 
@@ -131,42 +132,76 @@ bool isAncestor(Pythia8::Event* evtPtr, int iParticle, int iAncestor)
 std::vector<int> daughterList(Pythia8::Event* evtPtr, int iPart)
 {
 
-  // Vector of all the daughters; created empty. Done if no event pointer.
-  std::vector<int> daughterVec;
-  if (evtPtr == 0) return daughterVec;
+    // Vector of all the daughters; created empty. Done if no event pointer.
+    std::vector<int> daughterVec;
+    if (evtPtr == 0) return daughterVec;
 
-  // Simple cases: no or one daughter.
-  if ((*evtPtr)[iPart].daughter1() == 0 && (*evtPtr)[iPart].daughter2() == 0) ;
-  else if ((*evtPtr)[iPart].daughter2() == 0 || (*evtPtr)[iPart].daughter2() == (*evtPtr)[iPart].daughter1())
-    daughterVec.push_back((*evtPtr)[iPart].daughter1());
+    // Simple cases: no or one daughter.
+    if ((*evtPtr)[iPart].daughter1() == 0 && (*evtPtr)[iPart].daughter2() == 0) ;
+    else if ((*evtPtr)[iPart].daughter2() == 0 || (*evtPtr)[iPart].daughter2() == (*evtPtr)[iPart].daughter1())
+        daughterVec.push_back((*evtPtr)[iPart].daughter1());
 
-  // A range of daughters.
-  else if ((*evtPtr)[iPart].daughter2() > (*evtPtr)[iPart].daughter1())
-    for (int iRange = (*evtPtr)[iPart].daughter1(); iRange <= (*evtPtr)[iPart].daughter2(); ++iRange)
-      daughterVec.push_back(iRange);
+    // A range of daughters.
+    else if ((*evtPtr)[iPart].daughter2() > (*evtPtr)[iPart].daughter1())
+        for (int iRange = (*evtPtr)[iPart].daughter1(); iRange <= (*evtPtr)[iPart].daughter2(); ++iRange)
+            daughterVec.push_back(iRange);
 
-  // Two separated daughters.
-  else {
-    daughterVec.push_back((*evtPtr)[iPart].daughter2());
-    daughterVec.push_back((*evtPtr)[iPart].daughter1());
-  }
-
-  // Special case for two incoming beams: attach further
-  // initiators and remnants that have beam as mother.
-  if (abs((*evtPtr)[iPart].status()) == 12 || abs((*evtPtr)[iPart].status()) == 13) {
-    int i = iPart;
-    for (int iDau = i + 1; iDau < evtPtr->size(); ++iDau)
-    if ((*evtPtr)[iDau].mother1() == i) {
-      bool isIn = false;
-      for (int iIn = 0; iIn < int(daughterVec.size()); ++iIn)
-        if (iDau == daughterVec[iIn]) isIn = true;
-      if (!isIn) daughterVec.push_back(iDau);
+    // Two separated daughters.
+    else {
+        daughterVec.push_back((*evtPtr)[iPart].daughter2());
+        daughterVec.push_back((*evtPtr)[iPart].daughter1());
     }
-  }
 
-  // Done.
-  return daughterVec;
+    // Special case for two incoming beams: attach further
+    // initiators and remnants that have beam as mother.
+    if (std::abs((*evtPtr)[iPart].status()) == 12 || std::abs((*evtPtr)[iPart].status()) == 13) {
+        int i = iPart;
+        for (int iDau = i + 1; iDau < evtPtr->size(); ++iDau)
+            if ((*evtPtr)[iDau].mother1() == i) {
+                bool isIn = false;
+                for (int iIn = 0; iIn < int(daughterVec.size()); ++iIn)
+                    if (iDau == daughterVec[iIn]) isIn = true;
+                if (!isIn) daughterVec.push_back(iDau);
+            }
+    }
 
+    // Done.
+    return daughterVec;
+
+}
+
+/*
+ * re-implementation of the following : vector<int> Particle::daughterListRecursive();
+ * uses an external Event* evtPtr, the rest is same as the original function
+ *
+ * Find complete list of daughters recursively, i.e. including subsequent
+ * generations. Is intended specifically for resonance decays.
+ */
+std::vector<int> daughterListRecursive(Pythia8::Event* evtPtr, int iPart)
+{
+
+    // Vector of all the daughters; created empty. Done if no event pointer.
+    std::vector<int> daughterVec;
+    if (evtPtr == 0) return daughterVec;
+
+    // Find first generation of daughters.
+    daughterVec = daughterList(evtPtr, iPart);
+
+    // Recursively add daughters of unstable particles.
+    int size = daughterVec.size();
+    for (int iDau = 0; iDau < size; ++iDau) {
+        int iPartNow = daughterVec[iDau];
+        Pythia8::Particle& partNow = (*evtPtr)[iPartNow];
+        if (!partNow.isFinal()) {
+            vector<int> grandDauVec = daughterList(evtPtr, iPartNow);
+            for (int i = 0; i < int(grandDauVec.size()); ++i)
+                daughterVec.push_back( grandDauVec[i] );
+            size += grandDauVec.size();
+        }
+    }
+
+    // Done.
+    return daughterVec;
 }
 
 /*

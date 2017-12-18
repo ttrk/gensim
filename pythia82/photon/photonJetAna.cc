@@ -190,6 +190,7 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
     TH1D* h_ff_ptSort[kN_PARTONTYPES][kN_PARTICLETYPES][kN_FFDEFNS][kN_PTSORTING];
     TH1D* h_jetshape_ptSort[kN_PARTONTYPES][kN_PARTICLETYPES][kN_PTSORTING];
     TH1D* h_jetshape_ptSort_normJet[kN_PARTONTYPES][kN_PARTICLETYPES][kN_PTSORTING];
+    TH1D* h_ff_ptSort_daughter[kN_PARTONTYPES][kN_PARTICLETYPES][kN_FFDEFNS][kN_PTSORTING];
     for (int i = 0; i < kN_PARTONTYPES; ++i) {
 
         std::string strPartonPt = Form("p_{T}^{%s}", partonTypesLabel[i].c_str());
@@ -292,6 +293,14 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
                             Form("%s jet - particles are %s, %s;%s;",
                             partonTypesLabel[i].c_str(), particleTypesLabel[j].c_str(), ptSortingsLabel[k].c_str(), ffStr.c_str()),
                             nBinsX_xijet, axis_xijet_min, axis_xijet_max);
+
+                    if (j == kFinal || j == kFinalCh) {
+                        h_ff_ptSort_daughter[i][j][iFF][k] = new TH1D(Form("h_%s_%s_%s_%s_daughter",
+                                ffDefnsStr[iFF].c_str(), partonTypesStr[i].c_str(), particleTypesStr[j].c_str(), ptSortingsStr[k].c_str()),
+                                Form("%s jet - particles are %s, %s;%s;",
+                                partonTypesLabel[i].c_str(), particleTypesLabel[j].c_str(), ptSortingsLabel[k].c_str(), ffStr.c_str()),
+                                nBinsX_xijet, axis_xijet_min, axis_xijet_max);
+                    }
                 }
             }
 
@@ -534,6 +543,8 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
                     }
                 }
 
+                std::vector<int> usedDaughterIndices[kN_PARTICLETYPES];
+
                 // pt sorted FF
                 std::sort(pairs_pt_index_ff.begin(), pairs_pt_index_ff.end());
                 nPairs = pairs_pt_index_ff.size();
@@ -577,9 +588,78 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
                                 h_ff_ptSort[k][iPartType][iFF][kPt4thPlus]->Fill(xi);
                             }
                         }
+                    }
 
-                        for (int jQG = 0; jQG < nTypesQG; ++jQG) {
-                            int k = typesQG[jQG];
+                    if (iPartType == kParton) {
+                        int iOrig = (*eventParticle)[j].mother1();
+
+                        std::vector<int> daughters = daughterListRecursive(eventAll, iOrig);
+                        int nDaughters = daughters.size();
+
+                        for (int jChild = 0; jChild < nDaughters; ++jChild) {
+
+                            int iChild = daughters[jChild];
+
+                            std::vector<int> childTypes = {PARTICLETYPES::kFinal, PARTICLETYPES::kFinalCh};
+                            int nChildTypes = childTypes.size();
+
+                            for (int childType = 0; childType < nChildTypes; ++childType) {
+
+                                if (childType == PARTICLETYPES::kFinal) {
+                                    if (!(*eventAll)[iChild].isFinal()) continue;
+                                }
+                                else if (childType == PARTICLETYPES::kFinalCh) {
+                                    if (!((*eventAll)[iChild].isFinal() && isCharged((*eventAll)[iChild], pythia.particleData))) continue;
+                                }
+
+                                if ((!(*eventAll)[iChild].pT() > 1)) continue;
+
+                                double childPt = (*eventAll)[iChild].pT();
+                                double childEta = (*eventAll)[iChild].eta();
+                                double childPhi = (*eventAll)[iChild].phi();
+
+                                double dR_jet_child = getDR(jeteta, jetphi, childEta, childPhi);
+                                if (!(dR_jet_child < jetR))  continue;
+
+                                // One final particle can be daughter of multiple partons. Use a particle only once.
+                                // Priority is given to mother parton with higher pt.
+                                if (std::find(usedDaughterIndices[childType].begin(), usedDaughterIndices[childType].end(), iChild) != usedDaughterIndices[childType].end()) continue;
+                                usedDaughterIndices[childType].push_back(iChild);
+
+                                for (int iFF = 0; iFF < kN_FFDEFNS; ++iFF) {
+
+                                    double z = 0;
+                                    TLorentzVector vecPart;
+                                    if (iFF == kxijet) {
+                                        vecPart.SetPtEtaPhiM(childPt, childEta, childPhi, 0);
+                                        double angle = vecJet.Angle(vecPart.Vect());
+                                        z = vecPart.P() * cos(angle) / vecJet.P();
+                                    }
+                                    else if (iFF == kxipho) {
+                                        vecPart.SetPtEtaPhiM(childPt, 0, childPhi, 0);
+                                        double angle = vecTPho.Angle(vecPart.Vect());
+                                        z = childPt * fabs(cos(angle)) / phoPt;
+                                    }
+                                    double xi = log(1.0/z);
+
+                                    for (int jQG = 0; jQG < nTypesQG; ++jQG) {
+                                        int k = typesQG[jQG];
+
+                                        if (jPair == nPairs - 1) {
+                                            h_ff_ptSort_daughter[k][childType][iFF][kPt1st]->Fill(xi);
+                                        }
+                                        else if (jPair == nPairs - 2) {
+                                            h_ff_ptSort_daughter[k][childType][iFF][kPt2nd]->Fill(xi);
+                                        }
+                                        else if (jPair == nPairs - 3) {
+                                            h_ff_ptSort_daughter[k][childType][iFF][kPt3rd]->Fill(xi);
+                                        }
+                                        else {
+                                            h_ff_ptSort_daughter[k][childType][iFF][kPt4thPlus]->Fill(xi);
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -626,6 +706,10 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
 
                 for (int k = 0; k < kN_PTSORTING; ++k) {
                     h_ff_ptSort[i][j][iFF][k]->Scale(1./nJet, "width");
+
+                    if (j == kFinal || j == kFinalCh) {
+                        h_ff_ptSort_daughter[i][j][iFF][k]->Scale(1./nJet, "width");
+                    }
                 }
             }
 

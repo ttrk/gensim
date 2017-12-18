@@ -24,6 +24,7 @@
 #include "../../fastjet3/fastJetTree.h"
 
 #include <iostream>
+#include <iomanip>
 #include <string>
 #include <vector>
 #include "../../utilities/physicsUtil.h"
@@ -332,6 +333,10 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
     }
     std::cout << "Loop STARTED" << std::endl;
     for (int iEvent = 0; iEvent < nEvents; ++iEvent) {
+
+        if (iEvent % 10000 == 0)  {
+          std::cout << "current entry = " <<iEvent<<" out of "<<nEvents<<" : "<<std::setprecision(2)<<(double)iEvent/nEvents*100<<" %"<<std::endl;
+        }
 
         treeEvt->GetEntry(iEvent);
         treeEvtParton->GetEntry(iEvent);

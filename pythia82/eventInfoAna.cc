@@ -25,6 +25,7 @@
 #include "../utilities/systemUtil.h"
 
 #include <iostream>
+#include <iomanip>
 #include <string>
 #include <vector>
 
@@ -134,6 +135,10 @@ void eventInfoAna(std::string inputFileName, std::string outputFileName, std::st
     std::cout << "nEvents = " << nEvents << std::endl;
     std::cout << "Loop STARTED" << std::endl;
     for (int iEvent = 0; iEvent < nEvents; ++iEvent) {
+
+        if (iEvent % 10000 == 0)  {
+          std::cout << "current entry = " <<iEvent<<" out of "<<nEvents<<" : "<<std::setprecision(2)<<(double)iEvent/nEvents*100<<" %"<<std::endl;
+        }
 
         treeEvt->GetEntry(iEvent);
         treeEvtParton->GetEntry(iEvent);

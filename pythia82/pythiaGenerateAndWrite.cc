@@ -14,6 +14,11 @@
 // Error in <TTree::Branch>: The pointer specified for event is not of a class known to ROOT
 #include "utils/pythiaUtil.h"
 
+#include <iostream>
+#include <iomanip>
+#include <string>
+#include <vector>
+
 void pythiaGenerateAndWrite(std::string cardFileName = "mycard.cmnd", std::string outFileName = "pythiaGenerateAndWrite.root");
 
 void pythiaGenerateAndWrite(std::string cardFileName, std::string outFileName)
@@ -60,6 +65,11 @@ void pythiaGenerateAndWrite(std::string cardFileName, std::string outFileName)
     int iAbort = 0;
     std::cout << "Loop START" << std::endl;
     for (int iEvent = 0; iEvent < nEvent; ++iEvent) {
+
+        if (iEvent % 10000 == 0)  {
+          std::cout << "current entry = " <<iEvent<<" out of "<<nEvent<<" : "<<std::setprecision(2)<<(double)iEvent/nEvent*100<<" %"<<std::endl;
+        }
+
         // Generate events. Quit if many failures.
         if (!pythia.next()) {
             if (++iAbort < nAbort) continue;

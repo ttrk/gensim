@@ -515,7 +515,7 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
                 // pt sorted jet shape
                 std::sort(pairs_pt_index_js.begin(), pairs_pt_index_js.end());
                 nPairs = pairs_pt_index_js.size();
-                for (int jPair = nPairs - 1; jPair >= 0; --jPair) {
+                for (int jPair = 0; jPair < nPairs; ++jPair) {
 
                     int j = pairs_pt_index_js[jPair].second;
 
@@ -548,7 +548,7 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
                 // pt sorted FF
                 std::sort(pairs_pt_index_ff.begin(), pairs_pt_index_ff.end());
                 nPairs = pairs_pt_index_ff.size();
-                for (int jPair = nPairs - 1; jPair >= 0; --jPair) {
+                for (int jPair = 0; jPair < nPairs; ++jPair) {
 
                     int j = pairs_pt_index_ff[jPair].second;
 
@@ -622,7 +622,7 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
                                 if (!(dR_jet_child < jetR))  continue;
 
                                 // One final particle can be daughter of multiple partons. Use a particle only once.
-                                // Priority is given to mother parton with higher pt.
+                                // Priority is given to mother parton with lower pt.
                                 if (std::find(usedDaughterIndices[childType].begin(), usedDaughterIndices[childType].end(), iChild) != usedDaughterIndices[childType].end()) continue;
                                 usedDaughterIndices[childType].push_back(iChild);
 

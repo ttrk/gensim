@@ -159,6 +159,7 @@ void photonPartonAna(std::string inputFileName, std::string outputFileName, int 
     TH2D* h2_phoY_qgY[kN_PARTONTYPES];
     TH2D* h2_qscale_phoqgDeta[kN_PARTONTYPES];
     TH2D* h2_phoqgMeanEta_x1overx2[kN_PARTONTYPES];
+    TH2D* h2_phoqgDiffEta_x1overx2[kN_PARTONTYPES];
     // ratio / difference of outgoing parton and hard process parton pt / eta / phi
     TH2D* h2_pt_qgPt_ratio_sOut_sHard[kN_PARTONTYPES];
     TH2D* h2_pt_qgEta_diff_sOut_sHard[kN_PARTONTYPES];
@@ -186,11 +187,13 @@ void photonPartonAna(std::string inputFileName, std::string outputFileName, int 
         std::string strPhoPartonDphiShort = Form("#Delta#phi_{%s %s}", partonTypesLabel[i].c_str(), strPho.c_str());
         std::string strPhoPartonDphi = Form("%s = |%s - %s|", strPhoPartonDphiShort.c_str(), strPartonPhi.c_str(), strPhoPhi.c_str());
         std::string strPhoPartonDy = Form("#Deltay_{%s %s} = |%s - %s|",
-                partonTypesLabel[i].c_str(), strPho.c_str(), strPartonY.c_str(), strPhoY.c_str());
+                strPhoY.c_str(), partonTypesLabel[i].c_str(), strPhoY.c_str(), strPartonY.c_str());
         std::string strPhoPartonMeanEta = Form("#eta_{ave %s %s} = (%s + %s) / 2",
-                partonTypesLabel[i].c_str(), strPho.c_str(), strPartonEta.c_str(), strPhoEta.c_str());
+                strPho.c_str(), partonTypesLabel[i].c_str(), strPhoEta.c_str(), strPartonEta.c_str());
         std::string strPhoPartonMeanEtaAbs = Form("|#eta_{ave %s %s}| = |%s + %s| / 2",
-                        partonTypesLabel[i].c_str(), strPho.c_str(), strPartonEta.c_str(), strPhoEta.c_str());
+                strPho.c_str(), partonTypesLabel[i].c_str(), strPhoEta.c_str(), strPartonEta.c_str());
+        std::string strPhoPartonDiffEta = Form("#eta_{diff %s %s} = (%s - %s) / 2",
+                strPho.c_str(), partonTypesLabel[i].c_str(), strPhoEta.c_str(), strPartonEta.c_str());
 
         h_qgPt[i] = new TH1D(Form("h_%sPt", partonTypesStr[i].c_str()),
                 Form(";%s;", strPartonPt.c_str()),
@@ -254,6 +257,10 @@ void photonPartonAna(std::string inputFileName, std::string outputFileName, int 
         std::copy(binsVec.begin(), binsVec.end(), binsArr);
         h2_phoqgMeanEta_x1overx2[i] = new TH2D(Form("h2_pho%sMeanEta_x1overx2", partonTypesStr[i].c_str()),
                 Form(";%s;x_{1} / x_{2}", strPhoPartonMeanEta.c_str()),
+                nBinsX_eta, -0.8*axis_eta_max, 0.8*axis_eta_max, nBins_x1Overx2, binsArr);
+
+        h2_phoqgDiffEta_x1overx2[i] = new TH2D(Form("h2_pho%sDiffEta_x1overx2", partonTypesStr[i].c_str()),
+                Form(";%s;x_{1} / x_{2}", strPhoPartonDiffEta.c_str()),
                 nBinsX_eta, -0.8*axis_eta_max, 0.8*axis_eta_max, nBins_x1Overx2, binsArr);
 
         h2_pt_qgPt_ratio_sOut_sHard[i] = new TH2D(Form("h2_pt_%sPt_ratio_sOut_sHard", partonTypesStr[i].c_str()),
@@ -441,6 +448,7 @@ void photonPartonAna(std::string inputFileName, std::string outputFileName, int 
         double phoqgDy = TMath::Abs(phoY[iStatusPhoton] - qgY[iStatusParton]);
         double phoqgX = qgPt[iStatusParton] / phoPt[iStatusPhoton];
         double phoqgMeanEta = 0.5*(phoEta[iStatusPhoton] + qgEta[iStatusParton]);
+        double phoqgDiffEta = 0.5*(phoEta[iStatusPhoton] - qgEta[iStatusParton]);
 
         int iQG = (isQuark((*event)[iPartonH])) ? kQuark : kGluon;
 
@@ -465,6 +473,7 @@ void photonPartonAna(std::string inputFileName, std::string outputFileName, int 
             h2_phoY_qgY[k]->Fill(phoY[iStatusPhoton], qgY[iStatusParton]);
             h2_qscale_phoqgDeta[k]->Fill(phoqgDeta, event->scale());
             h2_phoqgMeanEta_x1overx2[k]->Fill(phoqgMeanEta, info->x1()/info->x2());
+            h2_phoqgDiffEta_x1overx2[k]->Fill(phoqgDiffEta, info->x1()/info->x2());
             h2_pt_qgPt_ratio_sOut_sHard[k]->Fill(qgPt[kHard], qgPt[kOut] / qgPt[kHard]);
             h2_pt_qgEta_diff_sOut_sHard[k]->Fill(qgPt[kHard], qgEta[kOut] - qgEta[kHard]);
             h2_pt_qgPhi_diff_sOut_sHard[k]->Fill(qgPt[kHard], getDPHI(qgPhi[kOut], qgPhi[kHard]));

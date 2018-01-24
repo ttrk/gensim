@@ -161,8 +161,8 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
     double axis_xijet_max = 5;
 
     double axis_js_min = 0;
-    double axis_js_max = 1.0;
-    int nBinsX_js = axis_js_max / 0.05;
+    double axis_js_max = 0.6;
+    int nBinsX_js = round(axis_js_max / 0.05);
 
     // photon histograms
     TH1D* h_phoPt_qg[kN_PARTONTYPES];

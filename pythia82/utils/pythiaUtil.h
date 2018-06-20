@@ -27,6 +27,7 @@ std::vector<int> daughterList(Pythia8::Event* evtPtr, int iPart);
 std::vector<int> daughterListRecursive(Pythia8::Event* evtPtr, int iPart);
 void fillPartonLevelEvent(Pythia8::Event& event, Pythia8::Event& partonLevelEvent);
 void fillFinalEvent(Pythia8::Event& event, Pythia8::Event& finalEvent);
+bool passedParticleFilter(Pythia8::Event& event, int idAbs, double ptMin = 0, bool isFinal = true, std::vector<int> motherIdAbs = {});
 
 bool isParton(Pythia8::Particle particle)
 {
@@ -241,6 +242,33 @@ void fillFinalEvent(Pythia8::Event& event, Pythia8::Event& finalEvent)
 
             finalEvent[iNew].mothers(i, i);
         }
+}
+
+bool passedParticleFilter(Pythia8::Event& event, int idAbs, double ptMin, bool isFinal, std::vector<int> motherIdAbs)
+{
+    int nEventSize = event.size();
+    for (int i = 0; i < nEventSize; ++i) {
+
+        if (isFinal && !event[i].isFinal()) continue;
+        if (idAbs != event[i].idAbs()) continue;
+        if (event[i].pT() < ptMin) continue;
+
+        int nMotherIdAbs = motherIdAbs.size();
+        bool passedMom = (nMotherIdAbs == 0);
+        for (int iMom = 0; iMom < nMotherIdAbs; ++iMom) {
+            if (motherIdAbs[iMom] != event[event[i].mother1()].idAbs())  continue;
+            if (motherIdAbs[iMom] != event[event[i].mother2()].idAbs())  continue;
+
+            event[i].motherList();
+
+            passedMom = true;
+            break;
+        }
+
+        if (passedMom) return true;
+    }
+
+    return false;
 }
 
 #endif /* PYTHIAUTIL_H_ */

@@ -5,7 +5,7 @@
 ! The settings here are illustrative, not always physics-motivated.
 
 ! 1) Settings used in the main program.
-Main:numberOfEvents = 10000         ! number of events to generate
+Main:numberOfEvents = 100000        ! number of events to generate
 Main:timesAllowErrors = 10000       ! how many aborts before run stops
 
 ! 2) Settings related to output in init(), next() and stat().
@@ -32,7 +32,7 @@ SLHA:minMassSM = 1000.  ! default = 100.
 ! Example 1: QCD + prompt photon production; must set pTmin.
 HardQCD:all = off                   ! switch on all QCD jet + jet processes
 PromptPhoton:all = on              ! swich on gamma + jet and gamma + gamma
-PhaseSpace:pTHatMin = 30.          ! minimal pT scale in process
+PhaseSpace:pTHatMin = 40.          ! minimal pT scale in process
 
 ! Example 2: t-tbar production.
 #Top:gg2ttbar = on                  ! g g -> t tbar

@@ -1,5 +1,5 @@
 // Do NOT change. Changes will be lost next time file is generated
-// derived from main92.cc example of PYTHIA 8.2
+// derived from main92.cc example of PYTHIA 8.2.
 
 #define R__DICTIONARY_FILENAME dict4RootDct
 

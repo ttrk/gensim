@@ -8,6 +8,8 @@
 *.log
 *.bin
 *.exe
+# shared objects
+*.so
 
 # output data
 *.root

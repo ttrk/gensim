@@ -13,15 +13,18 @@
 // dictionary is needed to avoid the following error :
 // Error in <TTree::Branch>: The pointer specified for event is not of a class known to ROOT
 #include "utils/pythiaUtil.h"
+#include "../utilities/systemUtil.h"
 
 #include <iostream>
 #include <iomanip>
 #include <string>
 #include <vector>
 
-void pythiaGenerateAndWrite(std::string cardFileName = "mycard.cmnd", std::string outFileName = "pythiaGenerateAndWrite.root");
+std::vector<std::string> argOptions;
 
-void pythiaGenerateAndWrite(std::string cardFileName, std::string outFileName)
+void pythiaGenerateAndWrite(std::string cardFileName = "mycard.cmnd", std::string outFileName = "pythiaGenerateAndWrite.root", std::string particleFilter = "");
+
+void pythiaGenerateAndWrite(std::string cardFileName, std::string outFileName, std::string particleFilter)
 {
     std::cout << "running pythiaGenerateAndWrite()" << std::endl;
 
@@ -62,9 +65,41 @@ void pythiaGenerateAndWrite(std::string cardFileName, std::string outFileName)
     TTree *treeEvtInfo = new TTree("evtInfo","event info tree");
     treeEvtInfo->Branch("info",&info);
 
+    std::cout << "##### Pythia Filters #####" << std::endl;
+    std::vector<pythiaFilter> filters;
+    int nFilters = 0;
+
+    int indexArgPythiaFilter = -1;
+    for (int i = 0; i < argOptions.size(); ++i) {
+        if (argOptions[i].find("--pythiaFilter") == 0) {
+            indexArgPythiaFilter = i;
+            break;
+        }
+    }
+    if (indexArgPythiaFilter >= 0) {
+        std::string pythiaFiltersStr = replaceAll(argOptions[indexArgPythiaFilter], "--pythiaFilter:", "");
+        std::vector<std::string> pythiaFilterStrVec = split(pythiaFiltersStr, ":", false);
+        if (pythiaFilterStrVec.size() == 0) pythiaFilterStrVec = {pythiaFiltersStr};
+
+        for (int i = 0; i < pythiaFilterStrVec.size(); ++i) {
+            pythiaFilter filterTmp;
+            filterTmp.parseFilter(pythiaFilterStrVec[i]);
+            filters.push_back(filterTmp);
+        }
+    }
+    nFilters = filters.size();
+    for (int i = 0; i < nFilters; ++i) {
+        std::cout << "## Filter " << i+1 << std::endl;
+        std::cout << filters[i].print() << std::endl;
+    }
+    std::cout << "##### Pythia Filters - END #####" << std::endl;
+
     int iAbort = 0;
+    int eventsGenerated = 0;
+    int eventsFinal = 0;
     std::cout << "Loop START" << std::endl;
-    for (int iEvent = 0; iEvent < nEvent; ++iEvent) {
+    int iEvent = 0;
+    while (iEvent < nEvent) {
 
         if (iEvent % 10000 == 0)  {
           std::cout << "current entry = " <<iEvent<<" out of "<<nEvent<<" : "<<std::setprecision(2)<<(double)iEvent/nEvent*100<<" %"<<std::endl;
@@ -76,6 +111,18 @@ void pythiaGenerateAndWrite(std::string cardFileName, std::string outFileName)
             cout << " Event generation aborted prematurely, owing to error!\n";
             break;
         }
+        eventsGenerated++;
+
+        bool passedFilters = true;
+        for (int iFilter = 0; iFilter < nFilters; ++iFilter) {
+            if (!filters[iFilter].passedFilter(*event, *info)) {
+                passedFilters = false;
+                break;
+            }
+        }
+        if (!passedFilters) continue;
+
+        eventsFinal++;
 
         fillPartonLevelEvent(*event, eventPartonLevel);
 
@@ -87,9 +134,12 @@ void pythiaGenerateAndWrite(std::string cardFileName, std::string outFileName)
         treeEvt->Fill();
         treeEvtParton->Fill();
         treeEvtInfo->Fill();
+
+        iEvent++;
     }
     std::cout << "Loop END" << std::endl;
-
+    std::cout << "eventsGenerated = " << eventsGenerated << std::endl;
+    std::cout << "eventsFinal = " << eventsFinal << std::endl;
     // Statistics on event generation.
     pythia.stat();
 
@@ -106,7 +156,15 @@ void pythiaGenerateAndWrite(std::string cardFileName, std::string outFileName)
 
 int main(int argc, char* argv[]) {
 
-    if (argc == 3) {
+    argOptions.clear();
+    for (int i = 0; i < argc; ++i) {
+
+        std::string tmp = argv[i];
+        // an option starts with "--"
+        if (tmp.find("--") == 0)  argOptions.push_back(tmp);
+    }
+
+    if (argc >= 3) {
         pythiaGenerateAndWrite(argv[1], argv[2]);
         return 0;
     }
@@ -116,7 +174,7 @@ int main(int argc, char* argv[]) {
     }
     else {
         std::cout << "Usage : \n" <<
-                "./pythiaGenerateAndWrite.exe <inputFileName> <outputFileName>"
+                "./pythiaGenerateAndWrite.exe <inputFileName> <outputFileName> [options]"
                 << std::endl;
         return 1;
     }

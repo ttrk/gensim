@@ -88,8 +88,8 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
     TH1::SetDefaultSumw2();
 
     enum STATUSES {
-        kHard,
-        kOut,
+        kHardPhoton,
+        kOutgoingHardPhoton,
         kN_STATUSES
     };
 
@@ -367,7 +367,7 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
         int iQG = (isQuark((*event)[iParton])) ? kQuark : kGluon;
 
         int iPho = iPhoH;
-        if (iStatusPhoton == kOut) {
+        if (iStatusPhoton == kOutgoingHardPhoton) {
             int eventPartonSize = eventParton->size();
             // search the hard scattering photon in outgoing particles
             int iOutPho = -1;

@@ -353,7 +353,7 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
         jetTree->GetEntry(iEvent);
 
         // jet analysis
-        // outgoing particles are at index 5 and 6
+        // particles from hard scattering are at index 5 and 6
         int ip1 = 5;
         int ip2 = 6;
         int iPhoH = -1;

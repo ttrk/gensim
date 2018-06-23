@@ -90,6 +90,7 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
     enum STATUSES {
         kHardPhoton,
         kOutgoingHardPhoton,
+        kOutgoingMaxPhoton,
         kN_STATUSES
     };
 
@@ -361,10 +362,7 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
             iPhoH = ip1;
         else if ((isGamma((*event)[ip2])) && (isParton((*event)[ip1])))
             iPhoH = ip2;
-        if (iPhoH == -1) continue;
-
-        int iParton = (iPhoH == ip1) ? ip2 : ip1;
-        int iQG = (isQuark((*event)[iParton])) ? kQuark : kGluon;
+        if ((iStatusPhoton == kHardPhoton || iStatusPhoton == kOutgoingHardPhoton) && iPhoH == -1) continue;
 
         int iPho = iPhoH;
         if (iStatusPhoton == kOutgoingHardPhoton) {
@@ -390,6 +388,27 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
 
             iPho = iOutPho;
         }
+        else if (iStatusPhoton == kOutgoingMaxPhoton) {
+            int eventPartonSize = eventParton->size();
+            // search the highest-pt photon in outgoing particles
+            int iOutPho = -1;
+            double maxPt = 0;
+            for (int i = 0; i < eventPartonSize; ++i) {
+
+                if (!isGamma((*eventParton)[i]))  continue;
+                int indexOrig = (*eventParton)[i].mother1();
+
+                if (hasDaughter((*event)[indexOrig]))  continue;
+
+                if ((*event)[indexOrig].pT() > maxPt) {
+                    iOutPho = indexOrig;
+                    maxPt = (*event)[indexOrig].pT();
+                }
+            }
+            if (iOutPho == -1)  continue;
+
+            iPho = iOutPho;
+        }
 
         eventsAnalyzed++;
 
@@ -408,6 +427,16 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
         h2_phoEta_phoPt->Fill(TMath::Abs(phoEta), phoPt);
         h2_qscale_phoPt->Fill(phoPt, event->scale());
         h2_qscale_phoEta->Fill(TMath::Abs(phoEta), event->scale());
+
+        int iParton = (iPhoH == ip1) ? ip2 : ip1;
+        int iQG = (isQuark((*event)[iParton])) ? kQuark : kGluon;
+        if (iStatusPhoton == kOutgoingMaxPhoton) {
+            // associated parton is the one that is farthest away in phi
+            double dphiParton1 = std::acos(cos(phoPhi - (*event)[ip1].phi()));
+            double dphiParton2 = std::acos(cos(phoPhi - (*event)[ip2].phi()));
+            iParton = (dphiParton1 > dphiParton2) ? ip1 : ip2;
+            iQG = (isQuark((*event)[iParton])) ? kQuark : kGluon;
+        }
 
         std::vector<int> typesQG = {kInclusive, iQG};
         int nTypesQG = typesQG.size();

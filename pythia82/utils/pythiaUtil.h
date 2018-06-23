@@ -449,7 +449,7 @@ void fillPartonLevelEvent(Pythia8::Event& event, Pythia8::Event& partonLevelEven
     // Copy over all particles that existed right before hadronization.
     partonLevelEvent.reset();
     int nEventSize = event.size();
-    for (int i = 0; i < nEventSize; ++i)
+    for (int i = 0; i < nEventSize; ++i) {
 
         if (event[i].isFinalPartonLevel()) {
             int iNew = partonLevelEvent.append(event[i]);
@@ -460,6 +460,7 @@ void fillPartonLevelEvent(Pythia8::Event& event, Pythia8::Event& partonLevelEven
             partonLevelEvent[iNew].mothers(i, i);
             partonLevelEvent[iNew].daughters(0, 0);
         }
+    }
 }
 
 /*
@@ -470,13 +471,14 @@ void fillFinalEvent(Pythia8::Event& event, Pythia8::Event& finalEvent)
 {
     finalEvent.reset();
     int nEventSize = event.size();
-    for (int i = 0; i < nEventSize; ++i)
+    for (int i = 0; i < nEventSize; ++i) {
 
         if (event[i].isFinal()) {
             int iNew = finalEvent.append(event[i]);
 
             finalEvent[iNew].mothers(i, i);
         }
+    }
 }
 
 #endif /* PYTHIAUTIL_H_ */

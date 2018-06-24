@@ -30,10 +30,10 @@
 #include "../../utilities/physicsUtil.h"
 
 void photonJetAna(std::string eventFileName = "promptPhoton.root", std::string jetFileName = "jets.root",
-                  std::string jetTreeName = "ak3jets", std::string outputFileName = "photonJetAna_out.root", int iStatusPhoton = 1);
+                  std::string jetTreeName = "ak3jets", std::string outputFileName = "photonJetAna_out.root", int photonType = 1);
 
 void photonJetAna(std::string eventFileName, std::string jetFileName, std::string jetTreeName, std::string outputFileName,
-                  int iStatusPhoton)
+                  int photonType)
 {
     std::cout << "running photonJetAna()" << std::endl;
 
@@ -42,7 +42,7 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
     std::cout << "jetFileName = " << jetFileName.c_str() << std::endl;
     std::cout << "jetTreeName = " << jetTreeName.c_str() << std::endl;
     std::cout << "outputFileName = " << outputFileName.c_str() << std::endl;
-    std::cout << "iStatusPhoton = " << iStatusPhoton << std::endl;
+    std::cout << "photonType = " << photonType << std::endl;
     std::cout << "##### Parameters - END #####" << std::endl;
 
     // Set up the ROOT TFile and TTree.
@@ -87,12 +87,12 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
 
     TH1::SetDefaultSumw2();
 
-    enum STATUSES {
+    enum PHOTONTYPES {
         kHardPhoton,
         kOutgoingHardPhoton,
         kOutgoingMaxPhoton,
         kOutgoingMaxPhotonIso,
-        kN_STATUSES
+        kN_PHOTONTYPES
     };
 
     // photon histograms
@@ -363,10 +363,10 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
             iPhoH = ip1;
         else if ((isGamma((*event)[ip2])) && (isParton((*event)[ip1])))
             iPhoH = ip2;
-        if ((iStatusPhoton == kHardPhoton || iStatusPhoton == kOutgoingHardPhoton) && iPhoH == -1) continue;
+        if ((photonType == kHardPhoton || photonType == kOutgoingHardPhoton) && iPhoH == -1) continue;
 
         int iPho = iPhoH;
-        if (iStatusPhoton == kOutgoingHardPhoton) {
+        if (photonType == kOutgoingHardPhoton) {
             int eventPartonSize = eventParton->size();
             // search the hard scattering photon in outgoing particles
             int iOutPho = -1;
@@ -389,7 +389,7 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
 
             iPho = iOutPho;
         }
-        else if (iStatusPhoton == kOutgoingMaxPhoton || iStatusPhoton == kOutgoingMaxPhotonIso) {
+        else if (photonType == kOutgoingMaxPhoton || photonType == kOutgoingMaxPhotonIso) {
             int eventPartonSize = eventParton->size();
             // search the highest-pt photon in outgoing particles
             int iOutPho = -1;
@@ -422,7 +422,7 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
 
         if (!(phoPt > 60)) continue;
         if (!(TMath::Abs(phoEta) < 1.44)) continue;
-        if (iStatusPhoton == kOutgoingMaxPhotonIso) {
+        if (photonType == kOutgoingMaxPhotonIso) {
             double isoCal = isolationEt(event, iPho, 0.4, true, true);
             if (!(isoCal < 5)) continue;
         }
@@ -435,7 +435,7 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
 
         int iParton = (iPhoH == ip1) ? ip2 : ip1;
         int iQG = (isQuark((*event)[iParton])) ? kQuark : kGluon;
-        if (iStatusPhoton == kOutgoingMaxPhoton || iStatusPhoton == kOutgoingMaxPhotonIso) {
+        if (photonType == kOutgoingMaxPhoton || photonType == kOutgoingMaxPhotonIso) {
             // associated parton is the one that is farthest away in phi
             double dphiParton1 = std::acos(cos(phoPhi - (*event)[ip1].phi()));
             double dphiParton2 = std::acos(cos(phoPhi - (*event)[ip2].phi()));

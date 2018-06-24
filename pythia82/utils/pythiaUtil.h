@@ -8,6 +8,7 @@
 #include "Pythia8/Basics.h"
 
 #include "../../utilities/systemUtil.h"
+#include "../../utilities/physicsUtil.h"
 
 #include <string>
 #include <vector>
@@ -263,6 +264,7 @@ std::vector<int> daughterList(Pythia8::Event* evtPtr, int iPart);
 std::vector<int> daughterListRecursive(Pythia8::Event* evtPtr, int iPart);
 void fillPartonLevelEvent(Pythia8::Event& event, Pythia8::Event& partonLevelEvent);
 void fillFinalEvent(Pythia8::Event& event, Pythia8::Event& finalEvent);
+double isolationEt(Pythia8::Event* event, int iPart, double maxdR, bool includeMu = true, bool includeNu = true);
 
 bool isParton(Pythia8::Particle particle)
 {
@@ -479,6 +481,38 @@ void fillFinalEvent(Pythia8::Event& event, Pythia8::Event& finalEvent)
             finalEvent[iNew].mothers(i, i);
         }
     }
+}
+
+/*
+ * sum of transverse energy inside a cone centered around the particle with index "iPart"
+ */
+double isolationEt(Pythia8::Event* event, int iPart, double maxdR, bool includeMu, bool includeNu)
+{
+    double partEta = (*event)[iPart].eta();
+    double partPhi = (*event)[iPart].phi();
+    double maxdR2 = maxdR * maxdR;
+
+    double sumEt = 0;
+
+    int nEventSize = event->size();
+    for (int i = 0; i < nEventSize; ++i) {
+
+        if ((*event)[i].isFinal()) {
+
+            if (i == iPart)  continue;
+
+            double dR2 = getDR2(partEta, partPhi, (*event)[i].eta(), (*event)[i].phi());
+            if (dR2 > maxdR2)  continue;
+
+            int pdgAbs = (*event)[i].idAbs();
+
+            if (!includeMu && pdgAbs == 13)  continue;
+            if (!includeNu && (pdgAbs == 12 || pdgAbs == 14 || pdgAbs == 16))  continue;
+
+            sumEt += (*event)[i].eT();
+        }
+    }
+    return sumEt;
 }
 
 #endif /* PYTHIAUTIL_H_ */

@@ -91,6 +91,7 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
         kHardPhoton,
         kOutgoingHardPhoton,
         kOutgoingMaxPhoton,
+        kOutgoingMaxPhotonIso,
         kN_STATUSES
     };
 
@@ -388,7 +389,7 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
 
             iPho = iOutPho;
         }
-        else if (iStatusPhoton == kOutgoingMaxPhoton) {
+        else if (iStatusPhoton == kOutgoingMaxPhoton || iStatusPhoton == kOutgoingMaxPhotonIso) {
             int eventPartonSize = eventParton->size();
             // search the highest-pt photon in outgoing particles
             int iOutPho = -1;
@@ -421,6 +422,10 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
 
         if (!(phoPt > 60)) continue;
         if (!(TMath::Abs(phoEta) < 1.44)) continue;
+        if (iStatusPhoton == kOutgoingMaxPhotonIso) {
+            double isoCal = isolationEt(event, iPho, 0.4, true, true);
+            if (!(isoCal < 5)) continue;
+        }
 
         h_phoPt->Fill(phoPt);
         h_phoEta->Fill(TMath::Abs(phoEta));
@@ -430,7 +435,7 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
 
         int iParton = (iPhoH == ip1) ? ip2 : ip1;
         int iQG = (isQuark((*event)[iParton])) ? kQuark : kGluon;
-        if (iStatusPhoton == kOutgoingMaxPhoton) {
+        if (iStatusPhoton == kOutgoingMaxPhoton || iStatusPhoton == kOutgoingMaxPhotonIso) {
             // associated parton is the one that is farthest away in phi
             double dphiParton1 = std::acos(cos(phoPhi - (*event)[ip1].phi()));
             double dphiParton2 = std::acos(cos(phoPhi - (*event)[ip2].phi()));

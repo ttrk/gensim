@@ -20,6 +20,7 @@ double getDR2(double eta1, double phi1, double eta2, double phi2);
 double getResolution(double pt, double C, double S, double N);
 double getEnergySmearingFactor(TRandom3 &rand, double pt, double C, double S, double N);
 double getAngleSmearing(TRandom3 &rand, double pt, double C, double S, double N);
+double correctPhiRange(double phi);
 
 double getDETA(double eta1, double eta2)
 {
@@ -91,6 +92,16 @@ double getAngleSmearing(TRandom3 &rand, double pt, double C, double S, double N)
     double sigma = getResolution(pt, C, S, N);
 
     return rand.Gaus(0, sigma);
+}
+
+double correctPhiRange(double phi)
+{
+    while (TMath::Abs(phi) > TMath::Pi())
+    {
+        if ( phi >    TMath::Pi() )  phi -= 2*TMath::Pi();
+        if ( phi < -1*TMath::Pi() )  phi += 2*TMath::Pi();
+    }
+    return phi;
 }
 
 #endif /* PHYSICSUTIL_H_ */

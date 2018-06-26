@@ -196,6 +196,9 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
     TH1D* h_jetshape_ptSort_normJet[kN_PARTONTYPES][kN_PARTICLETYPES][kN_PTSORTING];
     TH1D* h_jetshape_ptSort_daughter[kN_PARTONTYPES][kN_PARTICLETYPES][kN_PTSORTING];
     TH1D* h_jetshape_ptSort_daughter_normJet[kN_PARTONTYPES][kN_PARTICLETYPES][kN_PTSORTING];
+    // particle-jet correlations
+    TH1D* h_particle_jet_dphi[kN_PARTONTYPES][kN_PARTICLETYPES];
+    TH1D* h_particle_jet_deta[kN_PARTONTYPES][kN_PARTICLETYPES];
     for (int i = 0; i < kN_PARTONTYPES; ++i) {
 
         std::string strPartonPt = Form("p_{T}^{%s}", partonTypesLabel[i].c_str());
@@ -330,6 +333,14 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
                             nBinsX_js, axis_js_min, axis_js_max);
                 }
             }
+
+            h_particle_jet_dphi[i][j] = new TH1D(Form("h_particle_jet_dphi_%s_%s", partonTypesStr[i].c_str(), particleTypesStr[j].c_str()),
+                                Form("%s jet - particles are %s;|#phi^{jet} - #phi^{%s}|;", partonTypesLabel[i].c_str(), particleTypesLabel[j].c_str(), particleTypesLabel[j].c_str()),
+                                nBinsX_js*4, axis_js_min, axis_js_max);
+
+            h_particle_jet_deta[i][j] = new TH1D(Form("h_particle_jet_deta_%s_%s", partonTypesStr[i].c_str(), particleTypesStr[j].c_str()),
+                                Form("%s jet - particles are %s;|#eta^{jet} - #eta^{%s}|;", partonTypesLabel[i].c_str(), particleTypesLabel[j].c_str(), particleTypesLabel[j].c_str()),
+                                nBinsX_js*4, axis_js_min, axis_js_max);
         }
     }
 
@@ -527,6 +538,9 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
                     for (int jQG = 0; jQG < nTypesQG; ++jQG) {
                         int k = typesQG[jQG];
                         h_jetshape[k][iPartType]->Fill(dR_jet_particle, partPt / jetpt);
+
+                        h_particle_jet_dphi[k][iPartType]->Fill(TMath::Abs(getDPHI(jetphi, partPhi)));
+                        h_particle_jet_deta[k][iPartType]->Fill(TMath::Abs(getDETA(jeteta, partEta)));
                     }
                     if (dR_jet_particle < jetR) {
                         // consider only pairs inside jet cone
@@ -840,6 +854,9 @@ void photonJetAna(std::string eventFileName, std::string jetFileName, std::strin
                     h_jetshape_ptSort_daughter_normJet[i][j][k]->Scale(1./nJet, "width");
                 }
             }
+
+            h_particle_jet_dphi[i][j]->Scale(1./nJet, "width");
+            h_particle_jet_deta[i][j]->Scale(1./nJet, "width");
         }
 
         if (i != kInclusive) {

@@ -52,6 +52,7 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
     std::cout << "minJetPt = " << minJetPt << std::endl;
     std::cout << "constituentType = " << constituentType << std::endl;
     std::cout << "jetptCSN = " << jetptCSN.c_str() << std::endl;
+    std::cout << "jetphiCSN = " << jetphiCSN.c_str() << std::endl;
     std::cout << "##### Parameters - END #####" << std::endl;
 
     // Set up the ROOT TFile and TTree.
@@ -203,7 +204,7 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
         for (int i = 0; i < nSortedJets; ++i) {
 
             double sf = smearJetPt ? getEnergySmearingFactor(rand1, sortedJets[i].pt(), csnPt[0], csnPt[1], csnPt[2]) : 1;
-            double sPhi = smearJetPhi ? getAngleSmearing(rand2, sortedJets[i].pt(), csnPt[0], csnPt[1], csnPt[2]) : 0;
+            double sPhi = smearJetPhi ? getAngleSmearing(rand2, sortedJets[i].pt(), csnPhi[0], csnPhi[1], csnPhi[2]) : 0;
 
             fjt.rawpt->push_back(sortedJets[i].pt());
             fjt.jetpt->push_back(sf * sortedJets[i].pt());

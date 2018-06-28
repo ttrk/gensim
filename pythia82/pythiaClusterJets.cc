@@ -10,6 +10,7 @@
 #include "TVirtualPad.h"
 #include "TApplication.h"
 #include "TRandom3.h"
+#include "TLorentzVector.h"
 
 // dictionary to read Pythia8::Event
 #include "dictionary/dict4RootDct.cc"
@@ -17,6 +18,7 @@
 #include "../fastjet3/fastJetTree.h"
 #include "../utilities/physicsUtil.h"
 #include "../utilities/systemUtil.h"
+#include "../utilities/particleTree.h"
 
 #include "fastjet/ClusterSequence.hh"
 #include "fastjet/PseudoJet.hh"
@@ -32,6 +34,8 @@ enum CONSTITUENTS {
     kFinalCh,       // charged final state particles
     kParton,        // final partons (before hadronization)
     kPartonHard,    // final partons originating from one of the hard scatterers
+    kFinal_AND_MIX,  // final state particles (after hadronization) from Pythia event and external (mixed) event
+    kFinalCh_AND_MIX,  // charged final state particles from Pythia event and external (mixed) event
     kN_CONSTITUENTS
 };
 
@@ -73,6 +77,15 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
         event = eventParton;
     }
 
+    particleTree mixEvtParticles;
+    TTree* treeMixEvt = 0;
+    bool doMixEvt = (constituentType == CONSTITUENTS::kFinal_AND_MIX || constituentType == CONSTITUENTS::kFinalCh_AND_MIX);
+    if (doMixEvt) {
+        std::string mixEvtTreePath = "evtHydjet";
+        treeMixEvt = (TTree*)inputFile->Get(mixEvtTreePath.c_str());
+        mixEvtParticles.setupTreeForReading(treeMixEvt);
+    }
+
     std::cout << "initialize the Pythia class to obtain info that is not accessible through event TTree." << std::endl;
     std::cout << "##### Pythia initialize #####" << std::endl;
     Pythia8::Pythia pythia;
@@ -96,6 +109,14 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
     else if (constituentType == CONSTITUENTS::kPartonHard) {
         jetTreeName = Form("ak%djetsPartonHard", dR);
         jetTreeTitle = Form("partonic jets from hard scattering with R = %.1f", jetRadius);
+    }
+    else if (constituentType == CONSTITUENTS::kFinal_AND_MIX) {
+        jetTreeName = Form("ak%djetsMixed", dR);
+        jetTreeTitle = Form("jets with R = %.1f from Pythia+MIX event", jetRadius);
+    }
+    else if (constituentType == CONSTITUENTS::kFinalCh_AND_MIX) {
+        jetTreeName = Form("ak%djetsChMixed", dR);
+        jetTreeTitle = Form("charged particle jets with R = %.1f from Pythia+MIX event", jetRadius);
     }
     // comma separated list for CSN parameters
     std::vector<double> csnPt;
@@ -136,6 +157,15 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
     fastJetTree fjt;
     fjt.branchTree(jetTree);
 
+    TTree* jetMixSubTree = 0;
+    fastJetTree fjtMixSub;
+    if (doMixEvt) {
+        std::string jetMixSubTreeName = Form("%sMixSub", jetTreeName.c_str());
+        std::string jetMixSubTreeTitle = Form("%s - Energy from Mix event subtracted", jetTreeTitle.c_str());
+        jetMixSubTree = new TTree(jetMixSubTreeName.c_str(), jetMixSubTreeTitle.c_str());
+        fjtMixSub.branchTree(jetMixSubTree);
+    }
+
     // Fastjet input
     std::vector<fastjet::PseudoJet> fjParticles;
 
@@ -156,6 +186,10 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
         fjt.clearEvent();
         treeEvt->GetEntry(iEvent);
         treeEvtParton->GetEntry(iEvent);
+        if (doMixEvt) {
+            fjtMixSub.clearEvent();
+            treeMixEvt->GetEntry(iEvent);
+        }
 
         eventsAnalyzed++;
 
@@ -165,10 +199,10 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
         int eventSize = event->size();
         for (int i = 0; i < eventSize; ++i) {
 
-            if (constituentType == CONSTITUENTS::kFinal) {
+            if (constituentType == CONSTITUENTS::kFinal || constituentType == CONSTITUENTS::kFinal_AND_MIX) {
                 if (!(*event)[i].isFinal()) continue;
             }
-            else if (constituentType == CONSTITUENTS::kFinalCh) {
+            else if (constituentType == CONSTITUENTS::kFinalCh || constituentType == CONSTITUENTS::kFinalCh_AND_MIX) {
                 if (!((*event)[i].isFinal() && isCharged((*event)[i], pythia.particleData))) continue;
             }
             else if (constituentType == CONSTITUENTS::kPartonHard) {
@@ -192,9 +226,33 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
             fjParticles.push_back(fjParticle);
         }
 
+        if (doMixEvt) {
+            for (int i = 0; i < mixEvtParticles.n; ++i) {
+
+                if (constituentType == CONSTITUENTS::kFinalCh_AND_MIX) {
+                    if ((*mixEvtParticles.chg)[i] == 0) continue;
+                }
+
+                // Only |eta| < 5
+                if (std::fabs((*mixEvtParticles.eta)[i]) > 5) continue;
+
+                TLorentzVector vec4;
+                vec4.SetPtEtaPhiM((*mixEvtParticles.pt)[i], (*mixEvtParticles.eta)[i], (*mixEvtParticles.phi)[i], 0);
+
+                // Store as input to Fastjet
+                fastjet::PseudoJet fjParticle(vec4.Px(),
+                                              vec4.Py(),
+                                              vec4.Pz(),
+                                              vec4.E());
+
+                fjParticle.set_user_index(eventSize + i);
+
+                fjParticles.push_back(fjParticle);
+            }
+        }
+
         // Run Fastjet algorithm
         fastjet::ClusterSequence clustSeq(fjParticles, *fjJetDefn);
-
 
         // Extract inclusive jets sorted by pT (note the minimum pT)
         std::vector<fastjet::PseudoJet> inclusiveJets = clustSeq.inclusive_jets(minJetPt);
@@ -213,8 +271,45 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
             fjt.jetphi->push_back(sortedJets[i].phi_std() + sPhi);
             fjt.nJet++;
         }
+        if (doMixEvt) {
+            for (int i = 0; i < nSortedJets; ++i) {
+
+                std::vector<fastjet::PseudoJet> jetConstituents = sortedJets[i].constituents();
+                TLorentzVector vec4MixTot;
+                vec4MixTot.SetPtEtaPhiM(0,0,0,0);
+
+                int nJetConstituents = jetConstituents.size();
+                for (int j = 0; j < nJetConstituents; ++j) {
+
+                    // particles from mixed event have index with value >= eventSize
+                    // particles from Pythia event have index with value < eventSize
+                    if (jetConstituents[j].user_index() < eventSize)  continue;
+
+                    TLorentzVector vec4;
+                    vec4.SetPtEtaPhiM(jetConstituents[j].pt(), jetConstituents[j].eta(), jetConstituents[j].phi_std(), 0);
+                    vec4MixTot += vec4;
+                }
+
+                double eMixSub = sortedJets[i].E() - vec4MixTot.E();
+                if (eMixSub < 0) eMixSub = 0;
+                double ptMixSub = eMixSub / std::cosh(sortedJets[i].eta());
+
+                double sf = smearJetPt ? getEnergySmearingFactor(rand1, ptMixSub, csnPt[0], csnPt[1], csnPt[2]) : 1;
+                double sPhi = smearJetPhi ? getAngleSmearing(rand2, ptMixSub, csnPhi[0], csnPhi[1], csnPhi[2]) : 0;
+
+                fjtMixSub.rawpt->push_back(ptMixSub);
+                fjtMixSub.jetpt->push_back(sf * ptMixSub);
+                fjtMixSub.jeteta->push_back(sortedJets[i].eta());
+                fjtMixSub.rawphi->push_back(sortedJets[i].phi_std());
+                fjtMixSub.jetphi->push_back(sortedJets[i].phi_std() + sPhi);
+                fjtMixSub.nJet++;
+            }
+        }
 
         jetTree->Fill();
+        if (doMixEvt) {
+            jetMixSubTree->Fill();
+        }
     }
     std::cout << "Loop ENDED" << std::endl;
     std::cout << "eventsAnalyzed = " << eventsAnalyzed << std::endl;

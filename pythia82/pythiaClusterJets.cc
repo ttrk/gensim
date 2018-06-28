@@ -295,7 +295,7 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
             fjt.jetpt->push_back(sf * sortedJets[i].pt());
             fjt.jeteta->push_back(sortedJets[i].eta());
             fjt.rawphi->push_back(sortedJets[i].phi_std());
-            fjt.jetphi->push_back(sortedJets[i].phi_std() + sPhi);
+            fjt.jetphi->push_back(correctPhiRange(sortedJets[i].phi_std() + sPhi));
             fjt.nJet++;
         }
         if (doMixEvt) {
@@ -328,7 +328,7 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
                 fjtMixSub.jetpt->push_back(sf * ptMixSub);
                 fjtMixSub.jeteta->push_back(sortedJets[i].eta());
                 fjtMixSub.rawphi->push_back(sortedJets[i].phi_std());
-                fjtMixSub.jetphi->push_back(sortedJets[i].phi_std() + sPhi);
+                fjtMixSub.jetphi->push_back(correctPhiRange(sortedJets[i].phi_std() + sPhi));
                 fjtMixSub.nJet++;
             }
         }

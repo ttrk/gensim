@@ -75,7 +75,17 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
     treeEvtParton->SetBranchAddress("event", &eventParton);
 
     Pythia8::Event* event = eventAll;
-    if (constituentType == CONSTITUENTS::kParton || constituentType == CONSTITUENTS::kPartonHard) {
+
+    bool useFinalParticles = (constituentType == CONSTITUENTS::kFinal
+            || constituentType == CONSTITUENTS::kFinalCh
+            || constituentType == CONSTITUENTS::kFinal_AND_MIX
+            || constituentType == CONSTITUENTS::kFinalCh_AND_MIX
+            || constituentType == CONSTITUENTS::kFinalWTA
+            || constituentType == CONSTITUENTS::kFinalWTA_AND_MIX);
+    bool useFinalChParticles = useFinalParticles && (constituentType == CONSTITUENTS::kFinalCh
+            || constituentType == CONSTITUENTS::kFinalCh_AND_MIX);
+    bool usePartons = (constituentType == CONSTITUENTS::kParton || constituentType == CONSTITUENTS::kPartonHard);
+    if (usePartons) {
         event = eventParton;
     }
 
@@ -216,12 +226,10 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
         int eventSize = event->size();
         for (int i = 0; i < eventSize; ++i) {
 
-            if (constituentType == CONSTITUENTS::kFinal || constituentType == CONSTITUENTS::kFinal_AND_MIX
-                                                        || constituentType == CONSTITUENTS::kFinalWTA
-                                                        || constituentType == CONSTITUENTS::kFinalWTA_AND_MIX) {
+            if (useFinalParticles) {
                 if (!(*event)[i].isFinal()) continue;
             }
-            else if (constituentType == CONSTITUENTS::kFinalCh || constituentType == CONSTITUENTS::kFinalCh_AND_MIX) {
+            else if (useFinalChParticles) {
                 if (!((*event)[i].isFinal() && isCharged((*event)[i], pythia.particleData))) continue;
             }
             else if (constituentType == CONSTITUENTS::kPartonHard) {

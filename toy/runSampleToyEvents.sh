@@ -5,7 +5,7 @@ runCmd=$MYRUN
 progPath="./sampleToyEvents.exe"
 
 inputFiles=(
-$EWJTAOUT"/Configurations/genparticle/spectra_hiBinVSngen_etaVSpt_Hydjet_Quenched_Cymbal5Ev8_PbPbMinBias_5020GeV.root"
+"input/spectra_hiBinVSngen_etaVSpt_Hydjet_Quenched_Cymbal5Ev8_PbPbMinBias_5020GeV.root"
 );
 
 nEvents=10000

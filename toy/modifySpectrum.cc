@@ -112,6 +112,8 @@ void modifySpectrum(std::string fnc1, std::string fnc2, std::string outputFile)
             hOut->Fill(tmp);
         }
     }
+    hOut->Scale(h1Ds[0]->Integral() / hOut->GetEntries());
+
     setTH1D(hOut);
     hOut->Write("",TObject::kOverwrite);
 

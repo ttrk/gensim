@@ -108,7 +108,7 @@ void modifySpectrum(int mode, std::string fnc1, std::string fnc2, std::string ou
             for (int iBin = 1; iBin <= h1Ds[i]->GetNbinsX(); ++iBin) {
                 double x = h1Ds[i]->GetBinCenter(iBin);
                 h1Ds[i]->SetBinContent(iBin, f1s[i]->Eval(x));
-                h1Ds[i]->SetBinError(iBin, 0.00001);
+                h1Ds[i]->SetBinError(iBin, 0.000000000001 * h1Ds[i]->GetBinContent(iBin));
             }
         }
         setTH1D(h1Ds[i]);

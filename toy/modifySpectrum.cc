@@ -24,6 +24,12 @@ enum MODES {
     kN_MODES
 };
 
+enum INPUTS {
+    kSpectrum,
+    kModifier,
+    kN_INPUTS
+};
+
 void setTH1D(TH1D* h);
 void modifySpectrum(int mode, std::string fnc1, std::string fnc2, std::string outputFile = "modifySpectrum.root");
 
@@ -34,8 +40,8 @@ void modifySpectrum(int mode, std::string fnc1, std::string fnc2, std::string ou
     std::cout<<"fnc1 = " << fnc1.c_str() << std::endl;
     std::cout<<"fnc2 = " << fnc2.c_str() << std::endl;
 
-    if (mode >= MODES::kN_MODES) {
-        std::cout << "mode must be smaller than " << MODES::kN_MODES << std::endl;
+    if (mode >= kN_MODES) {
+        std::cout << "mode must be smaller than " << kN_MODES << std::endl;
         std::cout << "Exiting" << std::endl;
         return;
     }
@@ -48,11 +54,11 @@ void modifySpectrum(int mode, std::string fnc1, std::string fnc2, std::string ou
     // TH1 objects
     TH1::SetDefaultSumw2();
 
-    std::vector<TF1*> f1s(2, 0);
-    std::vector<TH1D*> h1Ds(2, 0);
+    std::vector<TF1*> f1s(kN_INPUTS, 0);
+    std::vector<TH1D*> h1Ds(kN_INPUTS, 0);
     int nBinsX = 1000;
 
-    for (int i = 0; i < 2; ++i) {
+    for (int i = 0; i < kN_INPUTS; ++i) {
 
         std::cout << "### Parsing info for function " << i+1 << " ###" << std::endl;
 
@@ -72,14 +78,14 @@ void modifySpectrum(int mode, std::string fnc1, std::string fnc2, std::string ou
         std::cout << "xMax = " << f1s[i]->GetXmax() << std::endl;
 
         int nParFnc = f1s[i]->GetNpar();
-        if (i == 0 && nFncInfo - 3 != nParFnc) {
+        if (i == kSpectrum && nFncInfo - 3 != nParFnc) {
             std::cout << "Function 1 : Number of parameter values provided do not match the number of parameters in the formula" << std::endl;
             std::cout << "Number of values provided = " << nFncInfo - 3 << std::endl;
             std::cout << "Number of parameters in the formula = " << nParFnc << std::endl;
             std::cout << "Exiting" << std::endl;
             return;
         }
-        else if (i == 1 && nFncInfo - 3 != nParFnc - 1) {
+        else if (i == kModifier && nFncInfo - 3 != nParFnc - 1) {
             // For 2nd function values of parameters must be provided except for one of them
             // The value of 2nd function's last parameter is sampled from the 1st function, no value should be provided for it.
             std::cout << "Function 2 : Number of fixed parameter values provided do not match the number of parameters in the formula" << std::endl;
@@ -90,14 +96,14 @@ void modifySpectrum(int mode, std::string fnc1, std::string fnc2, std::string ou
         }
         for (int j = 0; j < nParFnc; ++j) {
 
-            if (i == 1 && j == nParFnc - 1) continue;
+            if (i == kModifier && j == nParFnc - 1) continue;
 
             f1s[i]->SetParameter(j, std::atof(fncInfo[j+3].c_str()));
 
             std::cout << Form("par[%d] = ", j) << f1s[i]->GetParameter(j) << std::endl;
         }
 
-        h1Ds[i] = new TH1D(Form("h_%d", i), "", nBinsX, f1s[0]->GetXmin(), f1s[0]->GetXmax());
+        h1Ds[i] = new TH1D(Form("h_%d", i), "", nBinsX, f1s[kSpectrum]->GetXmin(), f1s[kSpectrum]->GetXmax());
         if (i == 0) {
             for (int iBin = 1; iBin <= h1Ds[i]->GetNbinsX(); ++iBin) {
                 double x = h1Ds[i]->GetBinCenter(iBin);
@@ -111,20 +117,21 @@ void modifySpectrum(int mode, std::string fnc1, std::string fnc2, std::string ou
         h1Ds[i]->Write("",TObject::kOverwrite);
     }
 
-    TH1D* hOut = new TH1D("hOut", "", nBinsX, f1s[0]->GetXmin(), f1s[0]->GetXmax());
+    TH1D* hOut = new TH1D("hOut", "", nBinsX, f1s[kSpectrum]->GetXmin(), f1s[kSpectrum]->GetXmax());
 
-    int nRnd1 = 10000;
-    int nRnd2 = 100;
-    for (int r1 = 0; r1 < nRnd1; ++r1) {
-        double x = f1s[0]->GetRandom(f1s[0]->GetXmin(), f1s[0]->GetXmax());
+    std::vector<int> nRnds(kN_INPUTS, 0);
+    nRnds[kSpectrum] = 10000;
+    nRnds[kModifier] = 100;
+    for (int r1 = 0; r1 < nRnds[kSpectrum]; ++r1) {
+        double x = f1s[kSpectrum]->GetRandom(f1s[kSpectrum]->GetXmin(), f1s[kSpectrum]->GetXmax());
 
-        f1s[1]->SetParameter(f1s[1]->GetNpar() - 1, x);
-        for (int r2 = 0; r2 < nRnd2; ++r2) {
-            double tmp = x * f1s[1]->GetRandom(f1s[1]->GetXmin(), f1s[1]->GetXmax());
+        f1s[kModifier]->SetParameter(f1s[kModifier]->GetNpar() - 1, x);
+        for (int r2 = 0; r2 < nRnds[kModifier]; ++r2) {
+            double tmp = x * f1s[kModifier]->GetRandom(f1s[kModifier]->GetXmin(), f1s[kModifier]->GetXmax());
             hOut->Fill(tmp);
         }
     }
-    hOut->Scale(h1Ds[0]->Integral() / hOut->GetEntries());
+    hOut->Scale(h1Ds[kSpectrum]->Integral() / hOut->GetEntries());
 
     setTH1D(hOut);
     hOut->Write("",TObject::kOverwrite);

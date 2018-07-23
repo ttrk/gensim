@@ -24,7 +24,7 @@ parValues2="0.06;0.95;0"  # CSN PP = {0.06, 0.95, 0};
 #parValues2="0.06;1.241;8.421"  # CSN HI cent0010 = {0.06, 1.241, 8.421};
 modifier=$modifierFormula";"$xMin2";"$xMax2";"$parValues2
 
-outputFile="./out_modifySpectrum.root"
+outputFile="./out_modifySpectrum_TF1.root"
 
 mode=0
 outputFileLOG="${outputFile/.root/.log}"

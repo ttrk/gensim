@@ -26,9 +26,10 @@ fnc2=$fnc2Formula";"$xMin2";"$xMax2";"$parValues2
 
 outputFile="./out_modifySpectrum.root"
 
+mode=0
 outputFileLOG="${outputFile/.root/.log}"
 outDir=$(dirname "${outputFile}")
 mkdir -p $outDir
-$runCmd $progPath $fnc1 $fnc2 $outputFile &> $outputFileLOG &
-echo "$runCmd $progPath $fnc1 $fnc2 $outputFile &> $outputFileLOG &"
+$runCmd $progPath $mode $fnc1 $fnc2 $outputFile &> $outputFileLOG &
+echo "$runCmd $progPath $mode $fnc1 $fnc2 $outputFile &> $outputFileLOG &"
 

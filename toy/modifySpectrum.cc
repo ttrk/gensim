@@ -19,14 +19,26 @@
 
 #include "../utilities/systemUtil.h"
 
-void setTH1D(TH1D* h);
-void modifySpectrum(std::string fnc1, std::string fnc2, std::string outputFile = "modifySpectrum.root");
+enum MODES {
+    kSpectrumIsTF1,
+    kN_MODES
+};
 
-void modifySpectrum(std::string fnc1, std::string fnc2, std::string outputFile)
+void setTH1D(TH1D* h);
+void modifySpectrum(int mode, std::string fnc1, std::string fnc2, std::string outputFile = "modifySpectrum.root");
+
+void modifySpectrum(int mode, std::string fnc1, std::string fnc2, std::string outputFile)
 {
     std::cout<<"running modifySpectrum()"<<std::endl;
+    std::cout<<"mode = " << mode << std::endl;
     std::cout<<"fnc1 = " << fnc1.c_str() << std::endl;
     std::cout<<"fnc2 = " << fnc2.c_str() << std::endl;
+
+    if (mode >= MODES::kN_MODES) {
+        std::cout << "mode must be smaller than " << MODES::kN_MODES << std::endl;
+        std::cout << "Exiting" << std::endl;
+        return;
+    }
 
     std::vector<std::string> fncStrVec = {fnc1, fnc2};
 
@@ -124,13 +136,13 @@ void modifySpectrum(std::string fnc1, std::string fnc2, std::string outputFile)
 
 int main(int argc, char** argv)
 {
-    if (argc == 4) {
-        modifySpectrum(argv[1], argv[2], argv[3]);
+    if (argc == 5) {
+        modifySpectrum(std::atoi(argv[1]), argv[2], argv[3], argv[4]);
         return 0;
     }
     else {
         std::cout << "Usage : \n" <<
-                "./modifySpectrum.exe <fnc1> <fnc2> <outputFile>"
+                "./modifySpectrum.exe <mode> <fnc1> <fnc2> <outputFile>"
                 << std::endl;
         return 1;
     }

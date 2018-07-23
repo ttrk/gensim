@@ -1,8 +1,8 @@
 /*
  * code to modify a spectrum/distribution with a given distribution
  * Ex. smearing energy spectrum with detector resolution
- * fnc1 : spectrum to be modified
- * fnc2 : modifier
+ * input 1 : spectrum to be modified
+ * input 2 : modifier
  */
 
 #include <TFile.h>
@@ -30,15 +30,17 @@ enum INPUTS {
     kN_INPUTS
 };
 
-void setTH1D(TH1D* h);
-void modifySpectrum(int mode, std::string fnc1, std::string fnc2, std::string outputFile = "modifySpectrum.root");
+const std::string inputsStr[kN_INPUTS] = {"Spectrum", "Modifier"};
 
-void modifySpectrum(int mode, std::string fnc1, std::string fnc2, std::string outputFile)
+void setTH1D(TH1D* h);
+void modifySpectrum(int mode, std::string spectrumStr, std::string modifierStr, std::string outputFile = "modifySpectrum.root");
+
+void modifySpectrum(int mode, std::string spectrumStr, std::string modifierStr, std::string outputFile)
 {
     std::cout<<"running modifySpectrum()"<<std::endl;
     std::cout<<"mode = " << mode << std::endl;
-    std::cout<<"fnc1 = " << fnc1.c_str() << std::endl;
-    std::cout<<"fnc2 = " << fnc2.c_str() << std::endl;
+    std::cout<< inputsStr[kSpectrum].c_str() << " = " << spectrumStr.c_str() << std::endl;
+    std::cout<< inputsStr[kModifier].c_str() << " = " << modifierStr.c_str() << std::endl;
 
     if (mode >= kN_MODES) {
         std::cout << "mode must be smaller than " << kN_MODES << std::endl;
@@ -46,7 +48,7 @@ void modifySpectrum(int mode, std::string fnc1, std::string fnc2, std::string ou
         return;
     }
 
-    std::vector<std::string> fncStrVec = {fnc1, fnc2};
+    std::vector<std::string> fncStrVec = {spectrumStr, modifierStr};
 
     TFile* output = TFile::Open(outputFile.c_str(),"RECREATE");
     output->cd();
@@ -60,7 +62,7 @@ void modifySpectrum(int mode, std::string fnc1, std::string fnc2, std::string ou
 
     for (int i = 0; i < kN_INPUTS; ++i) {
 
-        std::cout << "### Parsing info for function " << i+1 << " ###" << std::endl;
+        std::cout << "### Parsing info for " << inputsStr[i].c_str() << " ###" << std::endl;
 
         std::vector<std::string> fncInfo = split(fncStrVec[i], ";", false);
         int nFncInfo = fncInfo.size();
@@ -149,7 +151,7 @@ int main(int argc, char** argv)
     }
     else {
         std::cout << "Usage : \n" <<
-                "./modifySpectrum.exe <mode> <fnc1> <fnc2> <outputFile>"
+                "./modifySpectrum.exe <mode> <spectrum> <modifier> <outputFile>"
                 << std::endl;
         return 1;
     }

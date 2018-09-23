@@ -25,8 +25,10 @@ public :
   void clearEvent();
   void getHeaderInfo(TTree *t);
 
+  double p(int iObj);
   double pt(int iObj);
   double y(int iObj);
+  double eta(int iObj);
 
   // objects for header information
   float nb_evt;
@@ -103,6 +105,14 @@ void jetphoxTree::getHeaderInfo(TTree* t)
     list->Delete();
 }
 
+/*
+ * magnitude of 3-momentum
+ */
+double jetphoxTree::p(int iObj)
+{
+    return std::sqrt(px[iObj]*px[iObj] + py[iObj]*py[iObj] + pz[iObj]*pz[iObj]);
+}
+
 double jetphoxTree::pt(int iObj)
 {
     return std::sqrt(px[iObj]*px[iObj] + py[iObj]*py[iObj]);
@@ -110,7 +120,13 @@ double jetphoxTree::pt(int iObj)
 
 double jetphoxTree::y(int iObj)
 {
-    return 0.5 * std::log((energy[iObj]+pz[iObj])/(energy[iObj]-pz[iObj]));
+    return 0.5 * std::log( (energy[iObj]+pz[iObj]) / (energy[iObj]-pz[iObj]) );
+}
+
+double jetphoxTree::eta(int iObj)
+{
+    double pTmp = p(iObj);
+    return 0.5 * std::log( (pTmp+pz[iObj]) / (pTmp-pz[iObj]) );
 }
 
 #endif /* JETPHOXTREE_H_ */

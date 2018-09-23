@@ -73,7 +73,7 @@ void jetphoxAna(std::string inputFileName, std::string outputFileName)
         eventsAnalyzed++;
 
         double phoPt = jpt.pt(0);
-        double phoEta = jpt.y(0);
+        double phoEta = jpt.eta(0);
         //double phoPhi = (*event)[iPho].phi();
 
         //if (!(TMath::Abs(phoEta) < 1.44)) continue;

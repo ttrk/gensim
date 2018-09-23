@@ -29,6 +29,7 @@ public :
   double pt(int iObj);
   double y(int iObj);
   double eta(int iObj);
+  double phi(int iObj);
 
   // objects for header information
   float nb_evt;
@@ -127,6 +128,17 @@ double jetphoxTree::eta(int iObj)
 {
     double pTmp = p(iObj);
     return 0.5 * std::log( (pTmp+pz[iObj]) / (pTmp-pz[iObj]) );
+}
+
+/*
+ * TVector3::Phi()
+ * https://root.cern.ch/doc/master/TVector3_8cxx_source.html#l00230
+ * TMath::ATan2(Double_t y, Double_t x)
+ * https://root.cern.ch/doc/master/TMath_8h_source.html#l00667
+ */
+double jetphoxTree::phi(int iObj)
+{
+    return (px[iObj] == 0.0 && py[iObj] == 0.0) ? 0.0 : TMath::ATan2(py[iObj], px[iObj]);
 }
 
 #endif /* JETPHOXTREE_H_ */

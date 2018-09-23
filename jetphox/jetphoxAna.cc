@@ -47,14 +47,18 @@ void jetphoxAna(std::string inputFileName, std::string outputFileName)
     int nBinsX_eta = 20;
     double axis_eta_min = -5;
     double axis_eta_max = 5;
+    int nBinsX_phi = 20;
+    double axis_phi_min = -TMath::Pi();
+    double axis_phi_max = TMath::Pi();
 
     std::string strPho = "#gamma";
     std::string strPhoPt = Form("p_{T}^{%s}", strPho.c_str());
     std::string strPhoEta = Form("#eta^{%s}", strPho.c_str());
-    //std::string strPhoPhi = Form("#phi^{%s}", strPho.c_str());
+    std::string strPhoPhi = Form("#phi^{%s}", strPho.c_str());
 
     TH1D* h_phoPt = new TH1D("h_phoPt",Form(";%s;", strPhoPt.c_str()), nBinsX_pt, axis_pt_min, axis_pt_max);
     TH1D* h_phoEta = new TH1D("h_phoEta",Form(";%s;", strPhoEta.c_str()), nBinsX_eta, axis_eta_min, axis_eta_max);
+    TH1D* h_phoPhi = new TH1D("h_phoPhi",Form(";%s;", strPhoPhi.c_str()), nBinsX_phi, axis_phi_min, axis_phi_max);
 
     int eventsAnalyzed = 0;
     int nEvents = treeEvt->GetEntries();
@@ -74,12 +78,13 @@ void jetphoxAna(std::string inputFileName, std::string outputFileName)
 
         double phoPt = jpt.pt(0);
         double phoEta = jpt.eta(0);
-        //double phoPhi = (*event)[iPho].phi();
+        double phoPhi = jpt.phi(0);
 
         //if (!(TMath::Abs(phoEta) < 1.44)) continue;
 
         h_phoPt->Fill(phoPt);
         h_phoEta->Fill(phoEta);
+        h_phoPhi->Fill(phoPhi);
     }
     std::cout << "Loop ENDED" << std::endl;
     std::cout << "eventsAnalyzed = " << eventsAnalyzed << std::endl;
@@ -91,6 +96,7 @@ void jetphoxAna(std::string inputFileName, std::string outputFileName)
 
     h_phoPt->Scale(1./h_phoPt->Integral(), "width");
     h_phoEta->Scale(1./h_phoEta->Integral(), "width");
+    h_phoPhi->Scale(1./h_phoPhi->Integral(), "width");
 
     outputFile->Write("", TObject::kOverwrite);
     std::cout << "Closing the output file" << std::endl;

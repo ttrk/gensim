@@ -25,6 +25,9 @@ public :
   void clearEvent();
   void getHeaderInfo(TTree *t);
 
+  double pt(int iObj);
+  double y(int iObj);
+
   // objects for header information
   float nb_evt;
   float xsec;
@@ -98,6 +101,16 @@ void jetphoxTree::getHeaderInfo(TTree* t)
     sqrt_s = v[2];
 
     list->Delete();
+}
+
+double jetphoxTree::pt(int iObj)
+{
+    return std::sqrt(px[iObj]*px[iObj] + py[iObj]*py[iObj]);
+}
+
+double jetphoxTree::y(int iObj)
+{
+    return 0.5 * std::log((energy[iObj]+pz[iObj])/(energy[iObj]-pz[iObj]));
 }
 
 #endif /* JETPHOXTREE_H_ */

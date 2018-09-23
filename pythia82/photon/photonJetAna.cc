@@ -22,12 +22,12 @@
 #include "../dictionary/dict4RootDct.cc"
 #include "../utils/pythiaUtil.h"
 #include "../../fastjet3/fastJetTree.h"
+#include "../../utilities/physicsUtil.h"
 
 #include <iostream>
 #include <iomanip>
 #include <string>
 #include <vector>
-#include "../../utilities/physicsUtil.h"
 
 void photonJetAna(std::string eventFileName = "promptPhoton.root", std::string jetFileName = "jets.root",
                   std::string jetTreeName = "ak3jets", std::string outputFileName = "photonJetAna_out.root", int photonType = 1);

@@ -44,14 +44,17 @@ void jetphoxAna(std::string inputFileName, std::string outputFileName)
     int nBinsX_pt = 40;
     double axis_pt_min = 0;
     double axis_pt_max = 200+axis_pt_min;
+    int nBinsX_eta = 20;
+    double axis_eta_min = -5;
+    double axis_eta_max = 5;
 
     std::string strPho = "#gamma";
     std::string strPhoPt = Form("p_{T}^{%s}", strPho.c_str());
-    //std::string strPhoEta = Form("#eta^{%s}", strPho.c_str());
+    std::string strPhoEta = Form("#eta^{%s}", strPho.c_str());
     //std::string strPhoPhi = Form("#phi^{%s}", strPho.c_str());
 
     TH1D* h_phoPt = new TH1D("h_phoPt",Form(";%s;", strPhoPt.c_str()), nBinsX_pt, axis_pt_min, axis_pt_max);
-    //TH1D* h_phoEta = new TH1D("h_phoEta",Form(";|%s|;", strPhoEta.c_str()), nBinsX_eta, axis_eta_min, axis_eta_max);
+    TH1D* h_phoEta = new TH1D("h_phoEta",Form(";%s;", strPhoEta.c_str()), nBinsX_eta, axis_eta_min, axis_eta_max);
 
     int eventsAnalyzed = 0;
     int nEvents = treeEvt->GetEntries();
@@ -70,13 +73,13 @@ void jetphoxAna(std::string inputFileName, std::string outputFileName)
         eventsAnalyzed++;
 
         double phoPt = std::sqrt(jpt.px[0]*jpt.px[0] + jpt.py[0]*jpt.py[0]);
-        //double phoEta = 0.5 * std::log((jpt.energy[0]+jpt.pz[0])/(jpt.energy[0]-jpt.pz[0]));
+        double phoEta = 0.5 * std::log((jpt.energy[0]+jpt.pz[0])/(jpt.energy[0]-jpt.pz[0]));
         //double phoPhi = (*event)[iPho].phi();
 
         //if (!(TMath::Abs(phoEta) < 1.44)) continue;
 
         h_phoPt->Fill(phoPt);
-        //h_phoEta->Fill(TMath::Abs(phoEta));
+        h_phoEta->Fill(phoEta);
     }
     std::cout << "Loop ENDED" << std::endl;
     std::cout << "eventsAnalyzed = " << eventsAnalyzed << std::endl;
@@ -87,8 +90,7 @@ void jetphoxAna(std::string inputFileName, std::string outputFileName)
     std::cout << "saving histograms" << std::endl;
 
     h_phoPt->Scale(1./h_phoPt->Integral(), "width");
-    //h_phoEta->Scale(1./h_phoEta->Integral(), "width");
-
+    h_phoEta->Scale(1./h_phoEta->Integral(), "width");
 
     outputFile->Write("", TObject::kOverwrite);
     std::cout << "Closing the output file" << std::endl;

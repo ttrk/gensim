@@ -35,6 +35,8 @@ void jetphoxAna(std::string inputFileName, std::string outputFileName)
     jetphoxTree jpt;
     TTree *treeEvt = (TTree*)inputFile->Get("t2");
     jpt.setupTreeForReading(treeEvt);
+    jpt.getHeaderInfo(treeEvt);
+    double normFactor = jpt.xsec / jpt.nb_evt;
 
     TFile* outputFile = new TFile(outputFileName.c_str(), "RECREATE");
 
@@ -56,9 +58,13 @@ void jetphoxAna(std::string inputFileName, std::string outputFileName)
     std::string strPhoEta = Form("#eta^{%s}", strPho.c_str());
     std::string strPhoPhi = Form("#phi^{%s}", strPho.c_str());
 
-    TH1D* h_phoPt = new TH1D("h_phoPt",Form(";%s;", strPhoPt.c_str()), nBinsX_pt, axis_pt_min, axis_pt_max);
-    TH1D* h_phoEta = new TH1D("h_phoEta",Form(";%s;", strPhoEta.c_str()), nBinsX_eta, axis_eta_min, axis_eta_max);
-    TH1D* h_phoPhi = new TH1D("h_phoPhi",Form(";%s;", strPhoPhi.c_str()), nBinsX_phi, axis_phi_min, axis_phi_max);
+    std::string strdSigmaPhoPt = Form("d #sigma / d %s", strPhoPt.c_str());
+    std::string strdSigmaPhoEta = Form("d #sigma / d %s", strPhoEta.c_str());
+    std::string strdSigmaPhoPhi = Form("d #sigma / d %s", strPhoPhi.c_str());
+
+    TH1D* h_phoPt = new TH1D("h_phoPt",Form(";%s;%s", strPhoPt.c_str(), strdSigmaPhoPt.c_str()), nBinsX_pt, axis_pt_min, axis_pt_max);
+    TH1D* h_phoEta = new TH1D("h_phoEta",Form(";%s;%s", strPhoEta.c_str(), strdSigmaPhoEta.c_str()), nBinsX_eta, axis_eta_min, axis_eta_max);
+    TH1D* h_phoPhi = new TH1D("h_phoPhi",Form(";%s;%s", strPhoPhi.c_str(), strdSigmaPhoPhi.c_str()), nBinsX_phi, axis_phi_min, axis_phi_max);
 
     int eventsAnalyzed = 0;
     int nEvents = treeEvt->GetEntries();
@@ -76,15 +82,18 @@ void jetphoxAna(std::string inputFileName, std::string outputFileName)
 
         eventsAnalyzed++;
 
+        double w = 1;
+        w *= jpt.pdf_weight[0];
+
         double phoPt = jpt.pt(0);
         double phoEta = jpt.eta(0);
         double phoPhi = jpt.phi(0);
 
         //if (!(TMath::Abs(phoEta) < 1.44)) continue;
 
-        h_phoPt->Fill(phoPt);
-        h_phoEta->Fill(phoEta);
-        h_phoPhi->Fill(phoPhi);
+        h_phoPt->Fill(phoPt, w);
+        h_phoEta->Fill(phoEta, w);
+        h_phoPhi->Fill(phoPhi, w);
     }
     std::cout << "Loop ENDED" << std::endl;
     std::cout << "eventsAnalyzed = " << eventsAnalyzed << std::endl;
@@ -94,9 +103,10 @@ void jetphoxAna(std::string inputFileName, std::string outputFileName)
     // Save histogram on file and close file.
     std::cout << "saving histograms" << std::endl;
 
-    h_phoPt->Scale(1./h_phoPt->Integral(), "width");
-    h_phoEta->Scale(1./h_phoEta->Integral(), "width");
-    h_phoPhi->Scale(1./h_phoPhi->Integral(), "width");
+    // final histograms are differential cross section
+    h_phoPt->Scale(normFactor, "width");
+    h_phoEta->Scale(normFactor, "width");
+    h_phoPhi->Scale(normFactor, "width");
 
     outputFile->Write("", TObject::kOverwrite);
     std::cout << "Closing the output file" << std::endl;

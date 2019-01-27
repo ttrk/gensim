@@ -11,6 +11,7 @@
 #include <TH1D.h>
 #include <TH2D.h>
 #include <TF1.h>
+#include <TFormula.h>
 #include <TMath.h>
 
 #include <string>
@@ -18,6 +19,7 @@
 #include <iostream>
 
 #include "../utilities/systemUtil.h"
+#include "../utilities/mathUtil.h"
 
 enum MODES {
     kSpectrumIsTF1,
@@ -31,7 +33,13 @@ enum INPUTS {
     kN_INPUTS
 };
 
+enum FNCS {
+    kDSCB,
+    kN_FNCS
+};
+
 const std::string inputsStr[kN_INPUTS] = {"Spectrum", "Modifier"};
+const std::string fncsStr[kN_FNCS] = {"DSCB"};
 
 void setTH1D(TH1D* h);
 void modifySpectrum(int mode, std::string spectrumStr, std::string modifierStr, std::string outputFile = "modifySpectrum.root");
@@ -107,32 +115,56 @@ void modifySpectrum(int mode, std::string spectrumStr, std::string modifierStr, 
                 std::cout << "Exiting" << std::endl;
             }
 
-            f1s[i] = new TF1(Form("f_%d", i), fncInfo[0].c_str());
+            std::cout << "fncInfo[0] = " << fncInfo[0].c_str() << std::endl;
+            int nParFnc = 0;
+            if (fncInfo[0] == fncsStr[kDSCB].c_str()) {
+                f1s[i] = new TF1(Form("f_%d", i), fnc_DSCB, 0, 1, getFncNpar(fnc_DSCB));
+                std::cout << "formula = " << "DSCB" << std::endl;
+                nParFnc = getFncNpar(fnc_DSCB);
+            }
+            else {
+                f1s[i] = new TF1(Form("f_%d", i), fncInfo[0].c_str());
+                std::cout << "formula = " << f1s[i]->GetExpFormula() << std::endl;
+                nParFnc = f1s[i]->GetNpar();
+            }
             f1s[i]->SetRange(std::atof(fncInfo[1].c_str()), std::atof(fncInfo[2].c_str()));
-            std::cout << "formula = " << f1s[i]->GetExpFormula() << std::endl;
             std::cout << "xMin = " << f1s[i]->GetXmin() << std::endl;
             std::cout << "xMax = " << f1s[i]->GetXmax() << std::endl;
 
-            int nParFnc = f1s[i]->GetNpar();
-            if (i == kSpectrum && nFncInfo - 3 != nParFnc) {
-                std::cout << "Function 1 : Number of parameter values provided do not match the number of parameters in the formula" << std::endl;
+
+            if (fncInfo[0] != fncsStr[kDSCB].c_str()) {
+                if (i == kSpectrum && nFncInfo - 3 != nParFnc) {
+                    std::cout << "Function 1 : Number of parameter values provided do not match the number of parameters in the formula" << std::endl;
+                    std::cout << "Number of values provided = " << nFncInfo - 3 << std::endl;
+                    std::cout << "Number of parameters in the formula = " << nParFnc << std::endl;
+                    std::cout << "Exiting" << std::endl;
+                    return;
+                }
+                else if (i == kModifier && nFncInfo - 3 != nParFnc - 1) {
+                    // For 2nd function values of parameters must be provided except for one of them
+                    // The value of 2nd function's last parameter is sampled from the 1st function, no value should be provided for it.
+                    std::cout << "Function 2 : Number of fixed parameter values provided do not match the number of parameters in the formula" << std::endl;
+                    std::cout << "Number of values provided = " << nFncInfo - 3 << std::endl;
+                    std::cout << "Number of parameters in the formula = " << nParFnc << std::endl;
+                    std::cout << "Exiting" << std::endl;
+                    return;
+                }
+            }
+            if (fncInfo[0] == fncsStr[kDSCB].c_str() && nFncInfo - 3 != 7) {
+                std::cout << "DSCB : Number of parameter values provided do not match the number of parameters in the formula" << std::endl;
                 std::cout << "Number of values provided = " << nFncInfo - 3 << std::endl;
-                std::cout << "Number of parameters in the formula = " << nParFnc << std::endl;
+                std::cout << "Number of parameters for DSCB = " << 7 << std::endl;
                 std::cout << "Exiting" << std::endl;
                 return;
             }
-            else if (i == kModifier && nFncInfo - 3 != nParFnc - 1) {
-                // For 2nd function values of parameters must be provided except for one of them
-                // The value of 2nd function's last parameter is sampled from the 1st function, no value should be provided for it.
-                std::cout << "Function 2 : Number of fixed parameter values provided do not match the number of parameters in the formula" << std::endl;
-                std::cout << "Number of values provided = " << nFncInfo - 3 << std::endl;
-                std::cout << "Number of parameters in the formula = " << nParFnc << std::endl;
-                std::cout << "Exiting" << std::endl;
-                return;
-            }
+
             for (int j = 0; j < nParFnc; ++j) {
 
-                if (i == kModifier && j == nParFnc - 1) continue;
+                if (fncInfo[0] == fncsStr[kDSCB].c_str()) {
+                }
+                else if (i == kModifier && j == nParFnc - 1) {
+                    continue;
+                }
 
                 f1s[i]->SetParameter(j, std::atof(fncInfo[j+3].c_str()));
 
@@ -142,6 +174,8 @@ void modifySpectrum(int mode, std::string spectrumStr, std::string modifierStr, 
             if (i == kSpectrum) {
                 h1D_xMin = f1s[kSpectrum]->GetXmin();
                 h1D_xMax = f1s[kSpectrum]->GetXmax();
+                range_xMin = h1D_xMin;
+                range_xMax = h1D_xMax;
             }
 
             h1Ds[i] = new TH1D(Form("h_%d", i), "", nBinsX, h1D_xMin, h1D_xMax);
@@ -155,10 +189,8 @@ void modifySpectrum(int mode, std::string spectrumStr, std::string modifierStr, 
         }
         setTH1D(h1Ds[i]);
 
-        //int nBinsTmp = h1Ds[kSpectrum]->FindBin(h1D_xMax) - h1Ds[kSpectrum]->FindBin(h1D_xMin);
-        //h1DsSubRange[i] = new TH1D(Form("h_%d_subRange", i), "", nBinsTmp, h1D_xMin, h1D_xMax);
-        h1DsSubRange[i] = (TH1D*)h1Ds[i]->Clone(Form("h_%d_subRange", i));
-        h1DsSubRange[i]->Reset();
+        int nBinsTmp = h1Ds[kSpectrum]->FindBin(h1D_xMax) - h1Ds[kSpectrum]->FindBin(h1D_xMin);
+        h1DsSubRange[i] = new TH1D(Form("h_%d_subRange", i), "", nBinsTmp, h1D_xMin, h1D_xMax);
         if (i == kSpectrum) {
             for (int iBin = 1; iBin <= h1DsSubRange[i]->GetNbinsX(); ++iBin) {
                 if (h1DsSubRange[i]->GetBinLowEdge(iBin) >= range_xMin && h1DsSubRange[i]->GetBinLowEdge(iBin) < range_xMax) {

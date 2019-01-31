@@ -1,0 +1,38 @@
+inputFile = ./input/card1.txt
+R = 0.3
+jet algorithm = antikt_algorithm
+recombination scheme = E_scheme
+List of given particles : {pt, eta, phi, mass} --> {px, py, pz, E}
+nParticles = 6
+particle 0 : { 50.000000 , 1.000000 , -2.123400 , -0.000001 } --> { -26.245258 , -42.558036 , 58.760060 , 77.154032 }
+particle 1 : { 56.200000 , 1.100000 , -2.020000 , 0.000000 } --> { -24.404757 , -50.624577 , 75.063388 , 93.770743 }
+particle 2 : { 48.300000 , 1.030000 , -2.870000 , -0.000001 } --> { -46.529557 , -12.957250 , 59.024022 , 76.267458 }
+particle 3 : { 33.700000 , 1.200000 , -2.500000 , -0.000001 } --> { -26.998540 , -20.168511 , 50.868848 , 61.019093 }
+particle 4 : { 65.000000 , 0.940000 , -0.320000 , 0.000001 } --> { 61.700302 , -20.446826 , 70.503991 , 95.894801 }
+particle 5 : { 12.100000 , 0.940000 , -0.480000 , -0.000000 } --> { 10.732639 , -5.587528 , 13.124589 , 17.851186 }
+#--------------------------------------------------------------------------
+#                         FastJet release 3.3.0
+#                 M. Cacciari, G.P. Salam and G. Soyez                  
+#     A software package for jet finding and analysis at colliders      
+#                           http://fastjet.fr                           
+#	                                                                      
+# Please cite EPJC72(2012)1896 [arXiv:1111.6097] if you use this package
+# for scientific work and optionally PLB641(2006)57 [hep-ph/0512210].   
+#                                                                       
+# FastJet is provided without warranty under the terms of the GNU GPLv2.
+# It uses T. Chan's closest pair algorithm, S. Fortune's Voronoi code
+# and 3rd party plugin jet algorithms. See COPYING file for details.
+#--------------------------------------------------------------------------
+Clustering with Longitudinally invariant anti-kt algorithm with R = 0.3 and E scheme recombination
+List of clustered jets : {pt, eta, phi}
+and their constituents : {pt, eta, phi, mass}
+jet 0 : { 106.058585 , 1.054936 , -2.068679 }
+    constituent 0 : { 50.000000 , 1.000000 , -2.123400 , -0.000001 }
+    constituent 1 : { 56.200000 , 1.100000 , -2.020000 , 0.000000 }
+jet 1 : { 76.969595 , 0.941245 , -0.345048 }
+    constituent 0 : { 65.000000 , 0.940000 , -0.320000 , 0.000001 }
+    constituent 1 : { 12.100000 , 0.940000 , -0.480000 , -0.000000 }
+jet 2 : { 48.300000 , 1.030000 , -2.870000 }
+    constituent 0 : { 48.300000 , 1.030000 , -2.870000 , 0.000000 }
+jet 3 : { 33.700000 , 1.200000 , -2.500000 }
+    constituent 0 : { 33.700000 , 1.200000 , -2.500000 , -0.000001 }

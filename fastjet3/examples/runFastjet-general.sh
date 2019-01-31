@@ -13,14 +13,17 @@ inputCards=(
 "input1.txt"
 "input2.txt"
 "input3.txt"
+"input4_E_scheme.txt"
+"input4_WTA_pt_scheme.txt"
 );
 
 arrayIndices=${!inputCards[*]}
 for i1 in $arrayIndices
 do
   inputCard=${inputCards[i1]}
-  index=$((i1 + 1))
-  progOutput="${progExe/.exe/_card${index}.log}"
+  suffix="${inputCard/input/}"
+  suffix="${suffix/.txt/}"
+  progOutput="${progExe/.exe/_card${suffix}.log}"
   $progExe $inputCard &> $progOutput &
   echo "$progExe $inputCard &> $progOutput &"
 done

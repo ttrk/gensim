@@ -1,0 +1,13 @@
+## particles 
+# One particle per line containing pt, eta, phi, mass
+100, 0, 0, 0
+20, 0.3, 0, 0
+20, 0.3, 0, 0
+20, 0.3, 0, 0
+20, 0.3, 0, 0
+20, 0.3, 0, 0
+5,  0.6, 0, 0
+##
+R:0.3
+JetAlgorithm:antikt_algorithm
+RecombinationScheme:WTA_pt_scheme

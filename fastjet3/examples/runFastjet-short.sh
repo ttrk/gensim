@@ -2,6 +2,10 @@
 
 set -x
 fastjet3bin=$FASTJET3"/bin"
-g++ fastjet-short.cc -o fastjet-short.exe `${fastjet3bin}/fastjet-config --cxxflags --libs --plugins` || exit 1 
+progExe="./fastjet-short.exe"
+progCode="${progExe/.exe/.cc}"
 
-./fastjet-short.exe &> ./fastjet-short.log &
+g++ $progCode -o $progExe `${fastjet3bin}/fastjet-config --cxxflags --libs --plugins` || exit 1
+
+progOutput="${progExe/.exe/.log}"
+$progExe &> $progOutput &

@@ -26,8 +26,10 @@ void fillTH1fromTGraph(TH1* h, TGraph* graph);
 void setTH1_energyScale(TH1* h, float titleOffsetX = 1.25, float titleOffsetY = 1.75);
 void setTH1_energyWidth(TH1* h, float titleOffsetX = 1.25, float titleOffsetY = 1.75);
 void setTH1_efficiency (TH1* h, float titleOffsetX = 1.25, float titleOffsetY = 1.75);
-double getMinimumTH1s(TH1D* h[], int nHistos, int start = 0);
-double getMaximumTH1s(TH1D* h[], int nHistos, int start = 0);
+double getMinimumTH1s(TH1* h[], int nHistos, int start = 0);
+double getMinimumTH1s(std::vector<TH1*> vecH, int nHistos, int start = 0);
+double getMaximumTH1s(TH1* h[], int nHistos, int start = 0);
+double getMaximumTH1s(std::vector<TH1*> vecH, int nHistos, int start = 0);
 void setConstantBinContent(TH1* h, double constantContent);
 void setConstantBinError(TH1* h, double constantError);
 void setConstantBinContentError(TH1* h, double constantContent, double  constantError);
@@ -70,6 +72,7 @@ void calcTH1Abs4SysUnc(TH1* h);
 void setTH1Style4SysUnc(TH1* h);
 void subtractIdentity4SysUnc(TH1* h);
 void addSysUnc(TH1* hTot, TH1* h);
+void addBinErrors(TH1* h, TH1* hError);
 void sysDiff2sysRel(TH1D* hNom, TH1D* hSys);
 void sysRel2sysDiff(TH1D* hNom, TH1D* hSys);
 void setSysUncBox(TBox* box, TH1* h, TH1* hSys, int bin, double binWidth = -1, double binWidthScale = 1);
@@ -158,6 +161,9 @@ TH1* Graph2Histogram(TGraph* graph)
     xbins[fNpoints]=fX[fNpoints-1]+graph->GetErrorXhigh(fNpoints-1);
 
     TH1* h = new TH1D(graph->GetName(),graph->GetTitle(), fNpoints, xbins);
+    h->SetTitle(graph->GetTitle());
+    h->SetXTitle(graph->GetXaxis()->GetTitle());
+    h->SetYTitle(graph->GetYaxis()->GetTitle());
 
     for (int i=0; i<fNpoints; ++i)  {
         h->SetBinContent(i+1, fY[i]);
@@ -220,9 +226,9 @@ void setTH1_efficiency(TH1* h, float titleOffsetX, float titleOffsetY) {
 }
 
 /*
- * get minimum of an array of TH1D
+ * get minimum of an array of TH1
  */
-double getMinimumTH1s(TH1D* h[], int nHistos, int start) {
+double getMinimumTH1s(TH1* h[], int nHistos, int start) {
 
     double result = h[start]->GetMinimum();
     for (int i = start+1; i < start+nHistos; ++i) {
@@ -233,9 +239,19 @@ double getMinimumTH1s(TH1D* h[], int nHistos, int start) {
 }
 
 /*
- * get maximum of an array of TH1D
+ * get minimum of a vector of TH1
  */
-double getMaximumTH1s(TH1D* h[], int nHistos, int start) {
+double getMinimumTH1s(std::vector<TH1*> vecH, int nHistos, int start) {
+
+    TH1* arrH[nHistos];
+    std::copy(vecH.begin() + start, vecH.begin() + start + nHistos, arrH);
+    return getMinimumTH1s(arrH, nHistos);
+}
+
+/*
+ * get maximum of an array of TH1
+ */
+double getMaximumTH1s(TH1* h[], int nHistos, int start) {
 
     double result = h[start]->GetMaximum();
     for (int i = start+1; i < start+nHistos; ++i) {
@@ -243,6 +259,16 @@ double getMaximumTH1s(TH1D* h[], int nHistos, int start) {
     }
 
     return result;
+}
+
+/*
+ * get maximum of a vector of TH1
+ */
+double getMaximumTH1s(std::vector<TH1*> vecH, int nHistos, int start) {
+
+    TH1* arrH[nHistos];
+    std::copy(vecH.begin() + start, vecH.begin() + start + nHistos, arrH);
+    return getMaximumTH1s(arrH, nHistos);
 }
 
 /*
@@ -839,7 +865,7 @@ void calcTH1AbsMax4SysUnc(TH1* h, TH1* h1, TH1* h2)
 }
 
 /*
- * "h" becomes "abs(h)" : replace the bin contents of a "h" with the absolute values
+ * "h" becomes "abs(h)" : replace the bin contents of "h" with the absolute values
  */
 void calcTH1Abs4SysUnc(TH1* h)
 {
@@ -908,6 +934,22 @@ void addSysUnc(TH1* hTot, TH1* h)
 
         hTot->SetBinContent(i, uncTot);
         hTot->SetBinError(i, errTot);
+    }
+}
+
+/*
+ * add the content of "hError" to the bin error of "h"
+ */
+void addBinErrors(TH1* h, TH1* hError)
+{
+    int nBins = h->GetNbinsX();
+    for (int i = 1; i <= nBins; ++i)
+    {
+        double err1 = h->GetBinError(i);
+        double err2 = hError->GetBinContent(i);
+        double errTot = TMath::Sqrt(err1*err1 + err2*err2);
+
+        h->SetBinError(i, errTot);
     }
 }
 

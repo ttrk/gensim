@@ -3,7 +3,7 @@
 progPath="./pythiaGenerateAndWrite.exe"
 
 progCards=(
-"./photon/cards/promptPhoton.cmnd"
+"./cards/photon/promptPhoton.cmnd"
 );
 
 outputFiles=(

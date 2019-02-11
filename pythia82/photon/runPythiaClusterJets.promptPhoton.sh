@@ -92,7 +92,7 @@ do
     jetRadius=${jetRadii[i1]}
     minJetPt=${minJetPts[i1]}
     constituentType=${constituentTypes[i1]}
-    outputFileLOG="${outputFile/.root/.log}"
+    outputFileLOG="${outputFile/.root/_R${jetRadius}_minPt${minJetPt}_constituentType${constituentType}.log}"
     outDir=$(dirname "${outputFile}")
     mkdir -p $outDir
     $progPath $inputFile $outputFile $jetRadius $minJetPt $constituentType &> $outputFileLOG &

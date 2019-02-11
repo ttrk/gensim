@@ -2,7 +2,7 @@
 
 progPath="./pythiaClusterJets.exe"
 
-inputFileBase="./photon/pythiaGenerateAndWrite_promptPhoton.root"
+inputFileBase="./out/events/photon/pythiaGenerateAndWrite_promptPhoton.root"
 inputFiles=(
 $inputFileBase
 $inputFileBase

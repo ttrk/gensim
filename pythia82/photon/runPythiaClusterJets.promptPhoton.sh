@@ -1,5 +1,11 @@
 #!/bin/bash
 
+export PYTHIA8DATA=$PYTHIA82/share/Pythia8/xmldoc/
+runCmd=""
+if [ ! -z ${MYRUN} ]; then
+  runCmd=${MYRUN}
+fi
+
 progPath="./pythiaClusterJets.exe"
 
 inputFileBase="./out/events/photon/pythiaGenerateAndWrite_promptPhoton.root"
@@ -171,8 +177,8 @@ do
 
     outDir=$(dirname "${outputFile}")
     mkdir -p $outDir
-    $progPath $inputFile $outputFile $jetRadius $minJetPt $constituentType $jetptCSN $jetphiCSN &> $outputFileLOG &
-    echo "$progPath $inputFile $outputFile $jetRadius $minJetPt $constituentType $jetptCSN $jetphiCSN &> $outputFileLOG &"
+    $runCmd $progPath $inputFile $outputFile $jetRadius $minJetPt $constituentType $jetptCSN $jetphiCSN &> $outputFileLOG &
+    echo "$runCmd $progPath $inputFile $outputFile $jetRadius $minJetPt $constituentType $jetptCSN $jetphiCSN &> $outputFileLOG &"
     wait
 done
 

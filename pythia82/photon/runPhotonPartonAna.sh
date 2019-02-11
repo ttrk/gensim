@@ -1,5 +1,11 @@
 #!/bin/bash
 
+export PYTHIA8DATA=$PYTHIA82/share/Pythia8/xmldoc/
+runCmd=""
+if [ ! -z ${MYRUN} ]; then
+  runCmd=${MYRUN}
+fi
+
 progPath="./photon/photonPartonAna.exe"
 
 inputFiles=(
@@ -37,8 +43,8 @@ do
       outputFileLOG="${outputFile/.root/.log}"
       outDir=$(dirname "${outputFile}")
       mkdir -p $outDir
-      $progPath $inputFile $outputFile $photonStatus $partonStatus &> $outputFileLOG &
-      echo "$progPath $inputFile $outputFile $photonStatus $partonStatus &> $outputFileLOG &"
+      $runCmd $progPath $inputFile $outputFile $photonStatus $partonStatus &> $outputFileLOG &
+      echo "$runCmd $progPath $inputFile $outputFile $photonStatus $partonStatus &> $outputFileLOG &"
     done
   done
 done

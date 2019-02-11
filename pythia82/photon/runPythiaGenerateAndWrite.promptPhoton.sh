@@ -1,5 +1,11 @@
 #!/bin/bash
 
+export PYTHIA8DATA=$PYTHIA82/share/Pythia8/xmldoc/
+runCmd=""
+if [ ! -z ${MYRUN} ]; then
+  runCmd=${MYRUN}
+fi
+
 progPath="./pythiaGenerateAndWrite.exe"
 
 progCards=(
@@ -18,8 +24,8 @@ do
     outputFileLOG="${outputFile/.root/.log}"
     outDir=$(dirname "${outputFile}")
     mkdir -p $outDir
-    $progPath $progCard $outputFile &> $outputFileLOG &
-    echo "$progPath $progCard $outputFile &> $outputFileLOG &"
+    $runCmd $progPath $progCard $outputFile &> $outputFileLOG &
+    echo "$runCmd $progPath $progCard $outputFile &> $outputFileLOG &"
 done
 
 

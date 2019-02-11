@@ -1,6 +1,9 @@
 #!/bin/bash
 
-runCmd=$MYRUN
+runCmd=""
+if [ ! -z ${MYRUN} ]; then
+  runCmd=${MYRUN}
+fi
 
 progPath="./modifySpectrum.exe"
 

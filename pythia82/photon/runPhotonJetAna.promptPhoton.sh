@@ -1,5 +1,11 @@
 #!/bin/bash
 
+export PYTHIA8DATA=$PYTHIA82/share/Pythia8/xmldoc/
+runCmd=""
+if [ ! -z ${MYRUN} ]; then
+  runCmd=${MYRUN}
+fi
+
 progPath="./photon/photonJetAna.exe"
 
 eventFileBase="./out/events/photon/pythiaGenerateAndWrite_promptPhoton.root"
@@ -89,8 +95,8 @@ do
     outputFileLOG="${outputFile/.root/.log}"
     outDir=$(dirname "${outputFile}")
     mkdir -p $outDir
-    $progPath $eventFile $jetFile $jetTree $outputFile $photonType &> $outputFileLOG &
-    echo "$progPath $eventFile $jetFile $jetTree $outputFile $photonType &> $outputFileLOG &"
+    $runCmd $progPath $eventFile $jetFile $jetTree $outputFile $photonType &> $outputFileLOG &
+    echo "$runCmd $progPath $eventFile $jetFile $jetTree $outputFile $photonType &> $outputFileLOG &"
     wait
 done
 

@@ -1,5 +1,11 @@
 #!/bin/bash
 
+export PYTHIA8DATA=$PYTHIA82/share/Pythia8/xmldoc/
+runCmd=""
+if [ ! -z ${MYRUN} ]; then
+  runCmd=${MYRUN}
+fi
+
 progPath="./eventInfoAna.exe"
 
 inputFiles=(
@@ -40,8 +46,8 @@ do
       outputFileLOG="${outputFile/.root/.log}"
       outDir=$(dirname "${outputFile}")
       mkdir -p $outDir
-      $progPath $inputFile $outputFile $processCode $qMin $qMax &> $outputFileLOG &
-      echo "$progPath $inputFile $outputFile $processCode $qMin $qMax &> $outputFileLOG &"
+      $runCmd $progPath $inputFile $outputFile $processCode $qMin $qMax &> $outputFileLOG &
+      echo "$runCmd $progPath $inputFile $outputFile $processCode $qMin $qMax &> $outputFileLOG &"
     done
   done
 done

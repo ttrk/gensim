@@ -17,10 +17,14 @@ $eventFileBase
 $eventFileBase
 $eventFileBase
 $eventFileBase
+$eventFileBase
+$eventFileBase
 );
 
 jetFileBase="./out/jets/photon/pythiaClusterJets_promptPhoton.root"
 jetFiles=(
+$jetFileBase
+$jetFileBase
 $jetFileBase
 $jetFileBase
 $jetFileBase
@@ -41,10 +45,12 @@ jetTrees=(
 "ak3jetsCh"
 "ak3jetsParton"
 "ak3jetsPartonHard"
+"ak3jetsSmeared"
 "ak4jets"
 "ak4jetsCh"
 "ak4jetsParton"
 "ak4jetsPartonHard"
+"ak4jetsSmeared"
 "ak5jets"
 "ak7jets"
 "ak8jets"
@@ -58,10 +64,12 @@ $outputFileBase"_ak3jets.root"
 $outputFileBase"_ak3jetsCh.root"
 $outputFileBase"_ak3jetsParton.root"
 $outputFileBase"_ak3jetsPartonHard.root"
+$outputFileBase"_ak3jetsSmeared.root"
 $outputFileBase"_ak4jets.root"
 $outputFileBase"_ak4jetsCh.root"
 $outputFileBase"_ak4jetsParton.root"
 $outputFileBase"_ak4jetsPartonHard.root"
+$outputFileBase"_ak4jetsSmeared.root"
 $outputFileBase"_ak5jets.root"
 $outputFileBase"_ak7jets.root"
 $outputFileBase"_ak8jets.root"

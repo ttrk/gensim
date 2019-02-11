@@ -7,7 +7,7 @@ progCards=(
 );
 
 outputFiles=(
-"./photon/pythiaGenerateAndWrite_promptPhoton.root"
+"./out/events/photon/pythiaGenerateAndWrite_promptPhoton.root"
 );
 
 arrayIndices=${!outputFiles[*]}

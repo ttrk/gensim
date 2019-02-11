@@ -19,7 +19,7 @@ $inputFileBase
 $inputFileBase
 );
 
-outputFileBase="./photon/pythiaClusterJets_promptPhoton.root"
+outputFileBase="./out/jets/photon/pythiaClusterJets_promptPhoton.root"
 outputFiles=(
 $outputFileBase
 $outputFileBase

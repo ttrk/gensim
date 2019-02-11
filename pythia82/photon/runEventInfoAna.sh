@@ -3,11 +3,11 @@
 progPath="./eventInfoAna.exe"
 
 inputFiles=(
-"./photon/pythiaGenerateAndWrite_promptPhoton.root"
+"./out/events/photon/pythiaGenerateAndWrite_promptPhoton.root"
 );
 
 outputFiles=(
-"./photon/eventInfoAna_promptPhoton.root"
+"./out/analysis/photon/eventInfoAna_promptPhoton.root"
 );
 
 processCodes=("-1" "201" "202,203")

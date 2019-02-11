@@ -3,11 +3,11 @@
 progPath="./photon/photonPartonAna.exe"
 
 inputFiles=(
-"./photon/pythiaGenerateAndWrite_promptPhoton.root"
+"./out/events/photon/pythiaGenerateAndWrite_promptPhoton.root"
 );
 
 outputFiles=(
-"./photon/photonPartonAna_promptPhoton.root"
+"./out/analysis/photon/photonPartonAna_promptPhoton.root"
 );
 
 photonStatuses=(0 1)

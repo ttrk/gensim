@@ -19,32 +19,17 @@ Next:numberShowEvent = 0           ! print event record n times
 Beams:idA = 2212                   ! first beam, p = 2212, pbar = -2212
 Beams:idB = 2212                   ! second beam, p = 2212, pbar = -2212
 Beams:eCM = 5020.                  ! CM energy of collision
-Beams:setProductionScalesFromLHEF = off ! default = off
 Check:epTolErr = 0.010
 
 ! SUSY Les Houches Accord
-SLHA:keepSM = on        ! default = on
 SLHA:minMassSM = 1000.  ! default = 100.
 
 ! 4) Settings for the hard-process generation.
 
-! Example 1: QCD + prompt photon production; must set pTmin.
+! QCD prompt photon production
 HardQCD:all = off                   ! switch on all QCD jet + jet processes
 PromptPhoton:all = on              ! swich on gamma + jet and gamma + gamma
 PhaseSpace:pTHatMin = 40.          ! minimal pT scale in process
-
-! Example 2: t-tbar production.
-#Top:gg2ttbar = on                  ! g g -> t tbar
-#Top:qqbar2ttbar = on               ! q qbar -> t tbar
-
-! Example 3: Z0 production; should set mMin.
-#WeakSingleBoson:ffbar2gmZ = on     ! q qbar -> gamma*/Z0
-#PhaseSpace:mHatMin = 50.
-
-! Example 4: gauge boson pair production; set pTmin. Not yet complete.
-#WeakDoubleBoson:ffbar2ZW = on      ! q qbar -> Z0 W+-
-#WeakDoubleBoson:ffbar2WW = on      ! q qbar -> W+ W-
-#PhaseSpace:pTHatMin = 20.          ! minimal pT scale in process
 
 ! 5) Switch on/off the key event generation steps.
 #PartonLevel:MPI = off              ! no multiparton interactions

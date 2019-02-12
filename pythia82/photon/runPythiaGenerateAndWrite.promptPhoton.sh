@@ -10,10 +10,14 @@ progPath="./pythiaGenerateAndWrite.exe"
 
 progCards=(
 "./cards/photon/promptPhoton.cmnd"
+"./cards/photon/promptPhoton_off_MPI_ISR_FSR_BR.cmnd"
+"./cards/photon/promptPhoton_off_MPI_ISR_FSR_BR_pthatBias.cmnd"
 );
 
 outputFiles=(
 "./out/events/photon/pythiaGenerateAndWrite_promptPhoton.root"
+"./out/events/photon/pythiaGenerateAndWrite_promptPhoton_off_MPI_ISR_FSR_BR.root"
+"./out/events/photon/pythiaGenerateAndWrite_promptPhoton_off_MPI_ISR_FSR_BR_pthatBias.root"
 );
 
 arrayIndices=${!outputFiles[*]}

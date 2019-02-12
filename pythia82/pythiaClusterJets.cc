@@ -227,10 +227,13 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
         for (int i = 0; i < eventSize; ++i) {
 
             if (useFinalParticles) {
-                if (!(*event)[i].isFinal()) continue;
-            }
-            else if (useFinalChParticles) {
-                if (!((*event)[i].isFinal() && isCharged((*event)[i], pythia.particleData))) continue;
+
+                if (useFinalChParticles) {
+                    if (!((*event)[i].isFinal() && isCharged((*event)[i], pythia.particleData))) continue;
+                }
+                else {
+                    if (!(*event)[i].isFinal()) continue;
+                }
             }
             else if (constituentType == CONSTITUENTS::kPartonHard) {
                 int iOrig = (*event)[i].mother1();

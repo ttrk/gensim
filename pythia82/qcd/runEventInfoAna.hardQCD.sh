@@ -9,19 +9,19 @@ fi
 progPath="./eventInfoAna.exe"
 
 inputFiles=(
-"./out/events/photon/pythiaGenerateAndWrite_promptPhoton.root"
+"./out/events/qcd/pythiaGenerateAndWrite_hardQCD_off_MPI_ISR_FSR_BR.root"
 );
 
 outputFiles=(
-"./out/analysis/photon/eventInfoAna_promptPhoton.root"
+"./out/analysis/qcd/eventInfoAna_hardQCD_off_MPI_ISR_FSR_BR.root"
 );
 
-processCodes=("-1" "201" "202,203")
-processCodesSuffixes=("" "_proc201" "_proc202203")
+processCodes=("-1"       "113"        "111,115"    "112,114,116,121,122,123,124")
+processCodesSuffixes=("" "_proc_x2qg" "_proc_x2gg" "_proc_x2qqbar")
 
-qMins=(0  60  100)
-qMaxs=(-1 100 -1)
-qSuffixes=("" "_scale60100" "_scale100")
+qMins=(0  80  220)
+qMaxs=(-1 220 -1)
+qSuffixes=("" "_q80220" "_q220")
 
 arrayIndices=${!outputFiles[*]}
 indicesProcessCodes=${!processCodes[*]}

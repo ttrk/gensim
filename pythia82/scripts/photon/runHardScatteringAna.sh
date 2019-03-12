@@ -32,24 +32,15 @@ probeStatusList=(
 "1"
 );
 
-
-outputFiles=(
-##
-"./out/analysis/photon/hardScatteringAna_"$fileSuffix"_XTag_tagYY_probeZZ.root"
-"./out/analysis/photon/hardScatteringAna_"$fileSuffix"_XTag_tagYY_probeZZ.root"
-"./out/analysis/photon/hardScatteringAna_"$fileSuffix"_XTag_tagYY_probeZZ.root"
-"./out/analysis/photon/hardScatteringAna_"$fileSuffix"_XTag_tagYY_probeZZ.root"
-);
-
-
-arrayIndices=${!outputFiles[*]}
+arrayIndices=${!tagList[*]}
 for i1 in $arrayIndices
 do
     tag=${tagList[i1]}
     tagStatus=${tagStatusList[i1]}
     probeStatus=${probeStatusList[i1]}
-    outputFile=${outputFiles[i1]}
-    outputFile="${outputFile/_X/_${tag}}"
+
+    outputFileTmp="./out/analysis/photon/hardScatteringAna_"$fileSuffix"_XTag_tagYY_probeZZ.root"
+    outputFile="${outputFileTmp/_X/_${tag}}"
 
     tagStatusStr=""
     if [[ $tagStatus = 0 ]]; then

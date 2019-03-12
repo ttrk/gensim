@@ -260,6 +260,7 @@ bool isNeutrino(Pythia8::Particle particle);
 bool isCharged(Pythia8::Particle particle, Pythia8::ParticleData& particleData);
 bool hasDaughter(Pythia8::Particle particle);
 bool isAncestor(Pythia8::Event* evtPtr, int iParticle, int iAncestor);
+int getIndexLeadingOutDaughter(Pythia8::Event* evtPtr, Pythia8::Event* evtPartonPtr, int iPart);
 std::vector<int> daughterList(Pythia8::Event* evtPtr, int iPart);
 std::vector<int> daughterListRecursive(Pythia8::Event* evtPtr, int iPart);
 void fillPartonLevelEvent(Pythia8::Event& event, Pythia8::Event& partonLevelEvent);
@@ -359,6 +360,35 @@ bool isAncestor(Pythia8::Event* evtPtr, int iParticle, int iAncestor)
   }
   // End of loop. Should never reach beyond here.
   return false;
+}
+
+/*
+ * return index of leading particle among the outgoing daughters of particle with index "iPart" in "evtPtr"
+ *
+ */
+int getIndexLeadingOutDaughter(Pythia8::Event* evtPtr, Pythia8::Event* evtPartonPtr, int iPart)
+{
+    int iOutgoing = -1;
+    double ptOutgoing = -1;
+    int nTagOutCand = 0;
+
+    int eventPartonSize = evtPartonPtr->size();
+    for (int i = 0; i < eventPartonSize; ++i) {
+
+        // should not have a daughter in parton-level particles
+        if (hasDaughter((*evtPartonPtr)[i]))  continue;
+
+        int indexOrig = (*evtPartonPtr)[i].mother1();
+        if (!isAncestor(evtPtr, indexOrig, iPart))  continue;
+
+        if ((*evtPtr)[indexOrig].pT() > ptOutgoing) {
+
+            ptOutgoing = (*evtPtr)[indexOrig].pT();
+            iOutgoing = indexOrig;
+        }
+    }
+
+    return iOutgoing;
 }
 
 /*

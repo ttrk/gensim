@@ -1,5 +1,6 @@
 /*
  * code to analyze the two particles outgoing from hard process where one of the particles is assumed to be photon.
+ * WARNING : This code is OBSOLETE. Use hardScatteringAna.cc instead
  */
 // Header file to access Pythia 8 program elements.
 #include "Pythia8/Pythia.h"

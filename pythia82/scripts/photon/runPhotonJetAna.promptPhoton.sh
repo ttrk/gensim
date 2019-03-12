@@ -9,6 +9,8 @@ fi
 progPath="./photon/photonJetAna.exe"
 
 eventFileBase="./out/events/photon/pythiaGenerateAndWrite_promptPhoton.root"
+#eventFileBase="./out/events/photon/pythiaGenerateAndWrite_promptPhoton_noMPI_ISR_FSR.root"
+#eventFileBase="./out/events/photon/pythiaGenerateAndWrite_promptPhoton_pthatMax60.root"
 eventFiles=(
 $eventFileBase
 $eventFileBase
@@ -28,6 +30,8 @@ $eventFileBase
 );
 
 jetFileBase="./out/jets/photon/pythiaClusterJets_promptPhoton.root"
+#jetFileBase="./out/jets/photon/pythiaClusterJets_promptPhoton_noMPI_ISR_FSR.root"
+#jetFileBase="./out/jets/photon/pythiaClusterJets_promptPhoton_pthatMax60.root"
 jetFiles=(
 $jetFileBase
 $jetFileBase
@@ -65,6 +69,8 @@ jetTrees=(
 );
 
 outputFileBase="./out/analysis/photon/photonJetAna_promptPhoton"
+#outputFileBase="./out/analysis/photon/photonJetAna_promptPhoton_noMPI_ISR_FSR"
+#outputFileBase="./out/analysis/photon/photonJetAna_promptPhoton_pthatMax60"
 outputFiles=(
 $outputFileBase"_ak3jets.root"
 $outputFileBase"_ak3jetsCh.root"

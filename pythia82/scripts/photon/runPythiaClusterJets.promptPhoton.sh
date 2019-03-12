@@ -23,6 +23,7 @@ $inputFileBase
 $inputFileBase
 $inputFileBase
 $inputFileBase
+$inputFileBase
 ## smeared jets
 $inputFileBase
 $inputFileBase
@@ -30,6 +31,7 @@ $inputFileBase
 
 outputFileBase="./out/jets/photon/pythiaClusterJets_promptPhoton.root"
 outputFiles=(
+$outputFileBase
 $outputFileBase
 $outputFileBase
 $outputFileBase
@@ -58,6 +60,7 @@ jetRadii=(
 "4"
 "4"
 "5"
+"6"
 "7"
 "8"
 "8"
@@ -68,6 +71,7 @@ jetRadii=(
 );
 
 minJetPts=(
+"5"
 "5"
 "5"
 "5"
@@ -98,6 +102,7 @@ constituentTypes=(
 "0"
 "0"
 "0"
+"0"
 "2"
 "3"
 ## smeared jets
@@ -120,6 +125,7 @@ $noSmearJetpt
 $noSmearJetpt
 $noSmearJetpt
 $noSmearJetpt
+$noSmearJetpt
 ## smeared jets
 "0.06,0.95,0"
 "0.06,0.95,0"
@@ -127,6 +133,7 @@ $noSmearJetpt
 
 noSmearJetphi="0,0,0"
 jetphiCSNs=(
+$noSmearJetphi
 $noSmearJetphi
 $noSmearJetphi
 $noSmearJetphi

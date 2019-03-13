@@ -1,5 +1,6 @@
 /*
  * code to analyze photon+jet events
+ * WARNING : This code is OBSOLETE. Use qcdAna.cc instead
  */
 // Header file to access Pythia 8 program elements.
 #include "Pythia8/Pythia.h"

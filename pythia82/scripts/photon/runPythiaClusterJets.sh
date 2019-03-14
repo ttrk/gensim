@@ -8,7 +8,10 @@ fi
 
 progPath="./pythiaClusterJets.exe"
 
-inputFileBase="./out/events/photon/pythiaGenerateAndWrite_promptPhoton.root"
+## prompt photon
+fileSuffix="promptPhoton"
+
+inputFileBase="./out/events/photon/pythiaGenerateAndWrite_"$fileSuffix".root"
 inputFiles=(
 $inputFileBase
 $inputFileBase
@@ -29,7 +32,7 @@ $inputFileBase
 $inputFileBase
 );
 
-outputFileBase="./out/jets/photon/pythiaClusterJets_promptPhoton.root"
+outputFileBase="./out/jets/photon/pythiaClusterJets_"$fileSuffix".root"
 outputFiles=(
 $outputFileBase
 $outputFileBase

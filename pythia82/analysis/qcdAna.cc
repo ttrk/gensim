@@ -130,6 +130,7 @@ void qcdAna(std::string eventFileName, std::string jetFileName, std::string jetT
         kOutgoingMaxPhotonIso,
         kHardZ,
         kOutgoingHardZ,
+        kOutgoingZll,
         kN_EWBOSONTYPES
     };
 
@@ -138,7 +139,8 @@ void qcdAna(std::string eventFileName, std::string jetFileName, std::string jetT
                    ewBosonType == kOutgoingMaxPhoton ||
                    ewBosonType == kOutgoingMaxPhotonIso);
     bool vIsZ = (ewBosonType == kHardZ ||
-                 ewBosonType == kOutgoingHardZ);
+                 ewBosonType == kOutgoingHardZ ||
+                 ewBosonType == kOutgoingZll);
     bool doVectorBoson = (vIsPho || vIsZ);
 
     // EW boson histograms
@@ -477,6 +479,9 @@ void qcdAna(std::string eventFileName, std::string jetFileName, std::string jetT
     double minVJetPt = axis_jetPt_min;
     double maxJetEta = 1.6;
 
+    double minLeptonPt = 10;
+    double maxLeptonEta = 2.4;
+
     // dijet cuts
     double minDphiDijet = 2 * TMath::Pi() / 3;
     double minLeadJetPt = 50;
@@ -566,14 +571,19 @@ void qcdAna(std::string eventFileName, std::string jetFileName, std::string jetT
             }
 
             iV = iHardV;
-            if (ewBosonType == kOutgoingHardPhoton) {
+            if (ewBosonType == kOutgoingHardPhoton || ewBosonType == kOutgoingHardZ) {
                 int eventPartonSize = eventParton->size();
                 // search the hard scattering photon in outgoing particles
-                int iOutPho = -1;
-                int nOutPhoCand = 0;
+                int iOutV = -1;
+                int nOutVCand = 0;
                 for (int i = 0; i < eventPartonSize; ++i) {
 
-                    if (!isGamma((*eventParton)[i]))  continue;
+                    if (ewBosonType == kOutgoingHardPhoton) {
+                        if (!isGamma((*eventParton)[i]))  continue;
+                    }
+                    else if (ewBosonType == kOutgoingHardZ) {
+                        if (!isZboson((*eventParton)[i]))  continue;
+                    }
                     int indexOrig = (*eventParton)[i].mother1();
 
                     if (hasDaughter((*event)[indexOrig]))  continue;
@@ -581,13 +591,13 @@ void qcdAna(std::string eventFileName, std::string jetFileName, std::string jetT
                     // must be a daughter of the hard scattering particle
                     if (!isAncestor(event, indexOrig, iHardV))  continue;
 
-                    nOutPhoCand++;
-                    iOutPho = indexOrig;
+                    nOutVCand++;
+                    iOutV = indexOrig;
                 }
                 // there must be exactly one outgoing, final photon
-                if (iOutPho == -1 || nOutPhoCand != 1)  continue;
+                if (iOutV == -1 || nOutVCand != 1)  continue;
 
-                iV = iOutPho;
+                iV = iOutV;
             }
             else if (ewBosonType == kOutgoingMaxPhoton || ewBosonType == kOutgoingMaxPhotonIso) {
                 int eventSize = event->size();
@@ -609,10 +619,62 @@ void qcdAna(std::string eventFileName, std::string jetFileName, std::string jetT
 
                 iV = iOutPho;
             }
+            else if (ewBosonType == kOutgoingZll) {
+                int eventSize = event->size();
+                // search the ll pair whose mass is closest to Z mass in PDG
+                double zMassPDG = 91.1876;
+                double deltaMass = 999999;
+                bool foundZ = false;
 
-            vPt = (*event)[iV].pT();
-            vEta = (*event)[iV].eta();
-            vPhi = (*event)[iV].phi();
+                for (int i = 0; i < eventSize; ++i) {
+
+                    if (!((*event)[i].isFinal()))  continue;
+                    if (!isChLepton((*event)[i]))  continue;
+                    if (hasDaughter((*event)[i]))  continue;
+
+                    if (!((*event)[i].pT() > minLeptonPt))  continue;
+                    if (!(TMath::Abs((*event)[i].eta()) < maxLeptonEta))  continue;
+
+                    for (int j = i+1; j < eventSize; ++j) {
+
+                        // must be pairs of anti-particles
+                        if (!((*event)[j].id() == -1*(*event)[i].id()))  continue;
+
+                        if (!((*event)[j].isFinal()))  continue;
+                        if (!isChLepton((*event)[j]))  continue;
+                        if (hasDaughter((*event)[j]))  continue;
+
+                        if (!((*event)[j].pT() > minLeptonPt))  continue;
+                        if (!(TMath::Abs((*event)[j].eta()) < maxLeptonEta))  continue;
+
+                        TLorentzVector vecL1;
+                        TLorentzVector vecL2;
+
+                        vecL1.SetPtEtaPhiM((*event)[i].pT(), (*event)[i].eta(), (*event)[i].phi(), (*event)[i].m0());
+                        vecL2.SetPtEtaPhiM((*event)[j].pT(), (*event)[j].eta(), (*event)[j].phi(), (*event)[j].m0());
+
+                        TLorentzVector vecL1L2 = vecL1 + vecL2;
+
+                        if (!(vecL1L2.M() >= 60 && vecL1L2.M() <= 120))  continue;
+
+                        if (TMath::Abs(vecL1L2.M() - zMassPDG) < deltaMass) {
+                            foundZ = true;
+                            deltaMass = TMath::Abs(vecL1L2.M() - zMassPDG);
+                            vPt = vecL1L2.Pt();
+                            vEta = vecL1L2.Eta();
+                            vPhi = vecL1L2.Phi();
+                        }
+                    }
+                }
+
+                if (!foundZ)  continue;
+            }
+
+            if (ewBosonType != kOutgoingZll) {
+                vPt = (*event)[iV].pT();
+                vEta = (*event)[iV].eta();
+                vPhi = (*event)[iV].phi();
+            }
         }
 
         eventsAnalyzed++;
@@ -649,6 +711,7 @@ void qcdAna(std::string eventFileName, std::string jetFileName, std::string jetT
             }
             else if (vIsZ) {
                 if (!(vPt > minVPt)) continue;
+                if (!(TMath::Abs(vEta) < maxVEta)) continue;
             }
 
             h_vPt->Fill(vPt);
@@ -658,7 +721,7 @@ void qcdAna(std::string eventFileName, std::string jetFileName, std::string jetT
             h2_qscale_vEta->Fill(TMath::Abs(vEta), event->scale());
 
             iParton = (iHardV == ip1) ? ip2 : ip1;
-            if (ewBosonType == kOutgoingMaxPhoton || ewBosonType == kOutgoingMaxPhotonIso) {
+            if (ewBosonType == kOutgoingMaxPhoton || ewBosonType == kOutgoingMaxPhotonIso || ewBosonType == kOutgoingZll) {
                 // associated parton is the one that is farthest away in phi
                 double dphiParton1 = std::acos(cos(vPhi - (*event)[ip1].phi()));
                 double dphiParton2 = std::acos(cos(vPhi - (*event)[ip2].phi()));

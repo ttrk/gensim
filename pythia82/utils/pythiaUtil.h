@@ -292,6 +292,11 @@ bool isZboson(Pythia8::Particle particle)
     return (particle.id() == 23);
 }
 
+bool isChLepton(Pythia8::Particle particle)
+{
+    return (particle.idAbs() == 11 || particle.idAbs() == 13 || particle.idAbs() == 15);
+}
+
 bool isNeutrino(Pythia8::Particle particle)
 {
     return (particle.idAbs() == 12 || particle.idAbs() == 14 || particle.idAbs() == 16);

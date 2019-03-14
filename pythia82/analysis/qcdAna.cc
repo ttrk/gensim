@@ -144,9 +144,9 @@ void qcdAna(std::string eventFileName, std::string jetFileName, std::string jetT
     bool doVectorBoson = (vIsPho || vIsZ);
 
     // EW boson histograms
-    int nBinsX_pt = 30;
-    double axis_pt_min = 60;
-    double axis_pt_max = 150+axis_pt_min;
+    int nBinsX_pt = 40;
+    double axis_pt_min = 0;
+    double axis_pt_max = 200+axis_pt_min;
     int nBinsX_eta = 20;
     double axis_eta_min = 0;
     double axis_eta_max = 5;
@@ -702,7 +702,6 @@ void qcdAna(std::string eventFileName, std::string jetFileName, std::string jetT
         if (anaType == k_vJet) {
 
             if (vIsPho) {
-                if (!(vPt > minVPt)) continue;
                 if (!(TMath::Abs(vEta) < maxVEta)) continue;
                 if (ewBosonType == kOutgoingMaxPhotonIso) {
                     double isoCal = isolationEt(event, iV, 0.4, true, true);
@@ -710,11 +709,12 @@ void qcdAna(std::string eventFileName, std::string jetFileName, std::string jetT
                 }
             }
             else if (vIsZ) {
-                if (!(vPt > minVPt)) continue;
                 if (!(TMath::Abs(vEta) < maxVEta)) continue;
             }
 
             h_vPt->Fill(vPt);
+            if (!(vPt > minVPt)) continue;
+
             h_vEta->Fill(TMath::Abs(vEta));
             h2_vEta_vPt->Fill(TMath::Abs(vEta), vPt);
             h2_qscale_vPt->Fill(vPt, event->scale());
@@ -1245,7 +1245,8 @@ void qcdAna(std::string eventFileName, std::string jetFileName, std::string jetT
     // Save histogram on file and close file.
     std::cout << "saving histograms" << std::endl;
 
-    h_vPt->Scale(1./h_vPt->Integral(), "width");
+    double binMinVPt = h_vPt->FindBin(minVPt);
+    h_vPt->Scale(1./h_vPt->Integral(binMinVPt, h_vPt->GetNbinsX()+1), "width");
     h_vEta->Scale(1./h_vEta->Integral(), "width");
 
     for (int i = 0; i < kN_JETFLAVORS; ++i) {
@@ -1267,7 +1268,7 @@ void qcdAna(std::string eventFileName, std::string jetFileName, std::string jetT
         double normJet = nJet;
         if (anaType == k_vJet) {
 
-            h_vPt_jet[i]->Scale(1./h_vPt_jet[i]->Integral(), "width");
+            h_vPt_jet[i]->Scale(1./nV, "width");
 
             normJet = nV;
 

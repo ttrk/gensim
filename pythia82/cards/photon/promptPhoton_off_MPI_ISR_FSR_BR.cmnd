@@ -37,7 +37,7 @@ SLHA:minMassSM = 1000.  ! default = 100.
 # http://home.thep.lu.se/Pythia/pythia82php/ElectroweakProcesses.php
 HardQCD:all = off                  ! switch on all QCD jet + jet processes
 PromptPhoton:all = on              ! swich on gamma + jet and gamma + gamma
-PhaseSpace:pTHatMin = 40.          ! minimal pT scale in process
+PhaseSpace:pTHatMin = 30.          ! minimal pT scale in process
 
 ! 5) Switch on/off the key event generation steps.
 PartonLevel:MPI = off              ! no multiparton interactions

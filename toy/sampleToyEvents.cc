@@ -101,6 +101,10 @@ void sampleToyEvents(std::string inputFileName, std::string outputFileName,
 
     TFile* outputFile = new TFile(outputFileName.c_str(), "UPDATE");
 
+    TTree* eventInfoTree = new TTree("evtInfoHydjet", Form("Info about Hydjet events with Cent:%d-%d", minCent, maxCent));
+    int hiBin;
+    eventInfoTree->Branch("hiBin", &hiBin);
+
     TTree* partTree = new TTree("evtHydjet", Form("Hydjet particles from Cent:%d-%d", minCent, maxCent));
     particleTree partt;
     partt.branchTree(partTree);
@@ -116,7 +120,7 @@ void sampleToyEvents(std::string inputFileName, std::string outputFileName,
           std::cout << "current entry = " <<iEvent<<" out of "<<nEvents<<" : "<<std::setprecision(2)<<(double)iEvent/nEvents*100<<" %"<<std::endl;
         }
 
-        int hiBin = (int)std::floor(rand1.Uniform(minCent*2, maxCent*2));
+        hiBin = (int)std::floor(rand1.Uniform(minCent*2, maxCent*2));
         int iCent4 = 0;
         for (int i = 0; i < nCent; ++i) {
             if (hiBin < centMaxs[i]*2) {
@@ -153,6 +157,7 @@ void sampleToyEvents(std::string inputFileName, std::string outputFileName,
             }
         }
 
+        eventInfoTree->Fill();
         partTree->Fill();
     }
     std::cout << "Loop ENDED" << std::endl;

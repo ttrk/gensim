@@ -36,8 +36,8 @@ enum CONSTITUENTS {
     kPartonHard,    // final partons originating from one of the hard scatterers
     kFinal_AND_MIX,  // final state particles (after hadronization) from Pythia event and external (mixed) event
     kFinalCh_AND_MIX,  // charged final state particles from Pythia event and external (mixed) event
-    kFinalWTA,         // final state particles (after hadronization)
-    kFinalWTA_AND_MIX,  // final state particles (after hadronization) from Pythia event and external (mixed) event
+    kFinal_WTA,         // final state particles (after hadronization)
+    kFinal_AND_MIX_WTA,  // final state particles (after hadronization) from Pythia event and external (mixed) event
     kN_CONSTITUENTS
 };
 
@@ -80,8 +80,8 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
             || constituentType == CONSTITUENTS::kFinalCh
             || constituentType == CONSTITUENTS::kFinal_AND_MIX
             || constituentType == CONSTITUENTS::kFinalCh_AND_MIX
-            || constituentType == CONSTITUENTS::kFinalWTA
-            || constituentType == CONSTITUENTS::kFinalWTA_AND_MIX);
+            || constituentType == CONSTITUENTS::kFinal_WTA
+            || constituentType == CONSTITUENTS::kFinal_AND_MIX_WTA);
     bool useFinalChParticles = useFinalParticles && (constituentType == CONSTITUENTS::kFinalCh
             || constituentType == CONSTITUENTS::kFinalCh_AND_MIX);
     bool usePartons = (constituentType == CONSTITUENTS::kParton || constituentType == CONSTITUENTS::kPartonHard);
@@ -92,7 +92,7 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
     particleTree mixEvtParticles;
     TTree* treeMixEvt = 0;
     bool doMixEvt = (constituentType == CONSTITUENTS::kFinal_AND_MIX || constituentType == CONSTITUENTS::kFinalCh_AND_MIX
-                                                                     || constituentType == CONSTITUENTS::kFinalWTA_AND_MIX);
+                                                                     || constituentType == CONSTITUENTS::kFinal_AND_MIX_WTA);
     if (doMixEvt) {
         std::string mixEvtTreePath = "evtHydjet";
         treeMixEvt = (TTree*)inputFile->Get(mixEvtTreePath.c_str());
@@ -107,7 +107,7 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
     TFile* outputFile = new TFile(outputFileName.c_str(), "UPDATE");
 
     int recombScheme = fastjet::E_scheme;
-    if (constituentType == CONSTITUENTS::kFinalWTA || constituentType == CONSTITUENTS::kFinalWTA_AND_MIX) {
+    if (constituentType == CONSTITUENTS::kFinal_WTA || constituentType == CONSTITUENTS::kFinal_AND_MIX_WTA) {
         recombScheme = fastjet::WTA_pt_scheme;
     }
 
@@ -137,11 +137,11 @@ void pythiaClusterJets(std::string inputFileName, std::string outputFileName, in
         jetTreeName = Form("ak%djetsChMixed", dR);
         jetTreeTitle = Form("charged particle jets with R = %.1f from Pythia+MIX event", jetRadius);
     }
-    else if (constituentType == CONSTITUENTS::kFinalWTA) {
+    else if (constituentType == CONSTITUENTS::kFinal_WTA) {
         jetTreeName = Form("ak%djetsWTA", dR);
         jetTreeTitle = Form("jets with R = %.1f, WTA", jetRadius);
     }
-    else if (constituentType == CONSTITUENTS::kFinalWTA_AND_MIX) {
+    else if (constituentType == CONSTITUENTS::kFinal_AND_MIX_WTA) {
         jetTreeName = Form("ak%djetsWTAMixed", dR);
         jetTreeTitle = Form("jets with R = %.1f, WTA, from Pythia+MIX event", jetRadius);
     }

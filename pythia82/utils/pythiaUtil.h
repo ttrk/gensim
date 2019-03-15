@@ -263,6 +263,7 @@ bool isAncestor(Pythia8::Event* evtPtr, int iParticle, int iAncestor);
 int getIndexLeadingOutDaughter(Pythia8::Event* evtPtr, Pythia8::Event* evtPartonPtr, int iPart);
 std::vector<int> daughterList(Pythia8::Event* evtPtr, int iPart);
 std::vector<int> daughterListRecursive(Pythia8::Event* evtPtr, int iPart);
+void copyEvent(Pythia8::Event& eventSrc, Pythia8::Event& event);
 void fillPartonLevelEvent(Pythia8::Event& event, Pythia8::Event& partonLevelEvent);
 void fillFinalEvent(Pythia8::Event& event, Pythia8::Event& finalEvent);
 double isolationEt(Pythia8::Event* event, int iPart, double maxdR, bool includeMu = true, bool includeNu = true);
@@ -475,6 +476,20 @@ std::vector<int> daughterListRecursive(Pythia8::Event* evtPtr, int iPart)
 
     // Done.
     return daughterVec;
+}
+
+/*
+ * derived from fillPartonLevelEvent()
+ */
+void copyEvent(Pythia8::Event& eventSrc, Pythia8::Event& event)
+{
+    // Copy over all particles
+    event.reset();
+    int nEventSize = eventSrc.size();
+    for (int i = 0; i < nEventSize; ++i) {
+
+        event.append(eventSrc[i]);
+    }
 }
 
 /*

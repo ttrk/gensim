@@ -30,6 +30,11 @@ $inputFileBase
 ## smeared jets
 $inputFileBase
 $inputFileBase
+## WTA
+$inputFileBase
+$inputFileBase
+$inputFileBase
+$inputFileBase
 );
 
 outputFileBase="./out/jets/photon/pythiaClusterJets_"$fileSuffix".root"
@@ -49,6 +54,11 @@ $outputFileBase
 $outputFileBase
 $outputFileBase
 ## smeared jets
+$outputFileBase
+$outputFileBase
+## WTA
+$outputFileBase
+$outputFileBase
 $outputFileBase
 $outputFileBase
 );
@@ -71,6 +81,11 @@ jetRadii=(
 ## smeared jets
 "3"
 "4"
+## WTA
+"3"
+"3"
+"4"
+"4"
 );
 
 minJetPts=(
@@ -89,6 +104,11 @@ minJetPts=(
 "5"
 "5"
 ## smeared jets
+"5"
+"5"
+## WTA
+"5"
+"5"
 "5"
 "5"
 );
@@ -111,6 +131,11 @@ constituentTypes=(
 ## smeared jets
 "0"
 "0"
+## WTA
+"6"
+"6"
+"6"
+"6"
 );
 
 noSmearJetpt="0,0,0"
@@ -132,6 +157,11 @@ $noSmearJetpt
 ## smeared jets
 "0.06,0.95,0"
 "0.06,0.95,0"
+## WTA
+$noSmearJetpt
+"0.06,0.95,0"
+$noSmearJetpt
+"0.06,0.95,0"
 );
 
 noSmearJetphi="0,0,0"
@@ -152,6 +182,11 @@ $noSmearJetphi
 $noSmearJetphi
 ## smeared jets
 "0.000000772,0.1222,0.5818"
+"0.000000772,0.1222,0.5818"
+## WTA
+$noSmearJetphi
+"0.000000772,0.1222,0.5818"
+$noSmearJetphi
 "0.000000772,0.1222,0.5818"
 );
 

@@ -326,6 +326,7 @@ bool isAncestor(Pythia8::Event* evtPtr, int iParticle, int iAncestor)
 
   // Begin loop to trace upwards from the daughter.
   if (evtPtr == 0) return false;
+  if (iParticle < 0 || iAncestor < 0) return false;
   int iUp = iParticle;
   int sizeNow = (*evtPtr).size();
   for ( ; ; ) {
@@ -378,6 +379,8 @@ int getIndexLeadingOutDaughter(Pythia8::Event* evtPtr, Pythia8::Event* evtParton
     double ptOutgoing = -1;
     int nTagOutCand = 0;
 
+    if (iPart < 0) return iOutgoing;
+
     int eventPartonSize = evtPartonPtr->size();
     for (int i = 0; i < eventPartonSize; ++i) {
 
@@ -409,6 +412,7 @@ std::vector<int> daughterList(Pythia8::Event* evtPtr, int iPart)
     // Vector of all the daughters; created empty. Done if no event pointer.
     std::vector<int> daughterVec;
     if (evtPtr == 0) return daughterVec;
+    if (iPart < 0) return daughterVec;
 
     // Simple cases: no or one daughter.
     if ((*evtPtr)[iPart].daughter1() == 0 && (*evtPtr)[iPart].daughter2() == 0) ;
@@ -457,6 +461,7 @@ std::vector<int> daughterListRecursive(Pythia8::Event* evtPtr, int iPart)
     // Vector of all the daughters; created empty. Done if no event pointer.
     std::vector<int> daughterVec;
     if (evtPtr == 0) return daughterVec;
+    if (iPart < 0) return daughterVec;
 
     // Find first generation of daughters.
     daughterVec = daughterList(evtPtr, iPart);
@@ -538,6 +543,8 @@ void fillFinalEvent(Pythia8::Event& event, Pythia8::Event& finalEvent)
  */
 double isolationEt(Pythia8::Event* event, int iPart, double maxdR, bool includeMu, bool includeNu)
 {
+    if (iPart < 0) return -999999;
+
     double partEta = (*event)[iPart].eta();
     double partPhi = (*event)[iPart].phi();
     double maxdR2 = maxdR * maxdR;

@@ -484,7 +484,7 @@ std::vector<int> daughterListRecursive(Pythia8::Event* evtPtr, int iPart)
 void copyEvent(Pythia8::Event& eventSrc, Pythia8::Event& event)
 {
     // Copy over all particles
-    event.reset();
+    event.clear();
     int nEventSize = eventSrc.size();
     for (int i = 0; i < nEventSize; ++i) {
 

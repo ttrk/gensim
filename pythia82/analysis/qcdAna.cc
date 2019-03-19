@@ -28,6 +28,7 @@
 #include "../dictionary/dict4RootDct.cc"
 #include "../utils/pythiaUtil.h"
 #include "../../fastjet3/fastJetTree.h"
+#include "../../utilities/particleTree.h"
 #include "../../utilities/physicsUtil.h"
 #include "../../utilities/th1Util.h"
 
@@ -36,12 +37,17 @@
 #include <string>
 #include <vector>
 
-void qcdAna(std::string eventFileName = "events.root", std::string jetFileName = "jets.root",
-                  std::string jetTreeName = "ak3jets", std::string outputFileName = "qcdAna_out.root",
-                  int anaType = 0, int processType = 0, int ewBosonType = 1);
+void qcdAna(std::string eventFileName = "events.root",
+            std::string jetFileName = "jets.root", std::string jetTreeName = "ak3jets",
+            std::string particleFileName = "particles.root", std::string particleTreeName = "evtHydjet",
+            std::string outputFileName = "qcdAna_out.root",
+            int anaType = 0, int processType = 0, int sigBkgType = 0, int ewBosonType = 1);
 
-void qcdAna(std::string eventFileName, std::string jetFileName, std::string jetTreeName, std::string outputFileName,
-                  int anaType, int processType, int ewBosonType)
+void qcdAna(std::string eventFileName,
+            std::string jetFileName, std::string jetTreeName,
+            std::string particleFileName, std::string particleTreeName,
+            std::string outputFileName,
+            int anaType, int processType, int sigBkgType, int ewBosonType)
 {
     std::cout << "running qcdAna()" << std::endl;
 
@@ -49,9 +55,12 @@ void qcdAna(std::string eventFileName, std::string jetFileName, std::string jetT
     std::cout << "eventFileName = " << eventFileName.c_str() << std::endl;
     std::cout << "jetFileName = " << jetFileName.c_str() << std::endl;
     std::cout << "jetTreeName = " << jetTreeName.c_str() << std::endl;
+    std::cout << "particleFileName = " << particleFileName.c_str() << std::endl;
+    std::cout << "particleTreeName = " << particleTreeName.c_str() << std::endl;
     std::cout << "outputFileName = " << outputFileName.c_str() << std::endl;
     std::cout << "anaType = " << anaType << std::endl;
     std::cout << "processType = " << processType << std::endl;
+    std::cout << "sigBkgType = " << sigBkgType << std::endl;
     std::cout << "ewBosonType = " << ewBosonType << std::endl;
     std::cout << "##### Parameters - END #####" << std::endl;
 
@@ -91,11 +100,33 @@ void qcdAna(std::string eventFileName, std::string jetFileName, std::string jetT
     std::cout << "jetR = " << jetR << std::endl;
     std::cout << "##### Parameters (cont'd.) - END #####" << std::endl;
 
+    // this (using external file for particles) is mostly NOT the case
+    bool useExtParticleTree = (particleFileName != "NULL" && particleTreeName != "NULL");
+
+    TFile* particleFile = 0;
+    TTree* treeParticles = 0;
+    particleTree partt;
+    if (useExtParticleTree) {
+        if (particleFileName == eventFileName.c_str()) {
+            particleFile = eventFile;
+        }
+        else {
+            particleFile = TFile::Open(particleFileName.c_str(),"READ");
+        }
+        treeParticles = (TTree*)particleFile->Get(particleTreeName.c_str());
+        partt.setupTreeForReading(treeParticles);
+    }
 
     std::cout << "initialize the Pythia class to obtain info that is not accessible through event TTree." << std::endl;
     std::cout << "##### Pythia initialize #####" << std::endl;
     Pythia8::Pythia pythia;
     std::cout << "##### Pythia initialize - END #####" << std::endl;
+
+    Pythia8::Event eventExternal;
+    if (useExtParticleTree) {
+        eventExternal.init("Event record for external particles", &pythia.particleData);
+        std::cout << "##### Event record for external particles initialized #####" << std::endl;
+    }
 
     TFile* outputFile = new TFile(outputFileName.c_str(), "RECREATE");
 
@@ -121,6 +152,13 @@ void qcdAna(std::string eventFileName, std::string jetFileName, std::string jetT
         kQCD_qqbar2gg = 115,
         kQCD_qqbar2qqbarNew = 116,
         kN_PROCESSTYPES
+    };
+
+    enum SIGBKGTYPES {
+        kCORR_SIG,
+        kCORR_BKG,
+        kCORR_RAW,
+        kN_SIGBKGTYPES
     };
 
     enum EWBOSONTYPES {
@@ -514,6 +552,9 @@ void qcdAna(std::string eventFileName, std::string jetFileName, std::string jetT
         treeEvtParton->GetEntry(iEvent);
         treeEvtInfo->GetEntry(iEvent);
         jetTree->GetEntry(iEvent);
+        if (useExtParticleTree) {
+            treeParticles->GetEntry(iEvent);
+        }
 
         if (processType == kQCD_all) {
 
@@ -814,6 +855,36 @@ void qcdAna(std::string eventFileName, std::string jetFileName, std::string jetT
             }
         }
 
+        // prepare particle trees
+        if (useExtParticleTree) {
+            eventExternal.clear();
+
+            if (sigBkgType == SIGBKGTYPES::kCORR_RAW) {
+                copyEvent(*eventAll, eventExternal);
+            }
+
+            for (int i = 0; i < partt.n; ++i) {
+
+                TLorentzVector lVec;
+                lVec.SetPtEtaPhiM((*partt.pt)[i], (*partt.eta)[i], (*partt.phi)[i], 0);
+                Pythia8::Vec4 part4Vec(lVec.Px(), lVec.Py(), lVec.Pz(), lVec.E());
+
+                // assume charged particle is pi+, neutral is K0
+                int partID = (std::fabs((*partt.chg)[i]) > 0) ? 211 : 311;
+
+                /*
+                Particle(int idIn, int statusIn, int mother1In, int mother2In,
+                  int daughter1In, int daughter2In, int colIn, int acolIn,
+                  Vec4 pIn, double mIn = 0., double scaleIn = 0., double polIn = 9.)
+                */
+                Pythia8::Particle partTmp(partID, 123456, -1, -1,
+                        -1, -1, -1, -1,
+                        part4Vec);
+
+                eventExternal.append(partTmp);
+            }
+        }
+
         int njetaway = 0;
         for (int i = 0; i < fjt.nJet; ++i) {
 
@@ -936,9 +1007,14 @@ void qcdAna(std::string eventFileName, std::string jetFileName, std::string jetT
             vecJet.SetPtEtaPhiM(jetpt, jeteta, jetphi, 0);
             for (int iPartType = 0; iPartType < kN_PARTICLETYPES; ++iPartType) {
 
-                eventParticle = eventAll;
-                if (iPartType == PARTICLETYPES::kParton || iPartType == PARTICLETYPES::kPartonHard) {
-                    eventParticle = eventParton;
+                if (useExtParticleTree) {
+                    eventParticle = &eventExternal;
+                }
+                else {
+                    eventParticle = eventAll;
+                    if (iPartType == PARTICLETYPES::kParton || iPartType == PARTICLETYPES::kPartonHard) {
+                        eventParticle = eventParton;
+                    }
                 }
 
                 std::vector<std::pair<double, int>> pairs_pt_index_ff;
@@ -964,6 +1040,7 @@ void qcdAna(std::string eventFileName, std::string jetFileName, std::string jetT
                     double partPt = (*eventParticle)[j].pT();
                     double partEta = (*eventParticle)[j].eta();
                     double partPhi = (*eventParticle)[j].phi();
+                    int partID = (*eventParticle)[j].id();
 
                     double dR_jet_particle = getDR(jeteta, jetphi, partEta, partPhi);
                     for (int jQG = 0; jQG < nTypesQG; ++jQG) {
@@ -1005,7 +1082,7 @@ void qcdAna(std::string eventFileName, std::string jetFileName, std::string jetT
                             h_ff[k][iPartType][iFF]->Fill(xi);
 
                             if (iFF == 0) {
-                                h_partID[k][iPartType]->Fill(TMath::Abs((*eventParticle)[j].id()));
+                                h_partID[k][iPartType]->Fill(TMath::Abs(partID));
                             }
                         }
                     }
@@ -1241,6 +1318,10 @@ void qcdAna(std::string eventFileName, std::string jetFileName, std::string jetT
     eventFile->Close();
     std::cout << "Closing the jet file" << std::endl;
     jetFile->Close();
+    if (useExtParticleTree) {
+        std::cout << "Closing the particle file" << std::endl;
+        particleFile->Close();
+    }
 
     // Save histogram on file and close file.
     std::cout << "saving histograms" << std::endl;
@@ -1385,16 +1466,28 @@ void qcdAna(std::string eventFileName, std::string jetFileName, std::string jetT
 
 int main(int argc, char* argv[]) {
 
-    if (argc == 8) {
-        qcdAna(argv[1], argv[2], argv[3], argv[4], std::atoi(argv[5]), std::atoi(argv[6]), std::atoi(argv[7]));
+    if (argc == 11) {
+        qcdAna(argv[1], argv[2], argv[3], argv[4], argv[5], argv[6], std::atoi(argv[7]), std::atoi(argv[8]), std::atoi(argv[9]), std::atoi(argv[10]));
+        return 0;
+    }
+    else if (argc == 10) {
+        qcdAna(argv[1], argv[2], argv[3], argv[4], argv[5], argv[6], std::atoi(argv[7]), std::atoi(argv[8]), std::atoi(argv[9]));
+        return 0;
+    }
+    else if (argc == 9) {
+        qcdAna(argv[1], argv[2], argv[3], argv[4], argv[5], argv[6], std::atoi(argv[7]), std::atoi(argv[8]));
+        return 0;
+    }
+    else if (argc == 8) {
+        qcdAna(argv[1], argv[2], argv[3], argv[4], argv[5], argv[6], std::atoi(argv[7]));
         return 0;
     }
     else if (argc == 7) {
-        qcdAna(argv[1], argv[2], argv[3], argv[4], std::atoi(argv[5]), std::atoi(argv[6]));
+        qcdAna(argv[1], argv[2], argv[3], argv[4], argv[5], argv[6]);
         return 0;
     }
     else if (argc == 6) {
-        qcdAna(argv[1], argv[2], argv[3], argv[4], std::atoi(argv[5]));
+        qcdAna(argv[1], argv[2], argv[3], argv[4], argv[5]);
         return 0;
     }
     else if (argc == 5) {
@@ -1415,7 +1508,9 @@ int main(int argc, char* argv[]) {
     }
     else {
         std::cout << "Usage : \n" <<
-                "./qcdAna.exe <eventFileName> <jetFileName> <jetTreeName> <outputFileName> <anaType> <processType> <ewBosonType>"
+                "./qcdAna.exe <eventFileName> <jetFileName> <jetTreeName> "
+                "<particleFileName> <particleTreeName> "
+                "<outputFileName> <anaType> <processType> <sigBkgType> <ewBosonType>"
                 << std::endl;
         return 1;
     }

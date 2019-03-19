@@ -7,13 +7,16 @@ progPath="./analysis/qcdAna.exe"
 
 ## prompt photon
 fileSuffix="promptPhoton"
-defaultBosonType=1
-defaultBosonTypeStr="outgoingHardPhoton"
+defaultBosonType=3
+defaultBosonTypeStr="outgoingMaxPhotonIso" # "outgoingHardPhoton"
 defaultAnaType=0
 defaultProcessType=0
 
 eventFile="./out/events/photon/pythiaGenerateAndWrite_"$fileSuffix".root"
 jetFile="./out/jets/photon/pythiaClusterJets_"$fileSuffix".root"
+particleFile="NULL"
+particleTree="NULL"
+sigBkgType=0
 
 jetTrees=(
 "ak3jets"
@@ -23,9 +26,11 @@ jetTrees=(
 ##
 "ak3jetsParton"
 "ak3jetsSmeared"
+"ak3jetsWTA"
+"ak4jets"
 "ak4jetsParton"
 "ak4jetsSmeared"
-"ak4jets"
+"ak4jetsWTA"
 "ak5jets"
 "ak6jets"
 "ak7jets"
@@ -41,9 +46,11 @@ outputFiles=(
 ##
 "./out/analysis/photon/qcdAna_"$fileSuffix"_ak3jetsParton_"$defaultBosonTypeStr".root"
 "./out/analysis/photon/qcdAna_"$fileSuffix"_ak3jetsSmeared_"$defaultBosonTypeStr".root"
+"./out/analysis/photon/qcdAna_"$fileSuffix"_ak3jetsWTA_"$defaultBosonTypeStr".root"
+"./out/analysis/photon/qcdAna_"$fileSuffix"_ak4jets_"$defaultBosonTypeStr".root"
 "./out/analysis/photon/qcdAna_"$fileSuffix"_ak4jetsParton_"$defaultBosonTypeStr".root"
 "./out/analysis/photon/qcdAna_"$fileSuffix"_ak4jetsSmeared_"$defaultBosonTypeStr".root"
-"./out/analysis/photon/qcdAna_"$fileSuffix"_ak4jets_"$defaultBosonTypeStr".root"
+"./out/analysis/photon/qcdAna_"$fileSuffix"_ak4jetsWTA_"$defaultBosonTypeStr".root"
 "./out/analysis/photon/qcdAna_"$fileSuffix"_ak5jets_"$defaultBosonTypeStr".root"
 "./out/analysis/photon/qcdAna_"$fileSuffix"_ak6jets_"$defaultBosonTypeStr".root"
 "./out/analysis/photon/qcdAna_"$fileSuffix"_ak7jets_"$defaultBosonTypeStr".root"
@@ -56,6 +63,8 @@ $defaultAnaType
 $defaultAnaType
 $defaultAnaType
 ##
+$defaultAnaType
+$defaultAnaType
 $defaultAnaType
 $defaultAnaType
 $defaultAnaType
@@ -83,6 +92,8 @@ $defaultProcessType
 $defaultProcessType
 $defaultProcessType
 $defaultProcessType
+$defaultProcessType
+$defaultProcessType
 );
 
 ewBosonTypes=(
@@ -91,6 +102,8 @@ ewBosonTypes=(
 2
 3
 ##
+$defaultBosonType
+$defaultBosonType
 $defaultBosonType
 $defaultBosonType
 $defaultBosonType
@@ -115,8 +128,8 @@ do
     outDir=$(dirname "${outputFile}")
     mkdir -p $outDir
 
-    $runCmd $progPath $eventFile $jetFile $jetTree $outputFile $analysisType $processType $ewBosonType &> $outputFileLOG &
-    echo "$runCmd $progPath $eventFile $jetFile $jetTree $outputFile $analysisType $processType $ewBosonType &> $outputFileLOG &"
+    $runCmd $progPath $eventFile $jetFile $jetTree $particleFile $particleTree $outputFile $analysisType $processType $sigBkgType $ewBosonType &> $outputFileLOG &
+    echo "$runCmd $progPath $eventFile $jetFile $jetTree $particleFile $particleTree $outputFile $analysisType $processType $sigBkgType $ewBosonType &> $outputFileLOG &"
     wait
 done
 

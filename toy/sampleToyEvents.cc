@@ -23,10 +23,12 @@
  * code to sample toy AA events (in particular Hydjet) using input centrality, multiplicity, pt, eta distibutions
  */
 void sampleToyEvents(std::string inputFileName = "hydjetSpectra.root", std::string outputFileName = "sampleHydjet_out.root",
-                       int nEvents = 10, int minCent = 0, int maxCent = 100, double minPt = 0.5);
+                       int nEvents = 10, int minCent = 0, int maxCent = 100, double minPt = 0.5,
+                       int rndSeedHiBin = -1, int rndSeedParticle = -1, std::string eventInfoTreeName = "", std::string partTreeName = "");
 
 void sampleToyEvents(std::string inputFileName, std::string outputFileName,
-                       int nEvents, int minCent, int maxCent, double minPt)
+                       int nEvents, int minCent, int maxCent, double minPt,
+                       int rndSeedHiBin, int rndSeedParticle, std::string eventInfoTreeName, std::string partTreeName)
 {
     std::cout << "running sampleToyEvents()" << std::endl;
 
@@ -37,6 +39,10 @@ void sampleToyEvents(std::string inputFileName, std::string outputFileName,
     std::cout << "minCent = " << minCent << std::endl;
     std::cout << "maxCent = " << maxCent << std::endl;
     std::cout << "minPt = " << minPt << std::endl;
+    std::cout << "rndSeedHiBin = " << rndSeedHiBin << std::endl;
+    std::cout << "rndSeedParticle = " << rndSeedParticle << std::endl;
+    std::cout << "eventInfoTreeName = " << eventInfoTreeName.c_str() << std::endl;
+    std::cout << "partTreeName = " << partTreeName.c_str() << std::endl;
     std::cout << "##### Parameters - END #####" << std::endl;
 
     // Set up the ROOT TFile and TTree.
@@ -101,16 +107,30 @@ void sampleToyEvents(std::string inputFileName, std::string outputFileName,
 
     TFile* outputFile = new TFile(outputFileName.c_str(), "UPDATE");
 
-    TTree* eventInfoTree = new TTree("evtInfoHydjet", Form("Info about Hydjet events with Cent:%d-%d", minCent, maxCent));
+    if (eventInfoTreeName == "NULL") {
+        eventInfoTreeName = "evtInfoHydjet";
+    }
+    TTree* eventInfoTree = new TTree(eventInfoTreeName.c_str(), Form("Info about Hydjet events with Cent:%d-%d", minCent, maxCent));
     int hiBin;
     eventInfoTree->Branch("hiBin", &hiBin);
 
-    TTree* partTree = new TTree("evtHydjet", Form("Hydjet particles from Cent:%d-%d", minCent, maxCent));
+    if (partTreeName == "NULL") {
+        partTreeName = "evtHydjet";
+    }
+    TTree* partTree = new TTree(partTreeName.c_str(), Form("Hydjet particles from Cent:%d-%d", minCent, maxCent));
     particleTree partt;
     partt.branchTree(partTree);
 
-    TRandom3 rand1(12345);
-    TRandom3 rand2(6789);
+    if (rndSeedHiBin < 0) {
+        rndSeedHiBin = 12345;
+    }
+    TRandom3 rand1(rndSeedHiBin);
+
+    if (rndSeedParticle < 0) {
+        rndSeedParticle = 6789;
+    }
+    TRandom3 rand2(rndSeedParticle);
+    gRandom->SetSeed(rndSeedParticle);
     int eventsAnalyzed = 0;
     std::cout << "nEvents = " << nEvents << std::endl;
     std::cout << "Loop STARTED" << std::endl;
@@ -147,7 +167,7 @@ void sampleToyEvents(std::string inputFileName, std::string outputFileName,
 
                 if (pt < minPt) continue;
 
-                double phi = rand1.Uniform(-1*TMath::Pi(), TMath::Pi());
+                double phi = rand2.Uniform(-1*TMath::Pi(), TMath::Pi());
 
                 partt.pt->push_back(pt);
                 partt.eta->push_back(eta);
@@ -179,7 +199,27 @@ void sampleToyEvents(std::string inputFileName, std::string outputFileName,
 
 int main(int argc, char* argv[]) {
 
-    if (argc == 7) {
+    if (argc == 11) {
+        sampleToyEvents(argv[1], argv[2], std::atoi(argv[3]), std::atoi(argv[4]), std::atoi(argv[5]), std::atof(argv[6]),
+                std::atoi(argv[7]), std::atoi(argv[8]), argv[9], argv[10]);
+        return 0;
+    }
+    else if (argc == 10) {
+        sampleToyEvents(argv[1], argv[2], std::atoi(argv[3]), std::atoi(argv[4]), std::atoi(argv[5]), std::atof(argv[6]),
+                std::atoi(argv[7]), std::atoi(argv[8]), argv[9]);
+        return 0;
+    }
+    else if (argc == 9) {
+        sampleToyEvents(argv[1], argv[2], std::atoi(argv[3]), std::atoi(argv[4]), std::atoi(argv[5]), std::atof(argv[6]),
+                std::atoi(argv[7]), std::atoi(argv[8]));
+        return 0;
+    }
+    else if (argc == 8) {
+        sampleToyEvents(argv[1], argv[2], std::atoi(argv[3]), std::atoi(argv[4]), std::atoi(argv[5]), std::atof(argv[6]),
+                std::atoi(argv[7]));
+        return 0;
+    }
+    else if (argc == 7) {
         sampleToyEvents(argv[1], argv[2], std::atoi(argv[3]), std::atoi(argv[4]), std::atoi(argv[5]), std::atof(argv[6]));
         return 0;
     }

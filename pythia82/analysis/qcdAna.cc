@@ -194,9 +194,9 @@ void qcdAna(std::string eventFileName,
     double axis_Xjv_max = 2;
 
     // jet histograms
-    int nBinsX_jetPt = 36;
-    double axis_jetPt_min = 30;
-    double axis_jetPt_max = 180+axis_jetPt_min;
+    int nBinsX_jetPt = 40;
+    double axis_jetPt_min = 0;
+    double axis_jetPt_max = 200+axis_jetPt_min;
 
     int nBinsX_ratio_pt = 50;
     double axis_ratio_pt_min = 0;
@@ -514,7 +514,7 @@ void qcdAna(std::string eventFileName,
     double maxVEta = 1.44;
     double minDphijV = 7 * TMath::Pi() / 8;
     double minDR2jv = 0.8 * 0.8;
-    double minVJetPt = axis_jetPt_min;
+    double minVJetPt = 30;
     double maxJetEta = 1.6;
 
     double minLeptonPt = 10;
@@ -523,7 +523,7 @@ void qcdAna(std::string eventFileName,
     // dijet cuts
     double minDphiDijet = 2 * TMath::Pi() / 3;
     double minLeadJetPt = 50;
-    double minSubleadJetPt = axis_jetPt_min;
+    double minSubleadJetPt = 30;
 
     // particle cuts
     double minPartPt = 1;
@@ -1354,7 +1354,7 @@ void qcdAna(std::string eventFileName,
             normJet = nV;
 
             h_detajV[i]->Scale(1./normJet, "width");
-            h_dphijV[i]->Scale(1./normJet, "width");
+            h_dphijV[i]->Scale(1./h_dphijV[i]->Integral(), "width");
             h_Xj[i]->Scale(1./normJet, "width");
             h_NjV[i]->Scale(1./normJet, "width");
         }

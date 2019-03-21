@@ -14,6 +14,9 @@ defaultProcessType=0
 
 eventFile="./out/events/qcd/pythiaGenerateAndWrite_"$fileSuffix".root"
 jetFile="./out/jets/qcd/pythiaClusterJets_"$fileSuffix".root"
+particleFile="NULL"
+particleTree="NULL"
+sigBkgType=0
 
 jetTrees=(
 "ak3jets"
@@ -105,8 +108,8 @@ do
     outDir=$(dirname "${outputFile}")
     mkdir -p $outDir
 
-    $runCmd $progPath $eventFile $jetFile $jetTree $outputFile $analysisType $processType $ewBosonType &> $outputFileLOG &
-    echo "$runCmd $progPath $eventFile $jetFile $jetTree $outputFile $analysisType $processType $ewBosonType &> $outputFileLOG &"
+    $runCmd $progPath $eventFile $jetFile $jetTree $particleFile $particleTree $outputFile $analysisType $processType $sigBkgType $ewBosonType &> $outputFileLOG &
+    echo "$runCmd $progPath $eventFile $jetFile $jetTree $particleFile $particleTree $outputFile $analysisType $processType $sigBkgType $ewBosonType &> $outputFileLOG &"
     wait
 done
 

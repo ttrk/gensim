@@ -1502,7 +1502,7 @@ int main(int argc, char* argv[]) {
     }
     else {
         std::cout << "Usage : \n" <<
-                "./plotSameAll.exe <eventFileName> <jetFileName> <jetTreeName> <outputFileName> [options]"
+                "./qcdAna.exe <eventFileName> <jetFileName> <jetTreeName> <outputFileName> [options]"
                 << std::endl;
         std::cout << "Options are" << std::endl;
         std::cout << "--particleFile=<file containing particle tree to be used>" << std::endl;

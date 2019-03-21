@@ -6,7 +6,7 @@ if [ ! -z ${MYRUN} ]; then
   runCmd=${MYRUN}
 fi
 
-progPath="./eventInfoAna.exe"
+progPath="./analysis/eventInfoAna.exe"
 
 #fileSuffix="promptPhoton"
 fileSuffix="promptPhoton_off_MPI_ISR_FSR_BR"

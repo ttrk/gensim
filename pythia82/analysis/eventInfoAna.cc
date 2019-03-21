@@ -18,12 +18,12 @@
 #include "TApplication.h"
 
 // dictionary to read Pythia8::Event
-#include "dictionary/dict4RootDct.cc"
-#include "utils/pythiaUtil.h"
-#include "../utilities/physicsUtil.h"
-#include "../utilities/th1Util.h"
-#include "../utilities/systemUtil.h"
-#include "../utilities/ArgumentParser.h"
+#include "../dictionary/dict4RootDct.cc"
+#include "../utils/pythiaUtil.h"
+#include "../../utilities/physicsUtil.h"
+#include "../../utilities/th1Util.h"
+#include "../../utilities/systemUtil.h"
+#include "../../utilities/ArgumentParser.h"
 
 #include <iostream>
 #include <iomanip>
@@ -173,7 +173,7 @@ void eventInfoAna(std::string inputFileName, std::string outputFileName)
 
         eventsAnalyzed++;
 
-        h_q->Fill(info->QFac());
+        //h_q->Fill(info->QFac());
         h2_q_x1overx2->Fill(info->QFac(), info->x1() / info->x2());
 
         h_nMPI->Fill(info->nMPI());

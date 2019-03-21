@@ -31,11 +31,14 @@
 #include "../../utilities/particleTree.h"
 #include "../../utilities/physicsUtil.h"
 #include "../../utilities/th1Util.h"
+#include "../../utilities/ArgumentParser.h"
 
 #include <iostream>
 #include <iomanip>
 #include <string>
 #include <vector>
+
+std::vector<std::string> argOptions;
 
 void qcdAna(std::string eventFileName = "events.root",
             std::string jetFileName = "jets.root", std::string jetTreeName = "ak3jets",
@@ -63,6 +66,25 @@ void qcdAna(std::string eventFileName,
     std::cout << "sigBkgType = " << sigBkgType << std::endl;
     std::cout << "ewBosonType = " << ewBosonType << std::endl;
     std::cout << "##### Parameters - END #####" << std::endl;
+
+    double minVPt = (ArgumentParser::ParseOptionInputSingle("--minVPt", argOptions).size() > 0) ?
+            std::atof(ArgumentParser::ParseOptionInputSingle("--minVPt", argOptions).c_str()) : 60;
+    double maxVEta = (ArgumentParser::ParseOptionInputSingle("--maxVEta", argOptions).size() > 0) ?
+            std::atof(ArgumentParser::ParseOptionInputSingle("--maxVEta", argOptions).c_str()) : 1.44;
+    double minVJetPt = (ArgumentParser::ParseOptionInputSingle("--minVJetPt", argOptions).size() > 0) ?
+            std::atof(ArgumentParser::ParseOptionInputSingle("--minVJetPt", argOptions).c_str()) : 30;
+    double maxJetEta = (ArgumentParser::ParseOptionInputSingle("--maxJetEta", argOptions).size() > 0) ?
+            std::atof(ArgumentParser::ParseOptionInputSingle("--maxJetEta", argOptions).c_str()) : 1.6;
+    double minPartPt = (ArgumentParser::ParseOptionInputSingle("--minPartPt", argOptions).size() > 0) ?
+            std::atof(ArgumentParser::ParseOptionInputSingle("--minPartPt", argOptions).c_str()) : 1;
+
+    std::cout << "##### Arguments #####" << std::endl;
+    std::cout << "minVPt = " << minVPt << std::endl;
+    std::cout << "maxVEta = " << maxVEta << std::endl;
+    std::cout << "minVJetPt = " << minVJetPt << std::endl;
+    std::cout << "maxJetEta = " << maxJetEta << std::endl;
+    std::cout << "minPartPt = " << minPartPt << std::endl;
+    std::cout << "##### Arguments - END #####" << std::endl;
 
     // Set up the ROOT TFile and TTree.
     TFile* eventFile = TFile::Open(eventFileName.c_str(),"READ");
@@ -510,12 +532,8 @@ void qcdAna(std::string eventFileName,
     }
 
     // vJet cuts
-    double minVPt = 60;
-    double maxVEta = 1.44;
     double minDphijV = 7 * TMath::Pi() / 8;
     double minDR2jv = 0.8 * 0.8;
-    double minVJetPt = 30;
-    double maxJetEta = 1.6;
 
     double minLeptonPt = 10;
     double maxLeptonEta = 2.4;
@@ -526,7 +544,6 @@ void qcdAna(std::string eventFileName,
     double minSubleadJetPt = 30;
 
     // particle cuts
-    double minPartPt = 1;
     double maxPartEta = 2.4;
     double max_dR_jet_particle = jetR;
     double max_dR2_jet_particle = max_dR_jet_particle * max_dR_jet_particle;
@@ -1466,7 +1483,12 @@ void qcdAna(std::string eventFileName,
 
 int main(int argc, char* argv[]) {
 
-    if (argc == 11) {
+    std::vector<std::string> argStr = ArgumentParser::ParseParameters(argc, argv);
+    int nArgStr = argStr.size();
+
+    argOptions = ArgumentParser::ParseOptions(argc, argv);
+
+    if (argc >= 11) {
         qcdAna(argv[1], argv[2], argv[3], argv[4], argv[5], argv[6], std::atoi(argv[7]), std::atoi(argv[8]), std::atoi(argv[9]), std::atoi(argv[10]));
         return 0;
     }

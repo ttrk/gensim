@@ -40,32 +40,32 @@
 
 std::vector<std::string> argOptions;
 
-void qcdAna(std::string eventFileName = "events.root",
-            std::string jetFileName = "jets.root", std::string jetTreeName = "ak3jets",
-            std::string particleFileName = "particles.root", std::string particleTreeName = "evtHydjet",
-            std::string outputFileName = "qcdAna_out.root",
-            int anaType = 0, int processType = 0, int sigBkgType = 0, int ewBosonType = 1);
+void qcdAna(std::string eventFileName, std::string jetFileName, std::string jetTreeName, std::string outputFileName = "qcdAna_out.root");
 
-void qcdAna(std::string eventFileName,
-            std::string jetFileName, std::string jetTreeName,
-            std::string particleFileName, std::string particleTreeName,
-            std::string outputFileName,
-            int anaType, int processType, int sigBkgType, int ewBosonType)
+void qcdAna(std::string eventFileName, std::string jetFileName, std::string jetTreeName, std::string outputFileName)
 {
     std::cout << "running qcdAna()" << std::endl;
 
     std::cout << "##### Parameters #####" << std::endl;
-    std::cout << "eventFileName = " << eventFileName.c_str() << std::endl;
-    std::cout << "jetFileName = " << jetFileName.c_str() << std::endl;
-    std::cout << "jetTreeName = " << jetTreeName.c_str() << std::endl;
-    std::cout << "particleFileName = " << particleFileName.c_str() << std::endl;
-    std::cout << "particleTreeName = " << particleTreeName.c_str() << std::endl;
-    std::cout << "outputFileName = " << outputFileName.c_str() << std::endl;
-    std::cout << "anaType = " << anaType << std::endl;
-    std::cout << "processType = " << processType << std::endl;
-    std::cout << "sigBkgType = " << sigBkgType << std::endl;
-    std::cout << "ewBosonType = " << ewBosonType << std::endl;
+    std::cout << "eventFile = " << eventFileName.c_str() << std::endl;
+    std::cout << "jetFile = " << jetFileName.c_str() << std::endl;
+    std::cout << "jetTree = " << jetTreeName.c_str() << std::endl;
+    std::cout << "outputFile = " << outputFileName.c_str() << std::endl;
     std::cout << "##### Parameters - END #####" << std::endl;
+
+    std::string particleFileName = (ArgumentParser::ParseOptionInputSingle("--particleFile", argOptions).size() > 0) ?
+            ArgumentParser::ParseOptionInputSingle("--particleFile", argOptions).c_str() : "NULL";
+    std::string particleTreeName = (ArgumentParser::ParseOptionInputSingle("--particleTree", argOptions).size() > 0) ?
+            ArgumentParser::ParseOptionInputSingle("--particleTree", argOptions).c_str() : "NULL";
+
+    int anaType = (ArgumentParser::ParseOptionInputSingle("--anaType", argOptions).size() > 0) ?
+            std::atoi(ArgumentParser::ParseOptionInputSingle("--anaType", argOptions).c_str()) : 0;
+    int processType = (ArgumentParser::ParseOptionInputSingle("--processType", argOptions).size() > 0) ?
+            std::atoi(ArgumentParser::ParseOptionInputSingle("--processType", argOptions).c_str()) : 0;
+    int sigBkgType = (ArgumentParser::ParseOptionInputSingle("--sigBkgType", argOptions).size() > 0) ?
+            std::atoi(ArgumentParser::ParseOptionInputSingle("--sigBkgType", argOptions).c_str()) : 0;
+    int ewBosonType = (ArgumentParser::ParseOptionInputSingle("--ewBosonType", argOptions).size() > 0) ?
+                std::atoi(ArgumentParser::ParseOptionInputSingle("--ewBosonType", argOptions).c_str()) : 3;
 
     double minVPt = (ArgumentParser::ParseOptionInputSingle("--minVPt", argOptions).size() > 0) ?
             std::atof(ArgumentParser::ParseOptionInputSingle("--minVPt", argOptions).c_str()) : 60;
@@ -78,13 +78,19 @@ void qcdAna(std::string eventFileName,
     double minPartPt = (ArgumentParser::ParseOptionInputSingle("--minPartPt", argOptions).size() > 0) ?
             std::atof(ArgumentParser::ParseOptionInputSingle("--minPartPt", argOptions).c_str()) : 1;
 
-    std::cout << "##### Arguments #####" << std::endl;
+    std::cout << "##### Optional Arguments #####" << std::endl;
+    std::cout << "particleFile = " << particleFileName.c_str() << std::endl;
+    std::cout << "particleTree = " << particleTreeName.c_str() << std::endl;
+    std::cout << "anaType = " << anaType << std::endl;
+    std::cout << "processType = " << processType << std::endl;
+    std::cout << "sigBkgType = " << sigBkgType << std::endl;
+    std::cout << "ewBosonType = " << ewBosonType << std::endl;
     std::cout << "minVPt = " << minVPt << std::endl;
     std::cout << "maxVEta = " << maxVEta << std::endl;
     std::cout << "minVJetPt = " << minVJetPt << std::endl;
     std::cout << "maxJetEta = " << maxJetEta << std::endl;
     std::cout << "minPartPt = " << minPartPt << std::endl;
-    std::cout << "##### Arguments - END #####" << std::endl;
+    std::cout << "##### Optional Arguments - END #####" << std::endl;
 
     // Set up the ROOT TFile and TTree.
     TFile* eventFile = TFile::Open(eventFileName.c_str(),"READ");
@@ -1488,52 +1494,29 @@ int main(int argc, char* argv[]) {
 
     argOptions = ArgumentParser::ParseOptions(argc, argv);
 
-    if (argc >= 11) {
-        qcdAna(argv[1], argv[2], argv[3], argv[4], argv[5], argv[6], std::atoi(argv[7]), std::atoi(argv[8]), std::atoi(argv[9]), std::atoi(argv[10]));
-        return 0;
+    if (nArgStr == 5) {
+        qcdAna(argStr.at(1), argStr.at(2), argStr.at(3), argStr.at(4));
     }
-    else if (argc == 10) {
-        qcdAna(argv[1], argv[2], argv[3], argv[4], argv[5], argv[6], std::atoi(argv[7]), std::atoi(argv[8]), std::atoi(argv[9]));
-        return 0;
-    }
-    else if (argc == 9) {
-        qcdAna(argv[1], argv[2], argv[3], argv[4], argv[5], argv[6], std::atoi(argv[7]), std::atoi(argv[8]));
-        return 0;
-    }
-    else if (argc == 8) {
-        qcdAna(argv[1], argv[2], argv[3], argv[4], argv[5], argv[6], std::atoi(argv[7]));
-        return 0;
-    }
-    else if (argc == 7) {
-        qcdAna(argv[1], argv[2], argv[3], argv[4], argv[5], argv[6]);
-        return 0;
-    }
-    else if (argc == 6) {
-        qcdAna(argv[1], argv[2], argv[3], argv[4], argv[5]);
-        return 0;
-    }
-    else if (argc == 5) {
-        qcdAna(argv[1], argv[2], argv[3], argv[4]);
-        return 0;
-    }
-    else if (argc == 4) {
-        qcdAna(argv[1], argv[2], argv[3]);
-        return 0;
-    }
-    else if (argc == 3) {
-        qcdAna(argv[1], argv[2]);
-        return 0;
-    }
-    else if (argc == 2) {
-        qcdAna(argv[1]);
-        return 0;
+    else if (nArgStr == 4) {
+        qcdAna(argStr.at(1), argStr.at(2), argStr.at(3));
     }
     else {
         std::cout << "Usage : \n" <<
-                "./qcdAna.exe <eventFileName> <jetFileName> <jetTreeName> "
-                "<particleFileName> <particleTreeName> "
-                "<outputFileName> <anaType> <processType> <sigBkgType> <ewBosonType>"
+                "./plotSameAll.exe <eventFileName> <jetFileName> <jetTreeName> <outputFileName> [options]"
                 << std::endl;
+        std::cout << "Options are" << std::endl;
+        std::cout << "--particleFile=<file containing particle tree to be used>" << std::endl;
+        std::cout << "--particleTree=<path of particle tree in file>" << std::endl;
+        std::cout << "--anaType=<code for analysis type to run>" << std::endl;
+        std::cout << "--processType=<code for process type to analyze>" << std::endl;
+        std::cout << "--sigBkgType=<code whether to analyze sig/bkg/raw particles>" << std::endl;
+        std::cout << "--ewBosonType=<code for EW boson type to choose>" << std::endl;
+        std::cout << "--minVPt=<minimum V-boson pT>" << std::endl;
+        std::cout << "--maxVEta=<maximum V-boson eta>" << std::endl;
+        std::cout << "--minVJetPt=<maximum jet pT in V+jet analysis>" << std::endl;
+        std::cout << "--maxJetEta=<maximum jet eta>" << std::endl;
+        std::cout << "--minPartPt=<minimum particle pT>" << std::endl;
         return 1;
     }
+    return 0;
 }

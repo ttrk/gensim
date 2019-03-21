@@ -113,8 +113,8 @@ do
     outDir=$(dirname "${outputFile}")
     mkdir -p $outDir
 
-    $runCmd $progPath $eventFile $jetFile $jetTree $particleFile $particleTree $outputFile $analysisType $processType $sigBkgType $ewBosonType &> $outputFileLOG &
-    echo "$runCmd $progPath $eventFile $jetFile $jetTree $particleFile $particleTree $outputFile $analysisType $processType $sigBkgType $ewBosonType &> $outputFileLOG &"
+    $runCmd $progPath $eventFile $jetFile $jetTree $outputFile --particleFile=${particleFile} --particleTree=${particleTree} --analysisType=${analysisType} --processType=${processType} --sigBkgType=${sigBkgType} --ewBosonType=${ewBosonType} &> $outputFileLOG &
+    echo "$runCmd $progPath $eventFile $jetFile $jetTree $outputFile --particleFile=${particleFile} --particleTree=${particleTree} --analysisType=${analysisType} --processType=${processType} --sigBkgType=${sigBkgType} --ewBosonType=${ewBosonType} &> $outputFileLOG &"
     wait
 done
 

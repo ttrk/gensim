@@ -374,12 +374,20 @@ void hardScatteringAna(std::string inputFileName, std::string outputFileName, st
 
     // tag histograms split for parton types
     TH1D* h_p1Pt_p2Frac[kN_PARTONTYPES2];
+    TH1D* h_p1Eta_p2Frac[kN_PARTONTYPES2];
+    TH1D* h_p1Y_p2Frac[kN_PARTONTYPES2];
 
     for (int i = 0; i < kN_PARTONTYPES2; ++i) {
 
         h_p1Pt_p2Frac[i] = new TH1D(Form("h_p1Pt_p2Frac_%s", partonTypes2Str[i].c_str()),
                 Form(";%s;", strP1Pt.c_str()),
                 200, 0, 1000);
+        h_p1Eta_p2Frac[i] = new TH1D(Form("h_p1Eta_p2Frac_%s", partonTypes2Str[i].c_str()),
+                Form(";|%s|;", strP1Eta.c_str()),
+                50, 0, 5);
+        h_p1Y_p2Frac[i] = new TH1D(Form("h_p1Y_p2Frac_%s", partonTypes2Str[i].c_str()),
+                Form(";|%s|;", strP1Y.c_str()),
+                50, 0, 5);
     }
 
     int eventsAnalyzed = 0;
@@ -625,6 +633,8 @@ void hardScatteringAna(std::string inputFileName, std::string outputFileName, st
             else if (j == PARTONTYPES2::kbctQ && !((*event)[iProbe].idAbs() >= 4 && (*event)[iProbe].idAbs() <= 8))  continue;
 
             h_p1Pt_p2Frac[j]->Fill(p1Pt[iStatusTag]);
+            h_p1Eta_p2Frac[j]->Fill(TMath::Abs(p1Eta[iStatusTag]));
+            h_p1Y_p2Frac[j]->Fill(TMath::Abs(p1Y[iStatusTag]));
         }
 
         for (int i = 0; i < eventPartonSize; ++i) {
@@ -709,6 +719,8 @@ void hardScatteringAna(std::string inputFileName, std::string outputFileName, st
 
         if (i != PARTONTYPES2::kQG2) {
             h_p1Pt_p2Frac[i]->Divide(h_p1Pt_p2Frac[PARTONTYPES2::kQG2]);
+            h_p1Eta_p2Frac[i]->Divide(h_p1Eta_p2Frac[PARTONTYPES2::kQG2]);
+            h_p1Y_p2Frac[i]->Divide(h_p1Y_p2Frac[PARTONTYPES2::kQG2]);
         }
     }
 

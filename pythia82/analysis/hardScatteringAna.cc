@@ -91,9 +91,9 @@ void hardScatteringAna(std::string inputFileName, std::string outputFileName, st
     // tag depends on process.
     // for dijet, tag is the leading parton
     // for V+jet, tag is the EW boson
-    int nBinsX_pt = 36;
-    double axis_pt_min = 60;
-    double axis_pt_max = 180+axis_pt_min;
+    int nBinsX_pt = 40;
+    double axis_pt_min = 0;
+    double axis_pt_max = 200+axis_pt_min;
     int nBinsX_eta = 20;
     double axis_eta_min = 0;
     double axis_eta_max = 5;
@@ -408,42 +408,59 @@ void hardScatteringAna(std::string inputFileName, std::string outputFileName, st
         double ptTagOutgoing = -1;
         int nTagOutCand = 0;
 
+        if (tagCode == TAGS::kGamma) {
+            if ((isGamma((*event)[iH1])) && (isParton((*event)[iH2])))
+                iTag = iH1;
+            else if ((isGamma((*event)[iH2])) && (isParton((*event)[iH1])))
+                iTag = iH2;
+        }
+        else if (tagCode == TAGS::kZ0) {
+            if ((isZboson((*event)[iH1])) && (isParton((*event)[iH2])))
+                iTag = iH1;
+            else if ((isZboson((*event)[iH2])) && (isParton((*event)[iH1])))
+                iTag = iH2;
+        }
+
         int eventPartonSize = eventParton->size();
-        // find the leading outgoing daughter and thus identify the "tag"
-        for (int i = 0; i < eventPartonSize; ++i) {
+        if (iTag == -1) {
+            // find the leading outgoing daughter and thus identify the "tag"
+            for (int i = 0; i < eventPartonSize; ++i) {
 
-            // should not have a daughter in parton-level particles
-            if (hasDaughter((*eventParton)[i]))  continue;
+                // should not have a daughter in parton-level particles
+                if (hasDaughter((*eventParton)[i]))  continue;
 
-            int indexOrig = (*eventParton)[i].mother1();
-            // must be a daughter of the hard scattering particle
-            if (!isAncestor(event, indexOrig, iH1) && !isAncestor(event, indexOrig, iH2))  continue;
+                int indexOrig = (*eventParton)[i].mother1();
+                // must be a daughter of the hard scattering particle
+                if (!isAncestor(event, indexOrig, iH1) && !isAncestor(event, indexOrig, iH2))  continue;
 
-            // mother hard scatterer
-            int iHmother = (isAncestor(event, indexOrig, iH1)) ? iH1 : iH2;
+                // mother hard scatterer
+                int iHmother = (isAncestor(event, indexOrig, iH1)) ? iH1 : iH2;
 
-            bool passedTagCode = true;
-            if (tagCode == TAGS::kParton || tagCode == TAGS::kQuark || tagCode == TAGS::kGluon){
-                passedTagCode = isParton((*event)[iHmother]);
-            }
-            else if (tagCode == TAGS::kGamma){
-                passedTagCode = isGamma((*event)[iHmother]);
-            }
-            else if (tagCode == TAGS::kZ0){
-                passedTagCode = isZboson((*event)[iHmother]);
-            }
+                bool passedTagCode = true;
+                if (tagCode == TAGS::kParton || tagCode == TAGS::kQuark || tagCode == TAGS::kGluon){
+                    passedTagCode = isParton((*event)[iHmother]);
+                }
+                else if (tagCode == TAGS::kGamma){
+                    passedTagCode = isGamma((*event)[iHmother]);
+                }
+                else if (tagCode == TAGS::kZ0){
+                    passedTagCode = isZboson((*event)[iHmother]);
+                }
 
-            if (passedTagCode) {
-                nTagOutCand++;
+                if (passedTagCode) {
+                    nTagOutCand++;
 
-                if ((*event)[indexOrig].pT() > ptTagOutgoing) {
+                    if ((*event)[indexOrig].pT() > ptTagOutgoing) {
 
-                    ptTagOutgoing = (*event)[indexOrig].pT();
-                    iTagOutgoing = indexOrig;
-                    iTag = iHmother;
+                        ptTagOutgoing = (*event)[indexOrig].pT();
+                        iTagOutgoing = indexOrig;
+                        iTag = iHmother;
+                    }
                 }
             }
         }
+
+        if (iTag == -1) continue;
 
         /*
          * if tag is required to be quark or gluon, then the leading parton must be of that flavor

@@ -23,18 +23,28 @@
 #include "../utilities/physicsUtil.h"
 #include "../utilities/th1Util.h"
 #include "../utilities/systemUtil.h"
+#include "../utilities/ArgumentParser.h"
 
 #include <iostream>
 #include <iomanip>
 #include <string>
 #include <vector>
 
-void eventInfoAna(std::string inputFileName = "pythiaEvents.root", std::string outputFileName = "eventInfoAna_out.root",
-                  std::string processList = "", int qMin = 0, int qMax = -1);
+std::vector<std::string> argOptions;
 
-void eventInfoAna(std::string inputFileName, std::string outputFileName, std::string processList, int qMin, int qMax)
+void eventInfoAna(std::string inputFileName = "pythiaEvents.root", std::string outputFileName = "eventInfoAna_out.root");
+
+void eventInfoAna(std::string inputFileName, std::string outputFileName)
 {
     std::cout << "running eventInfoAna()" << std::endl;
+
+    std::cout << "##### Parameters #####" << std::endl;
+    std::cout << "inputFileName = " << inputFileName.c_str() << std::endl;
+    std::cout << "outputFileName = " << outputFileName.c_str() << std::endl;
+    std::cout << "##### Parameters - END #####" << std::endl;
+
+    std::string processList = (ArgumentParser::ParseOptionInputSingle("--processList", argOptions).size() > 0) ?
+            ArgumentParser::ParseOptionInputSingle("--processList", argOptions).c_str() : "-1";
 
     // comma separated list of process codes
     std::vector<int> processCodes;
@@ -42,14 +52,18 @@ void eventInfoAna(std::string inputFileName, std::string outputFileName, std::st
     for (int i = 0; i < processCodesStr.size(); ++i) {
         processCodes.push_back(std::atoi(processCodesStr.at(i).c_str()));
     }
-    if (std::string(processList).size() > 0 && processCodes.size() == 0)
+    if (std::string(processList).size() > 0 && processCodes.size() == 0) {
         processCodes.push_back(std::atoi(processList.c_str()));
+    }
 
     int nProcessCodes = processCodes.size();
 
-    std::cout << "##### Parameters #####" << std::endl;
-    std::cout << "inputFileName = " << inputFileName.c_str() << std::endl;
-    std::cout << "outputFileName = " << outputFileName.c_str() << std::endl;
+    double qMin = (ArgumentParser::ParseOptionInputSingle("--qMin", argOptions).size() > 0) ?
+            std::atof(ArgumentParser::ParseOptionInputSingle("--qMin", argOptions).c_str()) : 0;
+    double qMax = (ArgumentParser::ParseOptionInputSingle("--qMax", argOptions).size() > 0) ?
+            std::atof(ArgumentParser::ParseOptionInputSingle("--qMax", argOptions).c_str()) : -1;
+
+    std::cout << "##### Optional Arguments #####" << std::endl;
     std::cout << "processCodes = { ";
     for (int i = 0; i < nProcessCodes; ++i) {
         std::cout << processCodes.at(i) << " ";
@@ -57,7 +71,7 @@ void eventInfoAna(std::string inputFileName, std::string outputFileName, std::st
     std::cout << "}" << std::endl;
     std::cout << "qMin = " << qMin << std::endl;
     std::cout << "qMax = " << qMax << std::endl;
-    std::cout << "##### Parameters - END #####" << std::endl;
+    std::cout << "##### Optional Arguments - END #####" << std::endl;
 
     TFile *inputFile = TFile::Open(inputFileName.c_str(),"READ");
     Pythia8::Event *event = 0;
@@ -219,30 +233,29 @@ void eventInfoAna(std::string inputFileName, std::string outputFileName, std::st
 
 int main(int argc, char* argv[]) {
 
-    if (argc == 6) {
-        eventInfoAna(argv[1], argv[2], argv[3], std::atoi(argv[4]), std::atoi(argv[5]));
-        return 0;
+    std::vector<std::string> argStr = ArgumentParser::ParseParameters(argc, argv);
+    int nArgStr = argStr.size();
+
+    argOptions = ArgumentParser::ParseOptions(argc, argv);
+
+    if (nArgStr == 3) {
+        eventInfoAna(argStr.at(1), argStr.at(2));
     }
-    else if (argc == 5) {
-        eventInfoAna(argv[1], argv[2], argv[3], std::atoi(argv[4]));
-        return 0;
+    else if (nArgStr == 2) {
+        eventInfoAna(argStr.at(1));
     }
-    else if (argc == 4) {
-        eventInfoAna(argv[1], argv[2], argv[3]);
-        return 0;
-    }
-    else if (argc == 3) {
-        eventInfoAna(argv[1], argv[2]);
-        return 0;
-    }
-    else if (argc == 2) {
-        eventInfoAna(argv[1]);
-        return 0;
+    else if (nArgStr == 1) {
+        eventInfoAna();
     }
     else {
         std::cout << "Usage : \n" <<
-                "./eventInfoAna.exe <inputFileName> <outputFileName> <processList>"
+                "./eventInfoAna.exe <inputFileName> <outputFileName> [options]"
                 << std::endl;
+        std::cout << "Options are" << std::endl;
+        std::cout << "--processList=<comma separated list of process codes>" << std::endl;
+        std::cout << "--qMin=<minimum Q factorization scale>" << std::endl;
+        std::cout << "--qMax=<maximum Q factorization scale>" << std::endl;
         return 1;
     }
+    return 0;
 }

@@ -38,8 +38,9 @@ do
     outputFileLOG="${outputFile/.root/.log}"
     outDir=$(dirname "${outputFile}")
     mkdir -p $outDir
-    $runCmd $progPath $inputFile $outputFile $processCode $qMin $qMax &> $outputFileLOG &
-    echo "$runCmd $progPath $inputFile $outputFile $processCode $qMin $qMax &> $outputFileLOG &"
+
+    $runCmd $progPath $inputFile $outputFile --processList=${processCode} --qMin=${qMin} --qMax=${qMax} &> $outputFileLOG &
+    echo "$runCmd $progPath $inputFile $outputFile --processList=${processCode} --qMin=${qMin} --qMax=${qMax} &> $outputFileLOG &"
   done
 done
 

@@ -63,9 +63,8 @@ do
     outDir=$(dirname "${outputFile}")
     mkdir -p $outDir
 
-    $runCmd $progPath $inputFile $outputFile $tag $tagStatus $probeStatus &> $outputFileLOG &
-    echo "$runCmd $progPath $inputFile $outputFile $tag $tagStatus $probeStatus &> $outputFileLOG &"
+    $runCmd $progPath $inputFile $outputFile --tag=${tag} --tagStatus=${tagStatus} --probeStatus=${probeStatus} &> $outputFileLOG &
+    echo "$runCmd $progPath $inputFile $outputFile --tag=${tag} --tagStatus=${tagStatus} --probeStatus=${probeStatus} &> $outputFileLOG &"
     wait
 done
-
 

@@ -24,26 +24,40 @@
 #include "../../utilities/physicsUtil.h"
 #include "../../utilities/th1Util.h"
 #include "../../utilities/systemUtil.h"
+#include "../../utilities/ArgumentParser.h"
 
 #include <iostream>
 #include <iomanip>
 #include <string>
 #include <vector>
 
-void hardScatteringAna(std::string inputFileName = "promptPhoton.root", std::string outputFileName = "hardScatteringAna_out.root",
-                     std::string tagParticle = "", int iStatusTag = 0, int iStatusProbe = 0);
+std::vector<std::string> argOptions;
 
-void hardScatteringAna(std::string inputFileName, std::string outputFileName, std::string tagParticle, int iStatusTag, int iStatusProbe)
+void hardScatteringAna(std::string inputFileName, std::string outputFileName = "hardScatteringAna_out.root");
+
+void hardScatteringAna(std::string inputFileName, std::string outputFileName)
 {
     std::cout << "running hardScatteringAna()" << std::endl;
 
     std::cout << "##### Parameters #####" << std::endl;
     std::cout << "inputFileName = " << inputFileName.c_str() << std::endl;
     std::cout << "outputFileName = " << outputFileName.c_str() << std::endl;
+    std::cout << "##### Parameters - END #####" << std::endl;
+
+    std::string tagParticle = (ArgumentParser::ParseOptionInputSingle("--tag", argOptions).size() > 0) ?
+            ArgumentParser::ParseOptionInputSingle("--tag", argOptions).c_str() : "parton";
+
+    int iStatusTag = (ArgumentParser::ParseOptionInputSingle("--tagStatus", argOptions).size() > 0) ?
+            std::atoi(ArgumentParser::ParseOptionInputSingle("--tagStatus", argOptions).c_str()) : 0;
+
+    int iStatusProbe = (ArgumentParser::ParseOptionInputSingle("--probeStatus", argOptions).size() > 0) ?
+            std::atoi(ArgumentParser::ParseOptionInputSingle("--probeStatus", argOptions).c_str()) : 0;
+
+    std::cout << "##### Optional Arguments #####" << std::endl;
     std::cout << "tagParticle = " << tagParticle.c_str() << std::endl;
     std::cout << "iStatusTag = " << iStatusTag << std::endl;
     std::cout << "iStatusProbe = " << iStatusProbe << std::endl;
-    std::cout << "##### Parameters - END #####" << std::endl;
+    std::cout << "##### Optional Arguments - END #####" << std::endl;
 
     TFile *inputFile = TFile::Open(inputFileName.c_str(),"READ");
     Pythia8::Event *event = 0;
@@ -733,30 +747,26 @@ void hardScatteringAna(std::string inputFileName, std::string outputFileName, st
 
 int main(int argc, char* argv[]) {
 
-    if (argc == 6) {
-        hardScatteringAna(argv[1], argv[2], argv[3], std::atoi(argv[4]), std::atoi(argv[5]));
-        return 0;
+    std::vector<std::string> argStr = ArgumentParser::ParseParameters(argc, argv);
+    int nArgStr = argStr.size();
+
+    argOptions = ArgumentParser::ParseOptions(argc, argv);
+
+    if (nArgStr == 3) {
+        hardScatteringAna(argStr.at(1), argStr.at(2));
     }
-    else if (argc == 5) {
-        hardScatteringAna(argv[1], argv[2], argv[3], std::atoi(argv[4]));
-        return 0;
-    }
-    else if (argc == 4) {
-        hardScatteringAna(argv[1], argv[2], argv[3]);
-        return 0;
-    }
-    else if (argc == 3) {
-        hardScatteringAna(argv[1], argv[2]);
-        return 0;
-    }
-    else if (argc == 2) {
-        hardScatteringAna(argv[1]);
-        return 0;
+    else if (nArgStr == 2) {
+        hardScatteringAna(argStr.at(1));
     }
     else {
         std::cout << "Usage : \n" <<
-                "./hardScatteringAna.exe <inputFileName> <outputFileName> <tagParticle> <iStatusTag> <iStatusProbe>"
+                "./hardScatteringAna.exe <inputFileName> <outputFileName> [options]"
                 << std::endl;
+        std::cout << "Options are" << std::endl;
+        std::cout << "--tag=<label for tag particle>" << std::endl;
+        std::cout << "--tagStatus=<code for status of tag particle>" << std::endl;
+        std::cout << "--probeStatus=<code for status of probe particle>" << std::endl;
         return 1;
     }
+    return 0;
 }

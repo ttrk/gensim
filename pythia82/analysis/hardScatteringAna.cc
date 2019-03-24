@@ -53,10 +53,18 @@ void hardScatteringAna(std::string inputFileName, std::string outputFileName)
     int iStatusProbe = (ArgumentParser::ParseOptionInputSingle("--probeStatus", argOptions).size() > 0) ?
             std::atoi(ArgumentParser::ParseOptionInputSingle("--probeStatus", argOptions).c_str()) : 0;
 
+    double tagMinPt = (ArgumentParser::ParseOptionInputSingle("--tagMinPt", argOptions).size() > 0) ?
+            std::atof(ArgumentParser::ParseOptionInputSingle("--tagMinPt", argOptions).c_str()) : -1;
+
+    double tagMaxEta = (ArgumentParser::ParseOptionInputSingle("--tagMaxEta", argOptions).size() > 0) ?
+            std::atof(ArgumentParser::ParseOptionInputSingle("--tagMaxEta", argOptions).c_str()) : 999999;
+
     std::cout << "##### Optional Arguments #####" << std::endl;
     std::cout << "tagParticle = " << tagParticle.c_str() << std::endl;
     std::cout << "iStatusTag = " << iStatusTag << std::endl;
     std::cout << "iStatusProbe = " << iStatusProbe << std::endl;
+    std::cout << "tagMinPt = " << tagMinPt << std::endl;
+    std::cout << "tagMaxEta = " << tagMaxEta << std::endl;
     std::cout << "##### Optional Arguments - END #####" << std::endl;
 
     TFile *inputFile = TFile::Open(inputFileName.c_str(),"READ");
@@ -538,8 +546,16 @@ void hardScatteringAna(std::string inputFileName, std::string outputFileName)
             p1Y[i] = (*event)[j].y();
         }
 
-        h_p1Pt->Fill(p1Pt[iStatusTag]);
-        h_p1Eta->Fill(TMath::Abs(p1Eta[iStatusTag]));
+        if (TMath::Abs(p1Eta[iStatusTag]) < tagMaxEta) {
+            h_p1Pt->Fill(p1Pt[iStatusTag]);
+        }
+        if (p1Pt[iStatusTag] > tagMinPt) {
+            h_p1Eta->Fill(TMath::Abs(p1Eta[iStatusTag]));
+        }
+
+        if (!(p1Pt[iStatusTag] > tagMinPt))  continue;
+        if (!(TMath::Abs(p1Eta[iStatusTag]) < tagMaxEta))  continue;
+
         h_p1Y->Fill(TMath::Abs(p1Y[iStatusTag]));
         h2_p1Eta_p1Pt->Fill(TMath::Abs(p1Eta[iStatusTag]), p1Pt[iStatusTag]);
         h2_p1Y_p1Pt->Fill(TMath::Abs(p1Y[iStatusTag]), p1Pt[iStatusTag]);
@@ -683,7 +699,7 @@ void hardScatteringAna(std::string inputFileName, std::string outputFileName)
     // Save histogram on file and close file.
     std::cout << "saving histograms" << std::endl;
 
-    double nPartonsP1 = h_p1Pt->GetEntries();
+    double nPartonsP1 = h2_qscale_p1Pt->GetEntries();
 
     h_p1Pt->Scale(1./h_p1Pt->Integral(), "width");
     h_p1Eta->Scale(1./h_p1Eta->Integral(), "width");
@@ -766,6 +782,8 @@ int main(int argc, char* argv[]) {
         std::cout << "--tag=<label for tag particle>" << std::endl;
         std::cout << "--tagStatus=<code for status of tag particle>" << std::endl;
         std::cout << "--probeStatus=<code for status of probe particle>" << std::endl;
+        std::cout << "--tagMinPt=<min pT for tag particle>" << std::endl;
+        std::cout << "--tagMaxEta=<max |eta| for tag particle>" << std::endl;
         return 1;
     }
     return 0;

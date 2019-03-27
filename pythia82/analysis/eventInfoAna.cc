@@ -123,9 +123,13 @@ void eventInfoAna(std::string inputFileName, std::string outputFileName)
     std::string partonsStr[kN_PARTONS] = {"parton", "q", "g", "dQ", "uQ", "sQ", "udsQ", "bcQ"};
     std::string partonsLabel[kN_PARTONS] = {"q/g", "q", "g", "d", "u", "s", "u/d/s", "b/c"};
 
+    TH1D* h_Q_partonFrac[kN_PARTONS];
     TH2D* h2_pdf_x[kN_PARTONS];
 
     for (int i = 0; i < kN_PARTONS; ++i) {
+
+        h_Q_partonFrac[i] = new TH1D(Form("h_Q_partonFrac_%s", partonsStr[i].c_str()),
+                ";Q;", 200, 0, 1000);
 
         int nBins_x = 100;
         binsXVec = calcBinsLogScale(0.001, 1, nBins_x);
@@ -209,6 +213,30 @@ void eventInfoAna(std::string inputFileName, std::string outputFileName)
             if (incomingPartons[i].idAbs() == 4 ||
                 incomingPartons[i].idAbs() == 5)  h2_pdf_x[kcbQ]->Fill(x, scalePDF*pdf);
         }
+
+        // outgoing particles of the hardest subprocess are at index 5 and 6
+        std::vector<int> indicesOutgoing = {5, 6};
+        int nOutGoing = indicesOutgoing.size();
+        for (int i = 0; i < nOutGoing; ++i) {
+
+            int iHard = indicesOutgoing[i];
+
+            if (isParton((*event)[iHard])) {
+
+                h_Q_partonFrac[kInclusive]->Fill(info->QFac());
+
+                if (isQuark((*event)[iHard]))  h_Q_partonFrac[kQuark]->Fill(info->QFac());
+                if (isGluon((*event)[iHard]))  h_Q_partonFrac[kGluon]->Fill(info->QFac());
+                if ((*event)[iHard].idAbs() == 1)  h_Q_partonFrac[kdQ]->Fill(info->QFac());
+                if ((*event)[iHard].idAbs() == 2)  h_Q_partonFrac[kuQ]->Fill(info->QFac());
+                if ((*event)[iHard].idAbs() == 3)  h_Q_partonFrac[ksQ]->Fill(info->QFac());
+                if ((*event)[iHard].idAbs() == 1 ||
+                        (*event)[iHard].idAbs() == 2 ||
+                        (*event)[iHard].idAbs() == 3)  h_Q_partonFrac[kudsQ]->Fill(info->QFac());
+                if ((*event)[iHard].idAbs() == 4 ||
+                        (*event)[iHard].idAbs() == 5)  h_Q_partonFrac[kcbQ]->Fill(info->QFac());
+            }
+        }
     }
     std::cout << "Loop ENDED" << std::endl;
     std::cout << "eventsAnalyzed = " << eventsAnalyzed << std::endl;
@@ -220,6 +248,13 @@ void eventInfoAna(std::string inputFileName, std::string outputFileName)
     h_nMPI->Scale(1./h_nMPI->Integral(), "width");
     h_nISR->Scale(1./h_nISR->Integral(), "width");
     h_nFSR->Scale(1./h_nFSR->Integral(), "width");
+
+    for (int i = 0; i < kN_PARTONS; ++i) {
+
+        if (i != kInclusive) {
+            h_Q_partonFrac[i]->Divide(h_Q_partonFrac[kInclusive]);
+        }
+    }
 
     // Save histogram on file and close file.
     std::cout << "saving histograms" << std::endl;

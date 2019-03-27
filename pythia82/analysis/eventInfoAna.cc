@@ -96,13 +96,13 @@ void eventInfoAna(std::string inputFileName, std::string outputFileName)
     double axis_q_min = 0;
     double axis_q_max = 1000+axis_q_min;
 
-    TH1D* h_q = new TH1D("h_q", ";Q (GeV);", nBinsX_q, axis_q_min, axis_q_max);
+    TH1D* h_Q = new TH1D("h_q", ";Q (GeV);", nBinsX_q, axis_q_min, axis_q_max);
 
     int nBins_x1Overx2 = 50;
     binsYVec = calcBinsLogScale(5*0.0001, 5*1000, nBins_x1Overx2);
     double binsArrY[nBins_x1Overx2+1];
     std::copy(binsYVec.begin(), binsYVec.end(), binsArrY);
-    TH2D* h2_q_x1overx2 = new TH2D("h2_q_x1overx2", ";Q (GeV);x_{1} / x_{2}",
+    TH2D* h2_Q_x1overx2 = new TH2D("h2_q_x1overx2", ";Q (GeV);x_{1} / x_{2}",
             nBinsX_q, axis_q_min, axis_q_max, nBins_x1Overx2, binsArrY);
 
     TH1D* h_nMPI = new TH1D("h_nMPI", ";nMPI;", 25, 0, 25);
@@ -177,8 +177,8 @@ void eventInfoAna(std::string inputFileName, std::string outputFileName)
 
         eventsAnalyzed++;
 
-        h_q->Fill(info->QFac());
-        h2_q_x1overx2->Fill(info->QFac(), info->x1() / info->x2());
+        h_Q->Fill(info->QFac());
+        h2_Q_x1overx2->Fill(info->QFac(), info->x1() / info->x2());
 
         h_nMPI->Fill(info->nMPI());
         h_nISR->Fill(info->nISR());
@@ -243,7 +243,7 @@ void eventInfoAna(std::string inputFileName, std::string outputFileName)
     std::cout << "Closing the input file" << std::endl;
     inputFile->Close();
 
-    h_q->Scale(1./h_q->Integral(), "width");
+    h_Q->Scale(1./h_Q->Integral(), "width");
 
     h_nMPI->Scale(1./h_nMPI->Integral(), "width");
     h_nISR->Scale(1./h_nISR->Integral(), "width");

@@ -109,7 +109,7 @@ void eventInfoAna(std::string inputFileName, std::string outputFileName)
     TH1D* h_nISR = new TH1D("h_nISR", ";nISR;", 45, 0, 45);
     TH1D* h_nFSR = new TH1D("h_nFSR", ";nFSR;", 50, 0, 250);
 
-    enum INCOMINGPARTONS {
+    enum PARTONS {
         kInclusive,
         kQuark,
         kGluon,
@@ -118,14 +118,14 @@ void eventInfoAna(std::string inputFileName, std::string outputFileName)
         ksQ,
         kudsQ,
         kcbQ,
-        kN_INCOMINGPARTONS
+        kN_PARTONS
     };
-    std::string incomingPartonsStr[kN_INCOMINGPARTONS] = {"parton", "q", "g", "dQ", "uQ", "sQ", "udsQ", "bcQ"};
-    std::string incomingPartonsLabel[kN_INCOMINGPARTONS] = {"q/g", "q", "g", "d", "u", "s", "u/d/s", "b/c"};
+    std::string partonsStr[kN_PARTONS] = {"parton", "q", "g", "dQ", "uQ", "sQ", "udsQ", "bcQ"};
+    std::string partonsLabel[kN_PARTONS] = {"q/g", "q", "g", "d", "u", "s", "u/d/s", "b/c"};
 
-    TH2D* h2_pdf_x[kN_INCOMINGPARTONS];
+    TH2D* h2_pdf_x[kN_PARTONS];
 
-    for (int i = 0; i < kN_INCOMINGPARTONS; ++i) {
+    for (int i = 0; i < kN_PARTONS; ++i) {
 
         int nBins_x = 100;
         binsXVec = calcBinsLogScale(0.001, 1, nBins_x);
@@ -139,8 +139,8 @@ void eventInfoAna(std::string inputFileName, std::string outputFileName)
         std::copy(binsYVec.begin(), binsYVec.end(), binsArrY);
         */
 
-        h2_pdf_x[i] = new TH2D(Form("h2_pdf_x_%s", incomingPartonsStr[i].c_str()),
-                Form(";x_{%s};PDF", incomingPartonsLabel[i].c_str()),
+        h2_pdf_x[i] = new TH2D(Form("h2_pdf_x_%s", partonsStr[i].c_str()),
+                Form(";x_{%s};PDF", partonsLabel[i].c_str()),
                 nBins_x, binsArrX, nBins_y, 0, 1);
     }
 
@@ -173,7 +173,7 @@ void eventInfoAna(std::string inputFileName, std::string outputFileName)
 
         eventsAnalyzed++;
 
-        //h_q->Fill(info->QFac());
+        h_q->Fill(info->QFac());
         h2_q_x1overx2->Fill(info->QFac(), info->x1() / info->x2());
 
         h_nMPI->Fill(info->nMPI());

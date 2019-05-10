@@ -11,6 +11,7 @@ inputFiles=(
 "input/spectra_hiBinVSngen_etaVSpt_Hydjet_Quenched_Cymbal5Ev8_PbPbMinBias_5020GeV.root"
 );
 
+mode=0
 nEvents=5000
 minCent=0
 maxCent=10
@@ -32,8 +33,9 @@ do
     outputFileLOG="${outputFile/.root/.log}"
     outDir=$(dirname "${outputFile}")
     mkdir -p $outDir
-    $runCmd $progPath $inputFile $outputFile $nEvents $minCent $maxCent $minPt $rndSeedHiBin $rndSeedParticle $eventInfoTree $partTreeName &> $outputFileLOG &
-    echo "$runCmd $progPath $inputFile $outputFile $nEvents $minCent $maxCent $minPt $rndSeedHiBin $rndSeedParticle $eventInfoTree $partTreeName &> $outputFileLOG &"
+
+    $runCmd $progPath $mode $outputFile $nEvents --inputFile=$inputFile --minCent=$minCent --maxCent=$maxCent --minPt=$minPt --rndSeedCent=$rndSeedHiBin --rndSeedParticle=$rndSeedParticle --eventInfoTree=$eventInfoTree --particleTree=$partTreeName &> $outputFileLOG &
+    echo "$runCmd $progPath $mode $outputFile $nEvents --inputFile=$inputFile --minCent=$minCent --maxCent=$maxCent --minPt=$minPt --rndSeedCent=$rndSeedHiBin --rndSeedParticle=$rndSeedParticle --eventInfoTree=$eventInfoTree --particleTree=$partTreeName &> $outputFileLOG &"
     wait
 done
 

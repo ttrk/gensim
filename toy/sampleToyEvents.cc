@@ -13,37 +13,71 @@
 #include "../utilities/particleTree.h"
 #include "../utilities/physicsUtil.h"
 #include "../utilities/systemUtil.h"
+#include "../utilities/ArgumentParser.h"
 
 #include <iostream>
 #include <iomanip>
 #include <string>
 #include <vector>
 
+std::vector<std::string> argOptions;
+
 /*
  * code to sample toy AA events (in particular Hydjet) using input centrality, multiplicity, pt, eta distibutions
  */
-void sampleToyEvents(std::string inputFileName = "hydjetSpectra.root", std::string outputFileName = "sampleHydjet_out.root",
-                       int nEvents = 10, int minCent = 0, int maxCent = 100, double minPt = 0.5,
-                       int rndSeedHiBin = -1, int rndSeedParticle = -1, std::string eventInfoTreeName = "", std::string partTreeName = "");
+void sampleToyEvents(int mode = 0, std::string outputFileName = "sampleHydjet_out.root",
+                       int nEvents = 10);
 
-void sampleToyEvents(std::string inputFileName, std::string outputFileName,
-                       int nEvents, int minCent, int maxCent, double minPt,
-                       int rndSeedHiBin, int rndSeedParticle, std::string eventInfoTreeName, std::string partTreeName)
+void sampleToyEvents(int mode, std::string outputFileName,
+                       int nEvents)
 {
     std::cout << "running sampleToyEvents()" << std::endl;
 
     std::cout << "##### Parameters #####" << std::endl;
-    std::cout << "inputFileName = " << inputFileName.c_str() << std::endl;
+    std::cout << "mode = " << mode << std::endl;
     std::cout << "outputFileName = " << outputFileName.c_str() << std::endl;
     std::cout << "nEvents = " << nEvents << std::endl;
+    std::cout << "##### Parameters - END #####" << std::endl;
+
+    enum MODES {
+        k_sampleHydjet,
+        k_samplePtSpectrum,
+        kN_MODES
+    };
+    std::string modeLabels[kN_MODES] = {"Hydjet", "Thermal"};
+    std::cout << "Sampling mode is " << modeLabels[mode] << std::endl;
+
+    std::string inputFileName = (ArgumentParser::ParseOptionInputSingle("--inputFile", argOptions).size() > 0) ?
+            ArgumentParser::ParseOptionInputSingle("--inputFile", argOptions).c_str() : "NULL";
+
+    int minCent = (ArgumentParser::ParseOptionInputSingle("--minCent", argOptions).size() > 0) ?
+            std::atoi(ArgumentParser::ParseOptionInputSingle("--minCent", argOptions).c_str()) : 0;
+    int maxCent = (ArgumentParser::ParseOptionInputSingle("--maxCent", argOptions).size() > 0) ?
+            std::atoi(ArgumentParser::ParseOptionInputSingle("--maxCent", argOptions).c_str()) : 100;
+
+    double minPt = (ArgumentParser::ParseOptionInputSingle("--minPt", argOptions).size() > 0) ?
+            std::atof(ArgumentParser::ParseOptionInputSingle("--minPt", argOptions).c_str()) : 0;
+
+    std::string eventInfoTreeName = (ArgumentParser::ParseOptionInputSingle("--eventInfoTree", argOptions).size() > 0) ?
+            ArgumentParser::ParseOptionInputSingle("--eventInfoTree", argOptions).c_str() : "evtInfoHydjet";
+    std::string partTreeName = (ArgumentParser::ParseOptionInputSingle("--particleTree", argOptions).size() > 0) ?
+            ArgumentParser::ParseOptionInputSingle("--particleTree", argOptions).c_str() : "evtHydjet";
+
+    int rndSeedCent = (ArgumentParser::ParseOptionInputSingle("--rndSeedCent", argOptions).size() > 0) ?
+            std::atoi(ArgumentParser::ParseOptionInputSingle("--rndSeedCent", argOptions).c_str()) : 12345;
+    int rndSeedParticle = (ArgumentParser::ParseOptionInputSingle("--rndSeedParticle", argOptions).size() > 0) ?
+            std::atoi(ArgumentParser::ParseOptionInputSingle("--rndSeedParticle", argOptions).c_str()) : 6789;
+
+    std::cout << "##### Optional Arguments #####" << std::endl;
+    std::cout << "inputFile = " << inputFileName.c_str() << std::endl;
     std::cout << "minCent = " << minCent << std::endl;
     std::cout << "maxCent = " << maxCent << std::endl;
     std::cout << "minPt = " << minPt << std::endl;
-    std::cout << "rndSeedHiBin = " << rndSeedHiBin << std::endl;
+    std::cout << "eventInfoTree = " << eventInfoTreeName.c_str() << std::endl;
+    std::cout << "partTree = " << partTreeName.c_str() << std::endl;
+    std::cout << "rndSeedCent = " << rndSeedCent << std::endl;
     std::cout << "rndSeedParticle = " << rndSeedParticle << std::endl;
-    std::cout << "eventInfoTreeName = " << eventInfoTreeName.c_str() << std::endl;
-    std::cout << "partTreeName = " << partTreeName.c_str() << std::endl;
-    std::cout << "##### Parameters - END #####" << std::endl;
+    std::cout << "##### Optional Arguments - END #####" << std::endl;
 
     // Set up the ROOT TFile and TTree.
     TFile* inputFile = TFile::Open(inputFileName.c_str(),"READ");
@@ -107,29 +141,20 @@ void sampleToyEvents(std::string inputFileName, std::string outputFileName,
 
     TFile* outputFile = new TFile(outputFileName.c_str(), "UPDATE");
 
-    if (eventInfoTreeName == "NULL") {
-        eventInfoTreeName = "evtInfoHydjet";
-    }
-    TTree* eventInfoTree = new TTree(eventInfoTreeName.c_str(), Form("Info about Hydjet events with Cent:%d-%d", minCent, maxCent));
+    TTree* eventInfoTree = new TTree(eventInfoTreeName.c_str(), Form("Info about %s events with Cent:%d-%d", modeLabels[mode].c_str(),
+                                                                                                             minCent, maxCent));
     int hiBin;
     eventInfoTree->Branch("hiBin", &hiBin);
 
-    if (partTreeName == "NULL") {
-        partTreeName = "evtHydjet";
-    }
-    TTree* partTree = new TTree(partTreeName.c_str(), Form("Hydjet particles from Cent:%d-%d", minCent, maxCent));
+    TTree* partTree = new TTree(partTreeName.c_str(), Form("%s particles from Cent:%d-%d", modeLabels[mode].c_str(),
+                                                                                           minCent, maxCent));
     particleTree partt;
     partt.branchTree(partTree);
 
-    if (rndSeedHiBin < 0) {
-        rndSeedHiBin = 12345;
-    }
-    TRandom3 rand1(rndSeedHiBin);
+    TRandom3 rand1(rndSeedCent);
 
-    if (rndSeedParticle < 0) {
-        rndSeedParticle = 6789;
-    }
     TRandom3 rand2(rndSeedParticle);
+
     gRandom->SetSeed(rndSeedParticle);
     int eventsAnalyzed = 0;
     std::cout << "nEvents = " << nEvents << std::endl;
@@ -199,54 +224,37 @@ void sampleToyEvents(std::string inputFileName, std::string outputFileName,
 
 int main(int argc, char* argv[]) {
 
-    if (argc == 11) {
-        sampleToyEvents(argv[1], argv[2], std::atoi(argv[3]), std::atoi(argv[4]), std::atoi(argv[5]), std::atof(argv[6]),
-                std::atoi(argv[7]), std::atoi(argv[8]), argv[9], argv[10]);
+    std::vector<std::string> argStr = ArgumentParser::ParseParameters(argc, argv);
+    int nArgStr = argStr.size();
+
+    argOptions = ArgumentParser::ParseOptions(argc, argv);
+
+    if (nArgStr == 4) {
+        sampleToyEvents(std::atoi(argv[1]), argv[2], std::atoi(argv[3]));
         return 0;
     }
-    else if (argc == 10) {
-        sampleToyEvents(argv[1], argv[2], std::atoi(argv[3]), std::atoi(argv[4]), std::atoi(argv[5]), std::atof(argv[6]),
-                std::atoi(argv[7]), std::atoi(argv[8]), argv[9]);
+    else if (nArgStr == 3) {
+        sampleToyEvents(std::atoi(argv[1]), argv[2]);
         return 0;
     }
-    else if (argc == 9) {
-        sampleToyEvents(argv[1], argv[2], std::atoi(argv[3]), std::atoi(argv[4]), std::atoi(argv[5]), std::atof(argv[6]),
-                std::atoi(argv[7]), std::atoi(argv[8]));
-        return 0;
-    }
-    else if (argc == 8) {
-        sampleToyEvents(argv[1], argv[2], std::atoi(argv[3]), std::atoi(argv[4]), std::atoi(argv[5]), std::atof(argv[6]),
-                std::atoi(argv[7]));
-        return 0;
-    }
-    else if (argc == 7) {
-        sampleToyEvents(argv[1], argv[2], std::atoi(argv[3]), std::atoi(argv[4]), std::atoi(argv[5]), std::atof(argv[6]));
-        return 0;
-    }
-    else if (argc == 6) {
-        sampleToyEvents(argv[1], argv[2], std::atoi(argv[3]), std::atoi(argv[4]), std::atoi(argv[5]));
-        return 0;
-    }
-    else if (argc == 5) {
-        sampleToyEvents(argv[1], argv[2], std::atoi(argv[3]), std::atoi(argv[4]));
-        return 0;
-    }
-    else if (argc == 4) {
-        sampleToyEvents(argv[1], argv[2], std::atoi(argv[3]));
-        return 0;
-    }
-    else if (argc == 3) {
-        sampleToyEvents(argv[1], argv[2]);
-        return 0;
-    }
-    else if (argc == 2) {
-        sampleToyEvents(argv[1]);
+    else if (nArgStr == 2) {
+        sampleToyEvents(std::atoi(argv[1]));
         return 0;
     }
     else {
         std::cout << "Usage : \n" <<
-                "./sampleToyEvents.exe <inputFileName> <outputFileName> <nEvents> <minCent> <maxCent> <minPt>"
+                "./sampleToyEvents.exe <mode> <outputFileName> <nEvents>"
                 << std::endl;
+        std::cout << "Options are" << std::endl;
+        std::cout << "inputFile=<file containing distributions to be sampled>" << std::endl;
+        std::cout << "minCent=<minimum centrality>" << std::endl;
+        std::cout << "maxCent=<maximum centrality>" << std::endl;
+        std::cout << "minPt=<minimum pT to be written>" << std::endl;
+        std::cout << "eventInfoTree=<path to tree containing event information>" << std::endl;
+        std::cout << "partTree=<path to tree containing particles>" << std::endl;
+        std::cout << "rndSeedCent=<random number seed reserved for centrality>" << std::endl;
+        std::cout << "rndSeedParticle=<random number seed reserved for particles>" << std::endl;
+
         return 1;
     }
 }

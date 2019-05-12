@@ -57,7 +57,11 @@ void sampleToyEvents(int mode, std::string outputFileName,
             std::atoi(ArgumentParser::ParseOptionInputSingle("--maxCent", argOptions).c_str()) : 100;
 
     int multCh = (ArgumentParser::ParseOptionInputSingle("--multCh", argOptions).size() > 0) ?
-            std::atoi(ArgumentParser::ParseOptionInputSingle("--multCh", argOptions).c_str()) : 0;
+            std::atoi(ArgumentParser::ParseOptionInputSingle("--multCh", argOptions).c_str()) : -1;
+    double dNdEta = (ArgumentParser::ParseOptionInputSingle("--dNdEta", argOptions).size() > 0) ?
+                    std::atof(ArgumentParser::ParseOptionInputSingle("--dNdEta", argOptions).c_str()) : -1;
+    double maxEta = (ArgumentParser::ParseOptionInputSingle("--maxEta", argOptions).size() > 0) ?
+                        std::atof(ArgumentParser::ParseOptionInputSingle("--maxEta", argOptions).c_str()) : 3;
     double meanPt = (ArgumentParser::ParseOptionInputSingle("--meanPt", argOptions).size() > 0) ?
                 std::atof(ArgumentParser::ParseOptionInputSingle("--meanPt", argOptions).c_str()) : 0;
     double minPt = (ArgumentParser::ParseOptionInputSingle("--minPt", argOptions).size() > 0) ?
@@ -78,6 +82,7 @@ void sampleToyEvents(int mode, std::string outputFileName,
     std::cout << "minCent = " << minCent << std::endl;
     std::cout << "maxCent = " << maxCent << std::endl;
     std::cout << "multCh = " << multCh << std::endl;
+    std::cout << "dNdEta = " << dNdEta << std::endl;
     std::cout << "meanPt = " << meanPt << std::endl;
     std::cout << "minPt = " << minPt << std::endl;
     std::cout << "eventInfoTree = " << eventInfoTreeName.c_str() << std::endl;
@@ -85,6 +90,14 @@ void sampleToyEvents(int mode, std::string outputFileName,
     std::cout << "rndSeedCent = " << rndSeedCent << std::endl;
     std::cout << "rndSeedParticle = " << rndSeedParticle << std::endl;
     std::cout << "##### Optional Arguments - END #####" << std::endl;
+
+    if (multCh > 0 && dNdEta > 0) {
+        std::cout << "ERROR : Conflicting options. Cannot have both multCh and dNdEta non-zero. At most one of them can be non-zero." << std::endl;
+        std::cout << "multCh = " << multCh << std::endl;
+        std::cout << "dNdEta = " << dNdEta << std::endl;
+        std::cout << "Exiting" << std::endl;
+        return;
+    }
 
     // Set up the ROOT TFile and TTree.
     TFile* inputFile = 0;
@@ -165,8 +178,17 @@ void sampleToyEvents(int mode, std::string outputFileName,
         fncPt->SetParNames("Amplitude", "b (GeV/c)^{-1}");
         fncPt->SetParameters(1., 2./meanPt);
 
-        int multNeutral = multCh/2;
-        mults = {multCh, multNeutral};
+        int multNeutral = 0;
+        double ratioChNeutral = 0.5;
+        if (multCh > -1) {
+            multNeutral = multCh * ratioChNeutral;
+            mults = {multCh, multNeutral};
+        }
+        else if (dNdEta > -1) {
+            int nTmp = (int) (dNdEta*2*maxEta);
+            multNeutral = nTmp * ratioChNeutral;
+            mults = {nTmp, multNeutral};
+        }
         nCharge = mults.size();
     }
 
@@ -248,7 +270,7 @@ void sampleToyEvents(int mode, std::string outputFileName,
                     double pt = fncPt->GetRandom();
                     if (pt < minPt) continue;
 
-                    double eta = rand2.Uniform(-3, 3);
+                    double eta = rand2.Uniform(-maxEta, maxEta);
                     double phi = rand2.Uniform(-1*TMath::Pi(), TMath::Pi());
 
                     partt.pt->push_back(pt);
@@ -313,8 +335,10 @@ int main(int argc, char* argv[]) {
         std::cout << "minCent=<minimum centrality>" << std::endl;
         std::cout << "maxCent=<maximum centrality>" << std::endl;
         std::cout << "multCh=<number of charged particles>" << std::endl;
-        std::cout << "minPt=<minimum pT to be written>" << std::endl;
+        std::cout << "dNdEta=<number of charged particles per unit eta>" << std::endl;
+        std::cout << "maxEta=<maximum |eta| of particles>" << std::endl;
         std::cout << "meanPt=<average of pt spectrum to be sampled>" << std::endl;
+        std::cout << "minPt=<minimum pT to be written>" << std::endl;
         std::cout << "eventInfoTree=<path to tree containing event information>" << std::endl;
         std::cout << "partTree=<path to tree containing particles>" << std::endl;
         std::cout << "rndSeedCent=<random number seed reserved for centrality>" << std::endl;

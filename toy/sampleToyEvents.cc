@@ -56,10 +56,14 @@ void sampleToyEvents(int mode, std::string outputFileName,
     int maxCent = (ArgumentParser::ParseOptionInputSingle("--maxCent", argOptions).size() > 0) ?
             std::atoi(ArgumentParser::ParseOptionInputSingle("--maxCent", argOptions).c_str()) : 100;
 
-    int multCh = (ArgumentParser::ParseOptionInputSingle("--multCh", argOptions).size() > 0) ?
-            std::atoi(ArgumentParser::ParseOptionInputSingle("--multCh", argOptions).c_str()) : -1;
-    double dNdEta = (ArgumentParser::ParseOptionInputSingle("--dNdEta", argOptions).size() > 0) ?
-                    std::atof(ArgumentParser::ParseOptionInputSingle("--dNdEta", argOptions).c_str()) : -1;
+    int minMultCh = (ArgumentParser::ParseOptionInputSingle("--minMultCh", argOptions).size() > 0) ?
+            std::atoi(ArgumentParser::ParseOptionInputSingle("--minMultCh", argOptions).c_str()) : -1;
+    int maxMultCh = (ArgumentParser::ParseOptionInputSingle("--maxMultCh", argOptions).size() > 0) ?
+            std::atoi(ArgumentParser::ParseOptionInputSingle("--maxMultCh", argOptions).c_str()) : -1;
+    double mindNdEta = (ArgumentParser::ParseOptionInputSingle("--mindNdEta", argOptions).size() > 0) ?
+                    std::atof(ArgumentParser::ParseOptionInputSingle("--mindNdEta", argOptions).c_str()) : -1;
+    double maxdNdEta = (ArgumentParser::ParseOptionInputSingle("--maxdNdEta", argOptions).size() > 0) ?
+                    std::atof(ArgumentParser::ParseOptionInputSingle("--maxdNdEta", argOptions).c_str()) : -1;
     double maxEta = (ArgumentParser::ParseOptionInputSingle("--maxEta", argOptions).size() > 0) ?
                         std::atof(ArgumentParser::ParseOptionInputSingle("--maxEta", argOptions).c_str()) : 3;
     double meanPt = (ArgumentParser::ParseOptionInputSingle("--meanPt", argOptions).size() > 0) ?
@@ -81,8 +85,10 @@ void sampleToyEvents(int mode, std::string outputFileName,
     std::cout << "inputFile = " << inputFileName.c_str() << std::endl;
     std::cout << "minCent = " << minCent << std::endl;
     std::cout << "maxCent = " << maxCent << std::endl;
-    std::cout << "multCh = " << multCh << std::endl;
-    std::cout << "dNdEta = " << dNdEta << std::endl;
+    std::cout << "minMultCh = " << minMultCh << std::endl;
+    std::cout << "maxMultCh = " << maxMultCh << std::endl;
+    std::cout << "mindNdEta = " << mindNdEta << std::endl;
+    std::cout << "maxdNdEta = " << maxdNdEta << std::endl;
     std::cout << "meanPt = " << meanPt << std::endl;
     std::cout << "minPt = " << minPt << std::endl;
     std::cout << "eventInfoTree = " << eventInfoTreeName.c_str() << std::endl;
@@ -91,10 +97,12 @@ void sampleToyEvents(int mode, std::string outputFileName,
     std::cout << "rndSeedParticle = " << rndSeedParticle << std::endl;
     std::cout << "##### Optional Arguments - END #####" << std::endl;
 
-    if (multCh > 0 && dNdEta > 0) {
+    if (minMultCh > -1 && maxMultCh > 0 && mindNdEta > -1 && maxdNdEta > 0) {
         std::cout << "ERROR : Conflicting options. Cannot have both multCh and dNdEta non-zero. At most one of them can be non-zero." << std::endl;
-        std::cout << "multCh = " << multCh << std::endl;
-        std::cout << "dNdEta = " << dNdEta << std::endl;
+        std::cout << "minMultCh = " << minMultCh << std::endl;
+        std::cout << "maxMultCh = " << maxMultCh << std::endl;
+        std::cout << "mindNdEta = " << mindNdEta << std::endl;
+        std::cout << "maxdNdEta = " << maxdNdEta << std::endl;
         std::cout << "Exiting" << std::endl;
         return;
     }
@@ -171,25 +179,23 @@ void sampleToyEvents(int mode, std::string outputFileName,
     }
 
     TF1* fncPt = 0;
-    std::vector<int> mults;
+    std::vector<int> mults;         // {charged multiplicity, neutral multiplicity}
+    double ratioChNeutral = 0.5;
     if (mode == k_sampleThermalPt) {
         // taken from https://github.com/JetQuenchingTools/JetToyHI/blob/c80710caee0c3687707e5d676f3a97dda7c73a25/include/thermalEvent.hh#L45
         fncPt = new TF1("fncPt","[0]*TMath::Power([1], 2)*x*TMath::Exp(-[1]*x)", 0.2, 200);
         fncPt->SetParNames("Amplitude", "b (GeV/c)^{-1}");
         fncPt->SetParameters(1., 2./meanPt);
 
-        int multNeutral = 0;
-        double ratioChNeutral = 0.5;
-        if (multCh > -1) {
-            multNeutral = multCh * ratioChNeutral;
-            mults = {multCh, multNeutral};
+        if (minMultCh > -1 && maxMultCh > 0) {
+            //
         }
-        else if (dNdEta > -1) {
-            int nTmp = (int) (dNdEta*2*maxEta);
-            multNeutral = nTmp * ratioChNeutral;
-            mults = {nTmp, multNeutral};
+        else if (mindNdEta > -1 && maxdNdEta > -1) {
+            minMultCh = (int)(mindNdEta*2*maxEta);
+            maxMultCh = (int)(maxdNdEta*2*maxEta);
         }
-        nCharge = mults.size();
+        nCharge = 2;
+        mults.resize(nCharge);
     }
 
     std::vector<TH1D*> vecH1D_ngen;
@@ -263,6 +269,11 @@ void sampleToyEvents(int mode, std::string outputFileName,
             }
         }
         else if (mode == k_sampleThermalPt) {
+
+            // {charged multiplicity, neutral multiplicity}
+            mults[0] = (int)(rand2.Uniform(minMultCh, maxMultCh+1));
+            mults[1] = mults[0] * ratioChNeutral;
+
             for (int iCh = 0; iCh < nCharge; ++iCh) {
 
                 for (int i = 0; i < mults[iCh]; ++i) {
@@ -334,8 +345,10 @@ int main(int argc, char* argv[]) {
         std::cout << "inputFile=<file containing distributions to be sampled>" << std::endl;
         std::cout << "minCent=<minimum centrality>" << std::endl;
         std::cout << "maxCent=<maximum centrality>" << std::endl;
-        std::cout << "multCh=<number of charged particles>" << std::endl;
-        std::cout << "dNdEta=<number of charged particles per unit eta>" << std::endl;
+        std::cout << "minMultCh=<minimum number of charged particles>" << std::endl;
+        std::cout << "maxMultCh=<maximum number of charged particles>" << std::endl;
+        std::cout << "mindNdEta=<minimum number of charged particles per unit eta>" << std::endl;
+        std::cout << "maxdNdEta=<maximum number of charged particles per unit eta>" << std::endl;
         std::cout << "maxEta=<maximum |eta| of particles>" << std::endl;
         std::cout << "meanPt=<average of pt spectrum to be sampled>" << std::endl;
         std::cout << "minPt=<minimum pT to be written>" << std::endl;

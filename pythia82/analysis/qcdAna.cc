@@ -328,6 +328,7 @@ void qcdAna(std::string eventFileName, std::string jetFileName, std::string jetT
     // V-jet histograms
     TH1D* h_detajV[kN_JETFLAVORS];
     TH1D* h_dphijV[kN_JETFLAVORS];
+    TH1D* h_dphijV_awaySide[kN_JETFLAVORS];
     TH1D* h_Xj[kN_JETFLAVORS];
     TH1D* h_NjV[kN_JETFLAVORS];
     TH2D* h2_vEta_jetEta[kN_JETFLAVORS];
@@ -439,6 +440,10 @@ void qcdAna(std::string eventFileName, std::string jetFileName, std::string jetT
         h_dphijV[i] = new TH1D(Form("h_dphi%sV", jetFlavorsStr[i].c_str()),
                 Form(";%s;", lblDphijV.c_str()),
                 nBinsX_phi, 0, TMath::Pi()+1e-12);
+
+        h_dphijV_awaySide[i] = new TH1D(Form("h_dphi%sV_awaySide", jetFlavorsStr[i].c_str()),
+                Form(";%s;", lblDphijV.c_str()),
+                nBinsX_phi, 6 * TMath::Pi() / 8, TMath::Pi()+1e-12);
 
         h_Xj[i] = new TH1D(Form("h_X%s", jetFlavorsStr[i].c_str()),
                 Form(";%s;", lblXjV.c_str()),
@@ -931,6 +936,7 @@ void qcdAna(std::string eventFileName, std::string jetFileName, std::string jetT
                 for (int j = 0; j < nTypesQG; ++j) {
                     int k = typesQG[j];
                     h_dphijV[k]->Fill(dphij);
+                    h_dphijV_awaySide[k]->Fill(dphij);
                 }
 
                 if (!(dphij > minDphijV)) continue;
@@ -1022,6 +1028,7 @@ void qcdAna(std::string eventFileName, std::string jetFileName, std::string jetT
 
                     h_detajV[kJ2]->Fill(detaj);
                     h_dphijV[kJ2]->Fill(dphij);
+                    h_dphijV_awaySide[kJ2]->Fill(dphij);
                     h_Xj[kJ2]->Fill(xj);
                 }
             }
@@ -1378,6 +1385,7 @@ void qcdAna(std::string eventFileName, std::string jetFileName, std::string jetT
 
             h_detajV[i]->Scale(1./normJet, "width");
             h_dphijV[i]->Scale(1./h_dphijV[i]->Integral(), "width");
+            h_dphijV_awaySide[i]->Scale(1./h_dphijV_awaySide[i]->Integral(), "width");
             h_Xj[i]->Scale(1./normJet, "width");
             h_NjV[i]->Scale(1./normJet, "width");
         }
@@ -1395,6 +1403,7 @@ void qcdAna(std::string eventFileName, std::string jetFileName, std::string jetT
 
             h_detajV[i]->Scale(1./h_detajV[i]->Integral(), "width");
             h_dphijV[i]->Scale(1./h_dphijV[i]->Integral(), "width");
+            h_dphijV_awaySide[i]->Scale(1./h_dphijV_awaySide[i]->Integral(), "width");
             h_Xj[i]->Scale(1./h_Xj[i]->Integral(), "width");
         }
 

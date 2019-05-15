@@ -1376,18 +1376,15 @@ void qcdAna(std::string eventFileName, std::string jetFileName, std::string jetT
             h_partonPt_qgFrac[i]->Divide(h_partonPt_qgFrac[kInclusive]);
         }
 
-        double normJet = nJet;
         if (anaType == k_vJet) {
 
             h_vPt_jet[i]->Scale(1./nV, "width");
 
-            normJet = nV;
-
-            h_detajV[i]->Scale(1./normJet, "width");
+            h_detajV[i]->Scale(1./nV, "width");
             h_dphijV[i]->Scale(1./h_dphijV[i]->Integral(), "width");
             h_dphijV_awaySide[i]->Scale(1./h_dphijV_awaySide[i]->Integral(), "width");
-            h_Xj[i]->Scale(1./normJet, "width");
-            h_NjV[i]->Scale(1./normJet, "width");
+            h_Xj[i]->Scale(1./nV, "width");
+            h_NjV[i]->Scale(1./nV, "width");
         }
         else if (anaType == k_dijet) {
             h_jet2Pt_qgFrac[i] = (TH1D*)h_jet2Pt[i]->Clone(Form("h_%s2Pt_qgFrac", jetFlavorsStr[i].c_str()));
@@ -1407,12 +1404,12 @@ void qcdAna(std::string eventFileName, std::string jetFileName, std::string jetT
             h_Xj[i]->Scale(1./h_Xj[i]->Integral(), "width");
         }
 
-        h_jetPt[i]->Scale(1./normJet, "width");
-        h_jetEta[i]->Scale(1./normJet, "width");
+        h_jetPt[i]->Scale(1./nJet, "width");
+        h_jetEta[i]->Scale(1./nJet, "width");
 
-        h_jet2Pt[i]->Scale(1./normJet, "width");
-        h_jet2Eta[i]->Scale(1./normJet, "width");
-        h_jetPt_qgJ2[i]->Scale(1./normJet, "width");
+        h_jet2Pt[i]->Scale(1./nJet, "width");
+        h_jet2Eta[i]->Scale(1./nJet, "width");
+        h_jetPt_qgJ2[i]->Scale(1./nJet, "width");
 
         std::string hNameTmp = "";
         int nBinsTmp = -1;

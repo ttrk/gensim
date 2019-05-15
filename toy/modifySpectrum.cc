@@ -20,6 +20,7 @@
 
 #include "../utilities/systemUtil.h"
 #include "../utilities/mathUtil.h"
+#include "../utilities/physicsUtil.h"
 #include "../utilities/ArgumentParser.h"
 
 enum MODES {
@@ -66,8 +67,12 @@ void modifySpectrum(int mode, std::string spectrumStr, std::string modifierStr, 
     std::string operation = (ArgumentParser::ParseOptionInputSingle("--operation", argOptions).size() > 0) ?
             ArgumentParser::ParseOptionInputSingle("--operation", argOptions).c_str() : "MUL";
 
+    bool correctPhi = (ArgumentParser::ParseOptionInputSingle("--correctPhi", argOptions).size() > 0) ?
+            (std::atoi(ArgumentParser::ParseOptionInputSingle("--correctPhi", argOptions).c_str()) > 0) : false;
+
     std::cout << "##### Optional Arguments #####" << std::endl;
     std::cout << "operation = " << operation.c_str() << std::endl;
+    std::cout << "correctPhi = " << correctPhi << std::endl;
     std::cout << "##### Optional Arguments - END #####" << std::endl;
 
     std::vector<std::string> fncStrVec = {spectrumStr, modifierStr};
@@ -245,6 +250,10 @@ void modifySpectrum(int mode, std::string spectrumStr, std::string modifierStr, 
                 tmp = x + rndTmp;
             }
 
+            if (correctPhi) {
+                tmp = TMath::Abs(correctPhiRange(tmp));
+            }
+
             hOut->Fill(tmp);
         }
     }
@@ -281,6 +290,8 @@ int main(int argc, char** argv)
 
         std::cout << "Options are" << std::endl;
         std::cout << "operation=<operation used in modifying a value. Eg. MUL for multiplication, ADD for addition" << std::endl;
+        std::cout << "correctPhi=<flag whether the modified value should be corrected into [-pi, pi] range. "
+                     "This is useful if an angle distribution is modified" << std::endl;
 
         return 1;
     }

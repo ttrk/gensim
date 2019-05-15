@@ -7,10 +7,22 @@ progPath="./analysis/qcdAna.exe"
 
 ## prompt photon
 fileSuffix="promptPhoton"
+#fileSuffix="promptPhoton_sNN_200GeV"
 defaultBosonType=3
 defaultBosonTypeStr="outgoingMaxPhotonIso" # "outgoingHardPhoton"
 defaultAnaType=0
 defaultProcessType=0
+
+isRHIC=0
+if [[ $fileSuffix = *sNN_200GeV* ]]; then
+  isRHIC=1
+fi
+
+if [ $isRHIC -eq 1 ]; then
+  extraOption="--minVPt=40 --maxVEta=0.8 --minVJetPt=20 --maxJetEta=0.5"
+else
+  extraOption=""
+fi
 
 eventFile="./out/events/photon/pythiaGenerateAndWrite_"$fileSuffix".root"
 jetFile="./out/jets/photon/pythiaClusterJets_"$fileSuffix".root"
@@ -128,8 +140,9 @@ do
     outDir=$(dirname "${outputFile}")
     mkdir -p $outDir
 
-    $runCmd $progPath $eventFile $jetFile $jetTree $outputFile --particleFile=${particleFile} --particleTree=${particleTree} --analysisType=${analysisType} --processType=${processType} --sigBkgType=${sigBkgType} --ewBosonType=${ewBosonType} &> $outputFileLOG &
-    echo "$runCmd $progPath $eventFile $jetFile $jetTree $outputFile --particleFile=${particleFile} --particleTree=${particleTree} --analysisType=${analysisType} --processType=${processType} --sigBkgType=${sigBkgType} --ewBosonType=${ewBosonType} &> $outputFileLOG &"
+    $runCmd $progPath $eventFile $jetFile $jetTree $outputFile --particleFile=${particleFile} --particleTree=${particleTree} --analysisType=${analysisType} --processType=${processType} --sigBkgType=${sigBkgType} --ewBosonType=${ewBosonType} ${extraOption} &> $outputFileLOG &
+    echo "$runCmd $progPath $eventFile $jetFile $jetTree $outputFile --particleFile=${particleFile} --particleTree=${particleTree} --analysisType=${analysisType} --processType=${processType} --sigBkgType=${sigBkgType} --ewBosonType=${ewBosonType} ${extraOption} &> $outputFileLOG &"
+
     wait
 done
 

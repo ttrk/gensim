@@ -101,12 +101,12 @@ void modifySpectrum(int mode, std::string spectrumStr, std::string modifierStr, 
             double xMaxTmp = std::atof(fncInfo[3].c_str());
             if (xMaxTmp > xMinTmp)  {
                 h1Ds[i]->GetXaxis()->SetRangeUser(xMinTmp, xMaxTmp);
-                range_xMin = xMinTmp;
-                range_xMax = xMaxTmp;
             }
 
             h1D_xMin = h1Ds[i]->GetXaxis()->GetXmin();
             h1D_xMax = h1Ds[i]->GetXaxis()->GetXmax();
+            range_xMin = h1D_xMin;
+            range_xMax = h1D_xMax;
         }
         else {
             if (nFncInfo < 3) {
@@ -227,6 +227,11 @@ void modifySpectrum(int mode, std::string spectrumStr, std::string modifierStr, 
             hOut->Fill(tmp);
         }
     }
+
+    for (int i = 0; i < kN_INPUTS; ++i) {
+        if (f1s[i] != 0)  f1s[i]->Write("",TObject::kOverwrite);
+    }
+
     hOut->Scale(h1DsSubRange[kSpectrum]->Integral() / hOut->GetEntries());
 
     setTH1D(hOut);

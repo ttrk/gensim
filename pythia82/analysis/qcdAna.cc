@@ -328,7 +328,9 @@ void qcdAna(std::string eventFileName, std::string jetFileName, std::string jetT
     // V-jet histograms
     TH1D* h_detajV[kN_JETFLAVORS];
     TH1D* h_dphijV[kN_JETFLAVORS];
+    TH1D* h_dphijV_normV[kN_JETFLAVORS];
     TH1D* h_dphijV_awaySide[kN_JETFLAVORS];
+    TH1D* h_dphijV_awaySide_normV[kN_JETFLAVORS];
     TH1D* h_Xj[kN_JETFLAVORS];
     TH1D* h_NjV[kN_JETFLAVORS];
     TH2D* h2_vEta_jetEta[kN_JETFLAVORS];
@@ -1365,6 +1367,9 @@ void qcdAna(std::string eventFileName, std::string jetFileName, std::string jetT
         double nV = h_vPt_jet[i]->GetEntries();
         double nJet = h_jetPt[i]->GetEntries();
 
+        h_dphijV_normV[i] = (TH1D*)h_dphijV[i]->Clone(Form("%s_normV", h_dphijV[i]->GetName()));
+        h_dphijV_awaySide_normV[i] = (TH1D*)h_dphijV_awaySide[i]->Clone(Form("%s_normV", h_dphijV_awaySide[i]->GetName()));
+
         h_jetPt_qgFrac[i] = (TH1D*)h_jetPt[i]->Clone(Form("h_%sPt_qgFrac", jetFlavorsStr[i].c_str()));
         h_jetPt_qgFrac[i]->SetYTitle("Fraction relative to quark+gluon");
 
@@ -1382,7 +1387,9 @@ void qcdAna(std::string eventFileName, std::string jetFileName, std::string jetT
 
             h_detajV[i]->Scale(1./nV, "width");
             h_dphijV[i]->Scale(1./h_dphijV[i]->Integral(), "width");
+            h_dphijV_normV[i]->Scale(1./nV, "width");
             h_dphijV_awaySide[i]->Scale(1./h_dphijV_awaySide[i]->Integral(), "width");
+            h_dphijV_awaySide_normV[i]->Scale(1./nV, "width");
             h_Xj[i]->Scale(1./nV, "width");
             h_NjV[i]->Scale(1./nV, "width");
         }
@@ -1400,7 +1407,9 @@ void qcdAna(std::string eventFileName, std::string jetFileName, std::string jetT
 
             h_detajV[i]->Scale(1./h_detajV[i]->Integral(), "width");
             h_dphijV[i]->Scale(1./h_dphijV[i]->Integral(), "width");
+            h_dphijV_normV[i]->Scale(1./nJet, "width");
             h_dphijV_awaySide[i]->Scale(1./h_dphijV_awaySide[i]->Integral(), "width");
+            h_dphijV_awaySide_normV[i]->Scale(1./nJet, "width");
             h_Xj[i]->Scale(1./h_Xj[i]->Integral(), "width");
         }
 

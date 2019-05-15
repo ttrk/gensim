@@ -20,6 +20,7 @@
 
 #include "../utilities/systemUtil.h"
 #include "../utilities/mathUtil.h"
+#include "../utilities/ArgumentParser.h"
 
 enum MODES {
     kSpectrumIsTF1,
@@ -41,21 +42,33 @@ enum FNCS {
 const std::string inputsStr[kN_INPUTS] = {"Spectrum", "Modifier"};
 const std::string fncsStr[kN_FNCS] = {"DSCB"};
 
+std::vector<std::string> argOptions;
+
 void setTH1D(TH1D* h);
 void modifySpectrum(int mode, std::string spectrumStr, std::string modifierStr, std::string outputFile = "modifySpectrum.root");
 
 void modifySpectrum(int mode, std::string spectrumStr, std::string modifierStr, std::string outputFile)
 {
     std::cout<<"running modifySpectrum()"<<std::endl;
+
+    std::cout << "##### Parameters #####" << std::endl;
     std::cout<<"mode = " << mode << std::endl;
     std::cout<< inputsStr[kSpectrum].c_str() << " = " << spectrumStr.c_str() << std::endl;
     std::cout<< inputsStr[kModifier].c_str() << " = " << modifierStr.c_str() << std::endl;
+    std::cout << "##### Parameters - END #####" << std::endl;
 
     if (mode >= kN_MODES) {
         std::cout << "mode must be smaller than " << kN_MODES << std::endl;
         std::cout << "Exiting" << std::endl;
         return;
     }
+
+    std::string operation = (ArgumentParser::ParseOptionInputSingle("--operation", argOptions).size() > 0) ?
+            ArgumentParser::ParseOptionInputSingle("--operation", argOptions).c_str() : "MUL";
+
+    std::cout << "##### Optional Arguments #####" << std::endl;
+    std::cout << "operation = " << operation.c_str() << std::endl;
+    std::cout << "##### Optional Arguments - END #####" << std::endl;
 
     std::vector<std::string> fncStrVec = {spectrumStr, modifierStr};
 
@@ -223,7 +236,15 @@ void modifySpectrum(int mode, std::string spectrumStr, std::string modifierStr, 
 
         f1s[kModifier]->SetParameter(f1s[kModifier]->GetNpar() - 1, x);
         for (int r2 = 0; r2 < nRnds[kModifier]; ++r2) {
-            double tmp = x * f1s[kModifier]->GetRandom(f1s[kModifier]->GetXmin(), f1s[kModifier]->GetXmax());
+            double tmp = -1;
+            double rndTmp = f1s[kModifier]->GetRandom(f1s[kModifier]->GetXmin(), f1s[kModifier]->GetXmax());
+            if (operation == "MUL") {
+                tmp = x * rndTmp;
+            }
+            else if (operation == "ADD") {
+                tmp = x + rndTmp;
+            }
+
             hOut->Fill(tmp);
         }
     }
@@ -244,7 +265,12 @@ void modifySpectrum(int mode, std::string spectrumStr, std::string modifierStr, 
 
 int main(int argc, char** argv)
 {
-    if (argc == 5) {
+    std::vector<std::string> argStr = ArgumentParser::ParseParameters(argc, argv);
+    int nArgStr = argStr.size();
+
+    argOptions = ArgumentParser::ParseOptions(argc, argv);
+
+    if (nArgStr == 5) {
         modifySpectrum(std::atoi(argv[1]), argv[2], argv[3], argv[4]);
         return 0;
     }
@@ -252,6 +278,10 @@ int main(int argc, char** argv)
         std::cout << "Usage : \n" <<
                 "./modifySpectrum.exe <mode> <spectrum> <modifier> <outputFile>"
                 << std::endl;
+
+        std::cout << "Options are" << std::endl;
+        std::cout << "operation=<operation used in modifying a value. Eg. MUL for multiplication, ADD for addition" << std::endl;
+
         return 1;
     }
 }

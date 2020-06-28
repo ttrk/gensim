@@ -89,10 +89,11 @@ void hardScatteringAna(std::string inputFileName, std::string outputFileName)
         kQuark,
         kGluon,
         kGamma,
+        kLeadGamma,
         kZ0,
         kN_TAGS
     };
-    std::string tagsStr[kN_TAGS] = {"parton", "quark", "gluon", "gamma", "Z"};
+    std::string tagsStr[kN_TAGS] = {"parton", "quark", "gluon", "gamma", "leadgamma", "Z"};
 
     std::vector<std::string> tagsStrVec(std::begin(tagsStr), std::end(tagsStr));
     int tagCode = findPositionInVector(tagsStrVec, tagParticle);
@@ -145,7 +146,7 @@ void hardScatteringAna(std::string inputFileName, std::string outputFileName)
     else if (tagCode == TAGS::kGluon) {
         strP1 = "g";
     }
-    else if (tagCode == TAGS::kGamma) {
+    else if (tagCode == TAGS::kGamma || tagCode == TAGS::kLeadGamma) {
         strP1 = "#gamma";
     }
     else if (tagCode == TAGS::kZ0) {
@@ -474,6 +475,9 @@ void hardScatteringAna(std::string inputFileName, std::string outputFileName)
                 }
                 else if (tagCode == TAGS::kGamma){
                     passedTagCode = isGamma((*event)[iHmother]);
+                }
+                else if (tagCode == TAGS::kLeadGamma){
+                    passedTagCode = (isGamma((*event)[iHmother]) || isParton((*event)[iHmother]));
                 }
                 else if (tagCode == TAGS::kZ0){
                     passedTagCode = isZboson((*event)[iHmother]);

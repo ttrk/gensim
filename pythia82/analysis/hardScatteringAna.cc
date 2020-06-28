@@ -389,10 +389,12 @@ void hardScatteringAna(std::string inputFileName, std::string outputFileName)
         kG2 = PARTONTYPES::kG,
         kudsQ,
         kbctQ,
+        kcQ,
+        kbQ,
         kN_PARTONTYPES2
     };
-    std::string partonTypes2Str[kN_PARTONTYPES2] = {"parton", "q", "g", "uds", "bct"};
-    std::string partonTypes2Label[kN_PARTONTYPES2] = {"q/g", "q", "g", "u/d/s", "b/c/t"};
+    std::string partonTypes2Str[kN_PARTONTYPES2] = {"parton", "q", "g", "uds", "bct", "c", "b"};
+    std::string partonTypes2Label[kN_PARTONTYPES2] = {"q/g", "q", "g", "u/d/s", "b/c/t", "c", "b"};
 
     // tag histograms split for parton types
     TH1D* h_p1Pt_p2Frac[kN_PARTONTYPES2];
@@ -661,6 +663,8 @@ void hardScatteringAna(std::string inputFileName, std::string outputFileName)
             else if (j == PARTONTYPES2::kG2 && !(isGluon((*event)[iProbe])))  continue;
             else if (j == PARTONTYPES2::kudsQ && !((*event)[iProbe].idAbs() >= 1 && (*event)[iProbe].idAbs() <= 3))  continue;
             else if (j == PARTONTYPES2::kbctQ && !((*event)[iProbe].idAbs() >= 4 && (*event)[iProbe].idAbs() <= 8))  continue;
+            else if (j == PARTONTYPES2::kcQ && !((*event)[iProbe].idAbs() == 4))  continue;
+            else if (j == PARTONTYPES2::kbQ && !((*event)[iProbe].idAbs() == 5))  continue;
 
             h_p1Pt_p2Frac[j]->Fill(p1Pt[iStatusTag]);
             h_p1Eta_p2Frac[j]->Fill(TMath::Abs(p1Eta[iStatusTag]));

@@ -90,10 +90,11 @@ void hardScatteringAna(std::string inputFileName, std::string outputFileName)
         kGluon,
         kGamma,
         kLeadGamma,
+        kIsoGamma,
         kZ0,
         kN_TAGS
     };
-    std::string tagsStr[kN_TAGS] = {"parton", "quark", "gluon", "gamma", "leadgamma", "Z"};
+    std::string tagsStr[kN_TAGS] = {"parton", "quark", "gluon", "gamma", "leadgamma", "isogamma", "Z"};
 
     std::vector<std::string> tagsStrVec(std::begin(tagsStr), std::end(tagsStr));
     int tagCode = findPositionInVector(tagsStrVec, tagParticle);
@@ -146,7 +147,7 @@ void hardScatteringAna(std::string inputFileName, std::string outputFileName)
     else if (tagCode == TAGS::kGluon) {
         strP1 = "g";
     }
-    else if (tagCode == TAGS::kGamma || tagCode == TAGS::kLeadGamma) {
+    else if (tagCode == TAGS::kGamma || tagCode == TAGS::kLeadGamma || tagCode == TAGS::kIsoGamma) {
         strP1 = "#gamma";
     }
     else if (tagCode == TAGS::kZ0) {
@@ -455,36 +456,69 @@ void hardScatteringAna(std::string inputFileName, std::string outputFileName)
         }
 
         int eventPartonSize = eventParton->size();
+        int eventSize = event->size();
         if (iTag == -1) {
             // find the leading outgoing daughter and thus identify the "tag"
-            for (int i = 0; i < eventPartonSize; ++i) {
+            if (tagCode == TAGS::kParton || tagCode == TAGS::kQuark || tagCode == TAGS::kGluon ||
+                tagCode == TAGS::kGamma || tagCode == TAGS::kZ0){
+                for (int i = 0; i < eventPartonSize; ++i) {
 
-                // should not have a daughter in parton-level particles
-                if (hasDaughter((*eventParton)[i]))  continue;
+                    // should not have a daughter in parton-level particles
+                    if (hasDaughter((*eventParton)[i]))  continue;
 
-                int indexOrig = (*eventParton)[i].mother1();
-                // must be a daughter of the hard scattering particle
-                if (!isAncestor(event, indexOrig, iH1) && !isAncestor(event, indexOrig, iH2))  continue;
+                    int indexOrig = (*eventParton)[i].mother1();
+                    // must be a daughter of the hard scattering particle
+                    if (!isAncestor(event, indexOrig, iH1) && !isAncestor(event, indexOrig, iH2))  continue;
 
-                // mother hard scatterer
-                int iHmother = (isAncestor(event, indexOrig, iH1)) ? iH1 : iH2;
+                    // mother hard scatterer
+                    int iHmother = (isAncestor(event, indexOrig, iH1)) ? iH1 : iH2;
 
-                bool passedTagCode = true;
-                if (tagCode == TAGS::kParton || tagCode == TAGS::kQuark || tagCode == TAGS::kGluon){
-                    passedTagCode = isParton((*event)[iHmother]);
+                    bool passedTagCode = true;
+                    if (tagCode == TAGS::kParton || tagCode == TAGS::kQuark || tagCode == TAGS::kGluon){
+                        passedTagCode = isParton((*event)[iHmother]);
+                    }
+                    else if (tagCode == TAGS::kGamma){
+                        passedTagCode = isGamma((*event)[iHmother]);
+                    }
+                    else if (tagCode == TAGS::kZ0){
+                        passedTagCode = isZboson((*event)[iHmother]);
+                    }
+
+                    if (passedTagCode) {
+                        nTagOutCand++;
+
+                        if ((*event)[indexOrig].pT() > ptTagOutgoing) {
+
+                            ptTagOutgoing = (*event)[indexOrig].pT();
+                            iTagOutgoing = indexOrig;
+                            iTag = iHmother;
+                        }
+                    }
                 }
-                else if (tagCode == TAGS::kGamma){
-                    passedTagCode = isGamma((*event)[iHmother]);
-                }
-                else if (tagCode == TAGS::kLeadGamma){
-                    passedTagCode = (isGamma((*event)[iHmother]) || isParton((*event)[iHmother]));
-                }
-                else if (tagCode == TAGS::kZ0){
-                    passedTagCode = isZboson((*event)[iHmother]);
-                }
+            }
+            else if (tagCode == TAGS::kLeadGamma || tagCode == TAGS::kIsoGamma){
 
-                if (passedTagCode) {
-                    nTagOutCand++;
+                for (int i = 0; i < eventSize; ++i) {
+
+                    if (!((*event)[i].isFinal()))  continue;
+                    // should not have a daughter
+                    if (hasDaughter((*event)[i]))  continue;
+
+                    if (tagCode == TAGS::kLeadGamma || tagCode == TAGS::kIsoGamma){
+                        if (!isGamma((*event)[i]))  continue;
+
+                        if (tagCode == TAGS::kIsoGamma) {
+                            double isoCal = isolationEt(event, i, 0.4, true, true);
+                            if (!(isoCal < 5)) continue;
+                        }
+                    }
+
+                    int indexOrig = i;
+                    // must be a daughter of the hard scattering particle
+                    if (!isAncestor(event, indexOrig, iH1) && !isAncestor(event, indexOrig, iH2))  continue;
+
+                    // mother hard scatterer
+                    int iHmother = (isAncestor(event, indexOrig, iH1)) ? iH1 : iH2;
 
                     if ((*event)[indexOrig].pT() > ptTagOutgoing) {
 
